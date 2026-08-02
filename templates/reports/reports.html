@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Operational Reports</h4>
+        <div class="decore-breadcrumb">Generate, analyze, and export construction performance statistics</div>
+    </div>
+    <button class="btn btn-decore-primary btn-sm" onclick="decoreToast('Exporting document...', 'success')">
+        <i class="bi bi-download me-1"></i>Export Summary
+    </button>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="decore-card p-4 text-center decore-card-lift">
+            <i class="bi bi-people fs-1 text-decore-primary mb-3 d-block"></i>
+            <h6 class="fw-bold mb-1">Employee Report</h6>
+            <p class="text-muted small mb-3">Attendance logs &amp; workforce headcount summaries</p>
+            <button class="btn btn-outline-secondary btn-sm w-100" onclick="decoreToast('Generating Employee Report...', 'primary')">Generate</button>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="decore-card p-4 text-center decore-card-lift">
+            <i class="bi bi-geo-alt fs-1 text-decore-primary mb-3 d-block"></i>
+            <h6 class="fw-bold mb-1">Worksite Report</h6>
+            <p class="text-muted small mb-3">Site progression percentages and crew allocation</p>
+            <button class="btn btn-outline-secondary btn-sm w-100" onclick="decoreToast('Generating Worksite Report...', 'primary')">Generate</button>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="decore-card p-4 text-center decore-card-lift">
+            <i class="bi bi-cash-stack fs-1 text-decore-primary mb-3 d-block"></i>
+            <h6 class="fw-bold mb-1">Financial Ledger</h6>
+            <p class="text-muted small mb-3">Aggregated salary outputs, payments, and expenses</p>
+            <button class="btn btn-outline-secondary btn-sm w-100" onclick="decoreToast('Generating Financial Report...', 'primary')">Generate</button>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="decore-card p-4 text-center decore-card-lift">
+            <i class="bi bi-boxes fs-1 text-decore-primary mb-3 d-block"></i>
+            <h6 class="fw-bold mb-1">Materials Inventory</h6>
+            <p class="text-muted small mb-3">Procured stock volume and consumption per worksite</p>
+            <button class="btn btn-outline-secondary btn-sm w-100" onclick="decoreToast('Generating Materials Report...', 'primary')">Generate</button>
+        </div>
+    </div>
+</div>
+
+<div class="decore-card mb-4">
+    <div class="decore-card-header">
+        <h6>Operational Cost Summary (₹)</h6>
+        <span class="decore-status-badge badge-success"><span class="dot"></span>Live data</span>
+    </div>
+    <div class="decore-card-body">
+        <div class="decore-chart-wrap" style="height:320px;">
+            <canvas id="reportsOverviewChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var isDark = document.documentElement.getAttribute("data-bs-theme") === "dark";
+        var textColor = isDark ? "#94A3B8" : "#64748B";
+        var borderColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.06)";
+
+        var ctx = document.getElementById("reportsOverviewChart");
+        if (ctx) {
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: ["Salaries (₹)", "Disbursements (₹)", "Materials (₹)", "Expenses (₹)"],
+                    datasets: [{
+                        data: [
+                            {{ report_stats.salaries_total|default:"0" }},
+                            {{ report_stats.payments_total|default:"16390" }},
+                            {{ report_stats.materials_total|default:"12565" }},
+                            {{ report_stats.expenses_total|default:"3850" }}
+                        ],
+                        backgroundColor: ["#6366F1", "#0EA5E9", "#10B981", "#EF4444"],
+                        borderRadius: 8,
+                        barThickness: 32
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: textColor }
+                        },
+                        y: {
+                            grid: { color: borderColor },
+                            ticks: { color: textColor }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Re-render chart elements when dark mode shifts
+        var themeToggle = document.getElementById("darkModeToggle");
+        var themeSwitch = document.getElementById("darkModeSwitch");
+        var handleThemeChange = function() {
+            setTimeout(function() {
+                var nextDark = document.documentElement.getAttribute("data-bs-theme") === "dark";
+                var nextColor = nextDark ? "#94A3B8" : "#64748B";
+                var nextBorder = nextDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.06)";
+                
+                Chart.instances.forEach(function(chart) {
+                    if(chart.options.scales) {
+                        if(chart.options.scales.x) chart.options.scales.x.ticks.color = nextColor;
+                        if(chart.options.scales.y) {
+                            chart.options.scales.y.ticks.color = nextColor;
+                            chart.options.scales.y.grid.color = nextBorder;
+                        }
+                    }
+                    chart.update();
+                });
+            }, 100);
+        };
+
+        if(themeToggle) themeToggle.addEventListener("click", handleThemeChange);
+        if(themeSwitch) themeSwitch.addEventListener("change", handleThemeChange);
+    });
+</script>
+{% endblock %}

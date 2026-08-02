@@ -1,0 +1,83 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView, DetailView, View
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.models import User
+from .models import Worksite
+from employees.models import Employee
+from django import forms
+
+class WorksiteForm(forms.ModelForm):
+    class Meta:
+        model = Worksite
+        fields = ['name', 'client', 'location', 'supervisor', 'status', 'progress', 'budget', 'spend', 'start_date']
+
+class WorksiteListView(LoginRequiredMixin, ListView):
+    model = Worksite
+    template_name = "worksites/worksite_list.html"
+    context_object_name = "worksites"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        worksites = self.get_queryset()
+        
+        total_income = sum(w.budget for w in worksites)
+        total_expenses = sum(w.total_spend for w in worksites)
+        total_profit = total_income - total_expenses
+        profit_margin = (total_profit / total_income * 100) if total_income > 0 else 0
+
+        context['stats'] = {
+            'total': worksites.count(),
+            'active': worksites.filter(status='active').count(),
+            'on_hold': worksites.filter(status='on_hold').count(),
+            'completed': worksites.filter(status='completed').count(),
+            'total_income': total_income,
+            'total_expenses': total_expenses,
+            'total_profit': total_profit,
+            'total_profit_abs': abs(total_profit),
+            'profit_margin': profit_margin,
+        }
+        context['supervisors_list'] = User.objects.all()
+        return context
+
+class WorksiteCreateView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        form = WorksiteForm(request.POST)
+        if form.is_valid():
+            site = form.save()
+            return JsonResponse({'success': True, 'message': f'Worksite "{site.name}" created successfully!'})
+        else:
+            errors = ", ".join([f"{k}: {v[0]}" for k, v in form.errors.items()])
+            return JsonResponse({'success': False, 'error': errors})
+
+class WorksiteUpdateView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        site = get_object_or_404(Worksite, pk=pk)
+        form = WorksiteForm(request.POST, instance=site)
+        if form.is_valid():
+            site = form.save()
+            return JsonResponse({'success': True, 'message': f'Worksite "{site.name}" updated successfully!'})
+        else:
+            errors = ", ".join([f"{k}: {v[0]}" for k, v in form.errors.items()])
+            return JsonResponse({'success': False, 'error': errors})
+
+class WorksiteDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        site = get_object_or_404(Worksite, pk=pk)
+        name = site.name
+        site.delete()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': f'Worksite "{name}" deleted successfully!'})
+        return redirect('worksites:list')
+
+class WorksiteDetailView(LoginRequiredMixin, DetailView):
+    model = Worksite
+    template_name = "worksites/worksite_detail.html"
+    context_object_name = "worksite"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Fetch real employees assigned to this worksite
+        context['assigned_employees'] = self.object.employees.all()
+        context['materials'] = self.object.materials.all()
+        return context

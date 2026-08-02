@@ -1,0 +1,59 @@
+{% load static %}
+<aside class="decore-sidebar">
+    <div class="decore-sidebar-brand d-flex align-items-center">
+        <img src="{% static 'images/logo.png' %}?v=2" alt="Decore logo" style="width: 28px; height: 28px; object-fit: contain; border-radius: 6px; margin-right: 10px; box-shadow: 0 2px 5px rgba(59, 130, 246, 0.25);">
+        <span class="fw-bold">Decore</span>
+    </div>
+
+    <nav class="decore-sidebar-nav">
+        <a class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}"
+           href="{% url 'dashboard:index' %}">
+            <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.app_name == 'employees' %}active{% endif %}"
+           href="{% url 'employees:list' %}">
+            <i class="bi bi-people"></i><span>Employees</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.app_name == 'worksites' %}active{% endif %}"
+           href="{% url 'worksites:list' %}">
+            <i class="bi bi-geo-alt"></i><span>Worksites</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.app_name == 'attendance' %}active{% endif %}"
+           href="{% url 'attendance:list' %}">
+            <i class="bi bi-calendar-check"></i><span>Attendance</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.app_name == 'salaries' %}active{% endif %}"
+           href="{% url 'salaries:list' %}">
+            <i class="bi bi-cash-stack"></i><span>Salaries</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.app_name == 'payments' %}active{% endif %}"
+           href="{% url 'payments:list' %}">
+            <i class="bi bi-credit-card"></i><span>Payments</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.app_name == 'materials' %}active{% endif %}"
+           href="{% url 'materials:list' %}">
+            <i class="bi bi-boxes"></i><span>Materials</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.app_name == 'expenses' %}active{% endif %}"
+           href="{% url 'expenses:list' %}">
+            <i class="bi bi-receipt"></i><span>Expenses</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.app_name == 'reports' %}active{% endif %}"
+           href="{% url 'reports:index' %}">
+            <i class="bi bi-bar-chart-line"></i><span>Reports</span>
+        </a>
+        <a class="nav-link {% if request.resolver_match.app_name == 'settings' %}active{% endif %}"
+           href="{% url 'settings:index' %}">
+            <i class="bi bi-gear"></i><span>Settings</span>
+        </a>
+    </nav>
+
+    <div class="decore-sidebar-footer">
+        <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="nav-link border-0 w-100 text-start bg-transparent">
+                <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+            </button>
+        </form>
+    </div>
+</aside>

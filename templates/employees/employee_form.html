@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} Employee{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">{{ action }} Employee</h4>
+        <div class="decore-breadcrumb">
+            <a href="{% url 'employees:list' %}" class="text-decore-primary">Employees</a> / {{ action }} Form
+        </div>
+    </div>
+</div>
+
+<div class="decore-card" style="max-width: 800px;">
+    <div class="decore-card-header">
+        <h6>Employee Information Form</h6>
+        <span class="small text-muted">* All fields are mock fields in Phase 1</span>
+    </div>
+    <div class="decore-card-body">
+        <form method="post" novalidate onsubmit="event.preventDefault(); decoreShowLoading(); setTimeout(function(){ decoreHideLoading(); decoreToast('Employee profile saved successfully!', 'success'); window.location.href='{% url 'employees:list' %}'; }, 800);">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Full Name</label>
+                    <input type="text" class="form-control" placeholder="e.g. John Doe" value="{{ employee.name|default:'' }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Role</label>
+                    <select class="form-select">
+                        <option {% if employee.role == 'Project Manager' %}selected{% endif %}>Project Manager</option>
+                        <option {% if employee.role == 'Lead Engineer' %}selected{% endif %}>Lead Engineer</option>
+                        <option {% if employee.role == 'Supervisor' %}selected{% endif %}>Supervisor</option>
+                        <option {% if employee.role == 'Lead Mason' %}selected{% endif %}>Lead Mason</option>
+                        <option {% if employee.role == 'Architect' %}selected{% endif %}>Architect</option>
+                        <option {% if employee.role == 'Electrician' %}selected{% endif %}>Electrician</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Phone Number</label>
+                    <input type="tel" class="form-control" placeholder="e.g. +91 98765 43210" value="{{ employee.phone|default:'' }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Assigned Worksite</label>
+                    <select class="form-select">
+                        <option {% if employee.worksite == 'Greenwood Residency' %}selected{% endif %}>Greenwood Residency</option>
+                        <option {% if employee.worksite == 'Metro Heights Phase 1' %}selected{% endif %}>Metro Heights Phase 1</option>
+                        <option {% if employee.worksite == 'Skyline Corporate Center' %}selected{% endif %}>Skyline Corporate Center</option>
+                        <option {% if employee.worksite == 'Bridge Street Plaza' %}selected{% endif %}>Bridge Street Plaza</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Daily Wage Rate (₹)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">₹</span>
+                        <input type="number" class="form-control" placeholder="0.00" value="{{ employee.wage|default:'' }}" required>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-semibold">Residential Address</label>
+                    <textarea class="form-control" rows="2" placeholder="Street, city, state" required>{{ employee.address|default:'' }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Photo</label>
+                    <input type="file" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Status</label>
+                    <select class="form-select">
+                        <option {% if employee.status == 'Active' %}selected{% endif %}>Active</option>
+                        <option {% if employee.status == 'On Leave' %}selected{% endif %}>On Leave</option>
+                        <option {% if employee.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-decore-primary"><i class="bi bi-check-lg me-1"></i>Save Employee</button>
+                <a href="{% url 'employees:list' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

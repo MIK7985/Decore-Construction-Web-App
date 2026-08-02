@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Worksite Detail - {{ worksite.name }}{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Worksite Profile</h4>
+        <div class="decore-breadcrumb">
+            <a href="{% url 'worksites:list' %}" class="text-decore-primary">Worksites</a> / {{ worksite.name }}
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'worksites:list' %}?edit={{ worksite.id }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
+        <form method="post" action="{% url 'worksites:delete' pk=worksite.id %}">{% csrf_token %}<button class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this worksite? Employees will be unassigned.')"><i class="bi bi-trash me-1"></i>Delete</button></form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-cash-stack text-success"></i></span>
+            <div>
+                <div class="decore-stat-label">Project Value / Income</div>
+                <div class="decore-stat-value text-success">₹{{ worksite.budget|floatformat:2|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-graph-down text-danger"></i></span>
+            <div>
+                <div class="decore-stat-label">Total Expenses / Spend</div>
+                <div class="decore-stat-value text-danger">₹{{ worksite.total_spend|floatformat:2|intcomma }}</div>
+                <div class="small text-danger mt-1 font-monospace" style="font-size: 0.65rem; line-height: 1.25; font-weight: 700;">
+                    Mat: ₹{{ worksite.material_cost|floatformat:2|intcomma }}<br>
+                    Lab: ₹{{ worksite.labor_cost|floatformat:2|intcomma }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            {% if worksite.profit >= 0 %}
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-graph-up-arrow text-success"></i></span>
+            <div>
+                <div class="decore-stat-label">Net Profit</div>
+                <div class="decore-stat-value text-success">₹{{ worksite.profit|floatformat:2|intcomma }}</div>
+                <div class="small text-success mt-1" style="font-size: 0.72rem; font-weight: 700;">+{{ worksite.profit_margin|floatformat:1 }}% Margin</div>
+            </div>
+            {% else %}
+            <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-graph-down-arrow text-danger"></i></span>
+            <div>
+                <div class="decore-stat-label">Net Profit</div>
+                <div class="decore-stat-value text-danger">-₹{{ worksite.profit_abs|floatformat:2|intcomma }}</div>
+                <div class="small text-danger mt-1" style="font-size: 0.72rem; font-weight: 700;">{{ worksite.profit_margin|floatformat:1 }}% Margin</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-people text-primary"></i></span>
+            <div>
+                <div class="decore-stat-label">Project Status & Crew</div>
+                <div class="decore-stat-value" style="font-size: 1.15rem; font-weight: 700;">
+                    {% if worksite.status == 'active' %}
+                    <span class="decore-status-badge badge-success"><span class="dot"></span>Active</span>
+                    {% elif worksite.status == 'completed' %}
+                    <span class="decore-status-badge badge-success"><span class="dot"></span>Completed</span>
+                    {% else %}
+                    <span class="decore-status-badge badge-warning"><span class="dot"></span>On Hold</span>
+                    {% endif %}
+                </div>
+                <div class="small text-muted mt-1" style="font-size: 0.75rem;">{{ assigned_employees|length }} Assigned Crew</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-5">
+        <div class="decore-card h-100">
+            <div class="decore-card-header"><h6>Site Information</h6></div>
+            <div class="decore-card-body">
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="text-muted small fw-semibold">Client Name</div>
+                        <div class="fw-bold mt-1 text-decore-primary">{{ worksite.client }}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">Site Supervisor</div>
+                        <div class="fw-bold mt-1">{% if worksite.supervisor %}{{ worksite.supervisor.get_full_name|default:worksite.supervisor.username }}{% else %}Unassigned{% endif %}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">Start Date</div>
+                        <div class="fw-bold mt-1">{{ worksite.start_date }}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">Location Address</div>
+                        <div class="fw-bold mt-1 text-muted"><i class="bi bi-geo-alt me-1"></i>{{ worksite.location }}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">Project Budget (Income)</div>
+                        <div class="fw-bold mt-1 text-success font-monospace">₹{{ worksite.budget|floatformat:2|intcomma }}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">Project Expenses (Spend)</div>
+                        <div class="fw-bold mt-1 text-danger font-monospace">₹{{ worksite.total_spend|floatformat:2|intcomma }}</div>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">Project Net Profit</div>
+                        {% if worksite.profit >= 0 %}
+                        <div class="fw-bold mt-1 text-success font-monospace">₹{{ worksite.profit|floatformat:2|intcomma }} <span class="badge bg-success-soft text-success font-monospace ms-1">+{{ worksite.profit_margin|floatformat:1 }}%</span></div>
+                        {% else %}
+                        <div class="fw-bold mt-1 text-danger font-monospace">-₹{{ worksite.profit_abs|floatformat:2|intcomma }} <span class="badge bg-danger-soft text-danger font-monospace ms-1">{{ worksite.profit_margin|floatformat:1 }}%</span></div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-semibold">Progress Completion</div>
+                        <div class="d-flex align-items-center gap-2 mt-1">
+                            <div class="progress flex-grow-1" style="height: 6px; border-radius: 10px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ worksite.progress }}%"></div>
+                            </div>
+                            <span class="small fw-bold">{{ worksite.progress }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="decore-card h-100">
+            <div class="decore-card-header">
+                <h6>Assigned Crew Members</h6>
+                <span class="badge bg-light text-dark border">{{ assigned_employees|length }} active</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table decore-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th class="d-none d-md-table-cell">Role</th>
+                            <th class="d-none d-md-table-cell">Phone</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in assigned_employees %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="avatar-sm bg-primary-soft text-primary rounded-circle fw-bold d-inline-flex align-items-center justify-content-center" style="width:28px; height:28px; font-size: 0.75rem;">
+                                        {{ emp.name|first|upper }}
+                                    </span>
+                                    <div>
+                                        <span class="fw-bold">{{ emp.name }}</span>
+                                        <div class="text-muted small d-md-none" style="font-size: 0.72rem; margin-top: 2px;">{{ emp.role }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">{{ emp.role }}</td>
+                            <td class="text-muted small d-none d-md-table-cell">{{ emp.phone }}</td>
+                            <td><span class="decore-status-badge badge-success"><span class="dot"></span>{{ emp.status }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4">No employees assigned to this worksite yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-12">
+        <div class="decore-card">
+            <div class="decore-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h6>Onsite Materials Inventory</h6>
+                <div class="fw-bold text-decore-primary font-monospace" style="font-size: 0.9rem;">
+                    Total Material Spend: ₹{{ worksite.material_cost|floatformat:2|intcomma }}
+                </div>
+            </div>
+            <div class="table-responsive px-4 pb-2">
+                <table class="decore-table-premium mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-nowrap-custom">Material Type</th>
+                            <th class="text-nowrap-custom text-end">Quantity / Stock</th>
+                            <th class="text-nowrap-custom text-end d-none d-md-table-cell">Unit Cost</th>
+                            <th class="text-nowrap-custom text-end">Total Cost</th>
+                            <th class="text-nowrap-custom">Status</th>
+                            <th class="text-nowrap-custom d-none d-lg-table-cell">Supplier</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mat in materials %}
+                        <tr>
+                            <td class="text-nowrap-custom">
+                                <span class="fw-bold text-decore-primary">{{ mat.name }}</span>
+                                <div class="text-muted small d-lg-none" style="font-size: 0.72rem; margin-top: 2px;">{{ mat.supplier }}</div>
+                            </td>
+                            <td class="text-nowrap-custom text-end font-monospace fw-semibold">{{ mat.quantity }} <span class="text-muted text-uppercase small" style="font-size: 0.7rem;">{{ mat.unit }}</span></td>
+                            <td class="text-nowrap-custom text-end font-monospace d-none d-md-table-cell">₹{{ mat.unit_price|floatformat:2|intcomma }}</td>
+                            <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost|floatformat:2|intcomma }}</td>
+                            <td class="text-nowrap-custom">
+                                {% if mat.status == 'Delivered' %}
+                                <span class="decore-status-badge badge-success"><span class="dot"></span>Delivered</span>
+                                {% elif mat.status == 'Ordered' %}
+                                <span class="decore-status-badge badge-warning"><span class="dot"></span>Ordered</span>
+                                {% else %}
+                                <span class="decore-status-badge badge-secondary"><span class="dot"></span>Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-nowrap-custom text-muted small d-none d-lg-table-cell">{{ mat.supplier }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="decore-empty-state py-4 text-center">
+                                    <i class="bi bi-boxes text-muted fs-4"></i>
+                                    <p class="mb-0 small text-muted mt-1">No materials allocated to this worksite yet.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

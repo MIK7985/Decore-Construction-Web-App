@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% block title %}Weekly Salaries{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Weekly Payroll / Salaries</h4>
+        <div class="decore-breadcrumb">Attendance-based weekly Saturday payroll</div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <!-- Month & Week Selection Form (GET query to view) -->
+        <form method="get" id="filterForm" action="{% url 'salaries:list' %}" class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-2">
+                <label for="filterMonth" class="small text-muted text-nowrap mb-0 fw-semibold">Month:</label>
+                <select id="filterMonth" class="form-select form-select-sm fw-medium shadow-sm" style="min-width: 140px;">
+                    {% for m in recent_months %}
+                    <option value="{{ m.val }}" {% if selected_month == m.val %}selected{% endif %}>{{ m.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <label for="payrollPeriod" class="small text-muted text-nowrap mb-0 fw-semibold">Pay Week (Sat):</label>
+                <select id="payrollPeriod" name="period" class="form-select form-select-sm fw-medium shadow-sm" style="min-width: 250px;" onchange="this.form.submit()">
+                    <!-- Populated dynamically via JavaScript -->
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-4 col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-cash-stack text-primary"></i></span>
+            <div>
+                <div class="decore-stat-label">Total Weekly Payable</div>
+                <div class="decore-stat-value text-primary">₹{{ totals.net_salary }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-check-circle text-success"></i></span>
+            <div>
+                <div class="decore-stat-label">Completed</div>
+                <div class="decore-stat-value text-success">₹{{ totals.paid }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            <span class="decore-stat-icon bg-warning-soft"><i class="bi bi-hourglass-split text-warning"></i></span>
+            <div>
+                <div class="decore-stat-label">Outstanding</div>
+                <div class="decore-stat-value text-warning">₹{{ totals.pending }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="decore-card">
+    <div class="decore-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="mb-0">Weekly Salary Calculations</h6>
+        <span class="badge bg-primary-soft text-primary border" style="font-size: 0.8rem;">
+            <i class="bi bi-calendar-check me-1"></i>Period: {{ start_date|date:"b d" }} - {{ end_date|date:"b d, Y" }}
+        </span>
+    </div>
+    <div class="table-responsive px-4 pb-2">
+        <table class="decore-table-premium mb-0">
+            <thead>
+                <tr>
+                    <th class="text-nowrap-custom">Employee</th>
+                    <th class="text-nowrap-custom d-none d-md-table-cell">Pay Week (Sat)</th>
+                    <th class="text-nowrap-custom text-end">Working Days</th>
+                    <th class="text-nowrap-custom text-end d-none d-md-table-cell">Rate / Day</th>
+                    <th class="text-nowrap-custom text-end d-none d-md-table-cell">Bonus</th>
+                    <th class="text-nowrap-custom text-end">Total Salary</th>
+                    <th class="text-nowrap-custom">Status</th>
+                    <th class="text-nowrap-custom text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sal in salaries %}
+                <tr>
+                    <td class="text-nowrap-custom">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="avatar-sm bg-primary-soft text-primary rounded-circle fw-bold d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:0.85rem;">
+                                {{ sal.employee.name|first|upper }}
+                            </span>
+                            <div>
+                                <span class="fw-bold text-decore-primary">{{ sal.employee.name }}</span>
+                                <div class="small text-muted">{{ sal.employee.role }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-nowrap-custom d-none d-md-table-cell text-muted small font-monospace">{{ sal.start_date|date:"b d" }} - {{ sal.end_date|date:"b d, Y" }}</td>
+                    <td class="text-nowrap-custom text-end font-monospace fw-semibold">{{ sal.present_days }} / 7</td>
+                    <td class="text-nowrap-custom text-end font-monospace d-none d-md-table-cell">₹{{ sal.daily_wage }}</td>
+                    <td class="text-nowrap-custom text-end font-monospace text-success d-none d-md-table-cell">+₹{{ sal.bonus }}</td>
+                    <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace">₹{{ sal.net_salary }}</td>
+                    <td class="text-nowrap-custom">
+                        {% if sal.status == 'completed' %}
+                        <span class="decore-status-badge badge-success"><span class="dot"></span>Completed</span>
+                        {% elif sal.status == 'preview' %}
+                        <span class="decore-status-badge badge-primary"><span class="dot"></span>Preview</span>
+                        {% else %}
+                        <span class="decore-status-badge badge-warning"><span class="dot"></span>Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap-custom text-end">
+                        {% if sal.unpaid_balance <= 0 %}
+                        <span class="text-success small fw-semibold"><i class="bi bi-check2-circle me-1"></i>Paid</span>
+                        {% else %}
+                        <button type="button" class="btn btn-sm btn-decore-primary" onclick="openPayModal('{{ sal.employee.id }}','{{ sal.employee.name|escapejs }}','{{ sal.present_days }}','{{ sal.daily_wage }}','{{ sal.bonus }}','{{ sal.deductions }}','{{ sal.net_salary }}','{{ sal.paid_amount }}','{{ sal.unpaid_balance }}','{{ selected_period }}')">
+                            {% if sal.paid_amount > 0 %}Pay Balance (₹{{ sal.unpaid_balance }}){% else %}Pay{% endif %}
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8">
+                        <div class="decore-empty-state py-4 text-center">
+                            <i class="bi bi-cash-stack text-muted fs-4"></i>
+                            <p class="mb-0 small text-muted mt-1">No attendance or payroll data exists for this week period.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for paying weekly balance -->
+<div class="modal fade" id="paySalaryModal" tabindex="-1" aria-labelledby="paySalaryTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <form id="paySalaryForm" method="post" action="{% url 'salaries:pay' %}">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="paySalaryTitle">Confirm Weekly Salary Payment</h5>
+                        <p class="small text-muted mb-0">Review payment details before recording it.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="employee_id" id="paymentEmployeeId">
+                    <input type="hidden" name="period" id="paymentPeriod">
+
+                    <div class="rounded-3 bg-light p-3 mb-3">
+                        <div class="small text-muted">Employee</div>
+                        <div class="fw-bold fs-5 mb-2" id="paymentEmployee"></div>
+                        
+                        <div class="row g-2 border-top pt-2" style="font-size: 0.85rem;">
+                            <div class="col-6 text-muted">Working Days:</div>
+                            <div class="col-6 text-end fw-semibold" id="paymentDays"></div>
+                            
+                            <div class="col-6 text-muted">Rate / Day:</div>
+                            <div class="col-6 text-end fw-semibold" id="paymentRate"></div>
+                            
+                            <div class="col-6 text-muted">Bonus:</div>
+                            <div class="col-6 text-end text-success fw-semibold" id="paymentBonus"></div>
+                            
+                            <div class="col-6 text-muted">Deductions:</div>
+                            <div class="col-6 text-end text-danger fw-semibold" id="paymentDeductions"></div>
+                            
+                            <div class="col-6 text-muted">Total Weekly Salary:</div>
+                            <div class="col-6 text-end fw-semibold" id="paymentTotal"></div>
+                            
+                            <div class="col-6 text-muted">Previously Paid:</div>
+                            <div class="col-6 text-end text-primary fw-semibold" id="paymentPaid"></div>
+                        </div>
+                        
+                        <div class="row g-2 border-top mt-2 pt-2">
+                            <div class="col-6 fw-bold text-success">Net Payable Balance:</div>
+                            <div class="col-6 text-end fw-bold text-success fs-5" id="paymentAmount"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="paymentMethod">Payment method</label>
+                        <select class="form-select" id="paymentMethod" name="method">
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="cash">Cash</option>
+                            <option value="upi">UPI</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label small fw-semibold" for="paymentReference">Reference number</label>
+                        <input class="form-control" id="paymentReference" name="reference_number" maxlength="100" placeholder="Optional transaction / receipt number">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-decore-primary" type="submit"><i class="bi bi-check2-circle me-1"></i>Confirm Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ weeks_grouped|json_script:"weeks-data" }}
+<script>
+const weeksData = JSON.parse(document.getElementById('weeks-data').textContent);
+const monthSelect = document.getElementById('filterMonth');
+const weekSelect = document.getElementById('payrollPeriod');
+const selectedWeekVal = "{{ selected_period }}";
+
+function populateWeeks(monthVal, selectDefault = false) {
+    weekSelect.innerHTML = '';
+    const weeks = weeksData[monthVal] || [];
+    weeks.forEach((w, idx) => {
+        const option = document.createElement('option');
+        option.value = w.val;
+        option.textContent = w.label;
+        if (selectDefault) {
+            if (idx === 0) option.selected = true;
+        } else {
+            if (w.val === selectedWeekVal) option.selected = true;
+        }
+        weekSelect.appendChild(option);
+    });
+}
+
+if (monthSelect && weekSelect) {
+    populateWeeks(monthSelect.value, false);
+    monthSelect.addEventListener('change', function() {
+        populateWeeks(this.value, true);
+        document.getElementById('filterForm').submit();
+    });
+}
+
+function openPayModal(empId, name, days, rate, bonus, deductions, netSalary, paidAmount, unpaidBalance, period) {
+    document.getElementById('paymentEmployeeId').value = empId;
+    document.getElementById('paymentPeriod').value = period;
+    
+    document.getElementById('paymentEmployee').textContent = name;
+    document.getElementById('paymentDays').textContent = days;
+    document.getElementById('paymentRate').textContent = `₹${rate}`;
+    document.getElementById('paymentBonus').textContent = `+₹${bonus}`;
+    document.getElementById('paymentDeductions').textContent = `-₹${deductions}`;
+    document.getElementById('paymentTotal').textContent = `₹${netSalary}`;
+    document.getElementById('paymentPaid').textContent = `₹${paidAmount}`;
+    document.getElementById('paymentAmount').textContent = `₹${unpaidBalance}`;
+    
+    document.getElementById('paymentReference').value = '';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('paySalaryModal')).show();
+}
+</script>
+{% endblock %}

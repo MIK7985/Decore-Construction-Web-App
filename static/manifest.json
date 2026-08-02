@@ -1,0 +1,40 @@
+{
+  "name": "Decore Developers",
+  "short_name": "Decore",
+  "description": "Premium construction project, attendance, payroll, and material management tool.",
+  "start_url": "/dashboard/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/images/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mark Attendance",
+      "short_name": "Attendance",
+      "description": "Log daily attendance sheet for crew members",
+      "url": "/attendance/sheet/",
+      "icons": [{ "src": "/static/images/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Active Worksites",
+      "short_name": "Worksites",
+      "description": "View active construction projects",
+      "url": "/worksites/",
+      "icons": [{ "src": "/static/images/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

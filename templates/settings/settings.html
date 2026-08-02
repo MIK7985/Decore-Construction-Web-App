@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Settings</h4>
+        <div class="decore-breadcrumb">Manage your profile, credentials, and user options</div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-3">
+        <div class="decore-card overflow-hidden">
+            <div class="list-group list-group-flush" id="settingsList" role="tablist">
+                <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="list" role="tab"><i class="bi bi-person me-2"></i>Profile Information</a>
+                <a href="#account" class="list-group-item list-group-item-action" data-bs-toggle="list" role="tab"><i class="bi bi-shield-lock me-2"></i>Security &amp; Account</a>
+                <a href="#preferences" class="list-group-item list-group-item-action" data-bs-toggle="list" role="tab"><i class="bi bi-sliders me-2"></i>Preferences</a>
+                <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="list" role="tab"><i class="bi bi-bell me-2"></i>Notifications</a>
+                {% if request.user.profile.role == 'engineer' or request.user.is_superuser %}
+                <a href="#supervisors" class="list-group-item list-group-item-action" data-bs-toggle="list" role="tab"><i class="bi bi-people me-2"></i>Supervisor Accounts</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-9">
+        <div class="tab-content">
+            <!-- Profile Tab -->
+            <div class="tab-pane fade show active" id="profile" role="tabpanel">
+                <div class="decore-card">
+                    <div class="decore-card-header"><h6>Profile Details</h6></div>
+                    <div class="decore-card-body">
+                        <form method="post" action="{% url 'settings:index' %}">{% csrf_token %}<input type="hidden" name="action" value="update_profile">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Full Name</label>
+                                    <input type="text" name="first_name" class="form-control" placeholder="First name" value="{{ request.user.first_name }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Last Name</label>
+                                    <input type="text" name="last_name" class="form-control" placeholder="Last name" value="{{ request.user.last_name }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Email Address</label>
+                                    <input type="email" name="email" class="form-control" placeholder="name@example.com" value="{{ request.user.email }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Account Role</label>
+                                    <input type="text" class="form-control" value="{{ request.user.profile.get_role_display }}" readonly>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-decore-primary mt-4"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Tab -->
+            <div class="tab-pane fade" id="account" role="tabpanel">
+                <div class="decore-card">
+                    <div class="decore-card-header"><h6>Update Security Credentials</h6></div>
+                    <div class="decore-card-body">
+                        <form method="post" action="{% url 'settings:index' %}">{% csrf_token %}<input type="hidden" name="action" value="change_password">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">New Password</label>
+                                    <input type="password" name="password" class="form-control" placeholder="Min. 8 characters" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Confirm Password</label>
+                                    <input type="password" name="password_confirmation" class="form-control" placeholder="Repeat password" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-decore-primary mt-4"><i class="bi bi-shield-check me-1"></i>Update Password</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preferences Tab -->
+            <div class="tab-pane fade" id="preferences" role="tabpanel">
+                <div class="decore-card">
+                    <div class="decore-card-header"><h6>Interface Preferences</h6></div>
+                    <div class="decore-card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="darkModeSwitch">
+                            <label class="form-check-label fw-semibold small" for="darkModeSwitch">Dark Mode Interface</label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="compactSidebar">
+                            <label class="form-check-label fw-semibold small" for="compactSidebar">Compact Sidebar Navigation</label>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-semibold">Preferred Language</label>
+                            <select class="form-select" style="max-width:240px;">
+                                <option>English (US)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Tab -->
+            <div class="tab-pane fade" id="notifications" role="tabpanel">
+                <div class="decore-card">
+                    <div class="decore-card-header"><h6>Notification Subscriptions</h6></div>
+                    <div class="decore-card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="notifyEmail" checked>
+                            <label class="form-check-label fw-semibold small" for="notifyEmail">Email logs for material check-ins</label>
+                        </div>
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" type="checkbox" id="notifySms">
+                            <label class="form-check-label fw-semibold small" for="notifySms">SMS updates for pending wage approvals</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supervisors Tab -->
+            {% if request.user.profile.role == 'engineer' or request.user.is_superuser %}
+            <div class="tab-pane fade" id="supervisors" role="tabpanel">
+                <div class="decore-card mb-4">
+                    <div class="decore-card-header"><h6>Add Supervisor Account</h6></div>
+                    <div class="decore-card-body">
+                        <form method="post" action="{% url 'settings:index' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="create_supervisor">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold">Username</label>
+                                    <input type="text" name="username" class="form-control" placeholder="e.g. supervisor_sam" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold">Email Address</label>
+                                    <input type="email" name="email" class="form-control" placeholder="e.g. sam@decore.com" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold">Password</label>
+                                    <input type="password" name="password" class="form-control" placeholder="Min. 8 characters" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-decore-primary mt-4"><i class="bi bi-person-plus me-1"></i>Create Supervisor Account</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="decore-card">
+                    <div class="decore-card-header"><h6>Existing Supervisors</h6></div>
+                    <div class="table-responsive">
+                        <table class="table decore-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sup in supervisors %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="avatar-sm bg-primary-soft text-primary rounded-circle fw-bold" style="width:28px; height:28px; font-size: 0.75rem;">
+                                                {{ sup.username|first|upper }}
+                                            </span>
+                                            <span class="fw-bold">{{ sup.username }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ sup.email }}</td>
+                                    <td><span class="badge bg-light text-dark border">Supervisor</span></td>
+                                    <td><span class="decore-status-badge badge-success"><span class="dot"></span>Active</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">No supervisor accounts created yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

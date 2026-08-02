@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Dashboard</h4>
+        <div class="decore-breadcrumb">Overview of your construction operations</div>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-download me-1"></i>Export</button>
+        <a href="{% url 'worksites:create' %}" class="btn btn-decore-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>New Worksite</a>
+    </div>
+</div>
+
+<!-- Statistic cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift">
+            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-people"></i></span>
+            <div>
+                <div class="decore-stat-label">Total Employees</div>
+                <div class="decore-stat-value">{{ stats.total_employees }}</div>
+                <div class="decore-stat-trend text-success"><i class="bi bi-arrow-up-short"></i>4.2% this month</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift">
+            <span class="decore-stat-icon bg-secondary-soft"><i class="bi bi-geo-alt"></i></span>
+            <div>
+                <div class="decore-stat-label">Active Worksites</div>
+                <div class="decore-stat-value">{{ stats.active_worksites }}</div>
+                <div class="decore-stat-trend text-success"><i class="bi bi-arrow-up-short"></i>2 new sites</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift">
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-cash-stack"></i></span>
+            <div>
+                <div class="decore-stat-label">Payments This Month</div>
+                <div class="decore-stat-value">₹{{ stats.payments_month|default:"0" }}</div>
+                <div class="decore-stat-trend text-success"><i class="bi bi-arrow-up-short"></i>12% vs last month</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift">
+            <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-receipt"></i></span>
+            <div>
+                <div class="decore-stat-label">Pending Expenses</div>
+                <div class="decore-stat-value">₹{{ stats.pending_expenses|default:"0" }}</div>
+                <div class="decore-stat-trend text-warning"><i class="bi bi-exclamation-triangle"></i>Requires review</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="decore-card h-100">
+            <div class="decore-card-header">
+                <h6>Monthly Expenses Overview</h6>
+                <span class="decore-badge badge-success"><span class="dot"></span>Live data</span>
+            </div>
+            <div class="decore-card-body">
+                <div class="decore-chart-wrap" style="height:280px;">
+                    <canvas id="expensesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="decore-card h-100">
+            <div class="decore-card-header">
+                <h6>Worksite Status Distribution</h6>
+            </div>
+            <div class="decore-card-body">
+                <div class="decore-chart-wrap" style="height:280px;">
+                    <canvas id="worksiteStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent activity -->
+<div class="decore-card mb-4">
+    <div class="decore-card-header">
+        <h6>Recent Operational Activity</h6>
+        <span class="small text-muted">Latest system logs</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table decore-table mb-0">
+            <thead>
+                <tr>
+                    <th>Activity</th>
+                    <th>Worksite</th>
+                    <th>User</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for act in activities %}
+                <tr>
+                    <td>
+                        <span class="d-flex align-items-center gap-2">
+                            <i class="bi {{ act.icon }} fs-6"></i>
+                            <span class="fw-semibold">{{ act.title }}</span>
+                        </span>
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ act.worksite }}</span></td>
+                    <td>{{ act.user }}</td>
+                    <td>
+                        {% if act.status == 'Completed' or act.status == 'Success' or act.status == 'Approved' %}
+                        <span class="decore-status-badge badge-success"><span class="dot"></span>{{ act.status }}</span>
+                        {% elif act.status == 'Pending' %}
+                        <span class="decore-status-badge badge-warning"><span class="dot"></span>{{ act.status }}</span>
+                        {% else %}
+                        <span class="decore-status-badge badge-danger"><span class="dot"></span>{{ act.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted small">{{ act.date }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">No recent activities available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var isDark = document.documentElement.getAttribute("data-bs-theme") === "dark";
+        var textColor = isDark ? "#94A3B8" : "#64748B";
+        var borderColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.06)";
+
+        var expensesCtx = document.getElementById("expensesChart");
+        if (expensesCtx) {
+            var gradient = expensesCtx.getContext('2d').createLinearGradient(0, 0, 0, 280);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
+            gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+            new Chart(expensesCtx, {
+                type: "line",
+                data: {
+                    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
+                    datasets: [{
+                        label: "Monthly Costs (₹)",
+                        data: [12000, 18500, 24000, 15000, 29000, 34000, 38500],
+                        borderColor: "#6366F1",
+                        borderWidth: 3,
+                        backgroundColor: gradient,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: "#6366F1",
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: textColor }
+                        },
+                        y: {
+                            grid: { color: borderColor },
+                            ticks: { color: textColor }
+                        }
+                    }
+                }
+            });
+        }
+
+        var statusCtx = document.getElementById("worksiteStatusChart");
+        if (statusCtx) {
+            new Chart(statusCtx, {
+                type: "doughnut",
+                data: {
+                    labels: ["Active", "On Hold", "Completed"],
+                    datasets: [{
+                        data: [2, 1, 1],
+                        backgroundColor: ["#6366F1", "#F59E0B", "#10B981"],
+                        borderWidth: isDark ? 2 : 1,
+                        borderColor: isDark ? "#1E293B" : "#FFFFFF"
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: textColor, padding: 15 }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Re-render chart text color when theme changes
+        var themeToggle = document.getElementById("darkModeToggle");
+        var themeSwitch = document.getElementById("darkModeSwitch");
+        var handleThemeChange = function() {
+            setTimeout(function() {
+                var nextDark = document.documentElement.getAttribute("data-bs-theme") === "dark";
+                var nextColor = nextDark ? "#94A3B8" : "#64748B";
+                var nextBorder = nextDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.06)";
+                
+                Chart.instances.forEach(function(chart) {
+                    if(chart.options.scales) {
+                        if(chart.options.scales.x) chart.options.scales.x.ticks.color = nextColor;
+                        if(chart.options.scales.y) {
+                            chart.options.scales.y.ticks.color = nextColor;
+                            chart.options.scales.y.grid.color = nextBorder;
+                        }
+                    }
+                    if(chart.options.plugins && chart.options.plugins.legend) {
+                        chart.options.plugins.legend.labels.color = nextColor;
+                    }
+                    chart.update();
+                });
+            }, 100);
+        };
+
+        if(themeToggle) themeToggle.addEventListener("click", handleThemeChange);
+        if(themeSwitch) themeSwitch.addEventListener("change", handleThemeChange);
+    });
+</script>
+{% endblock %}

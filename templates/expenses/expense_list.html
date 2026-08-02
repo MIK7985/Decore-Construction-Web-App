@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}Expenses{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Operational Expenses</h4>
+        <div class="decore-breadcrumb">Track site machinery rentals, utilities, fuel, and municipal permit costs</div>
+    </div>
+    <button type="button" class="btn btn-decore-primary btn-sm" onclick="openExpenseModal()">
+        <i class="bi bi-plus-lg me-1"></i>Add Expense
+    </button>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift">
+            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-receipt"></i></span>
+            <div>
+                <div class="decore-stat-label">Total Outgoings</div>
+                <div class="decore-stat-value">₹{{ stats.total_expenses|default:"0" }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift">
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-check-circle"></i></span>
+            <div>
+                <div class="decore-stat-label">Approved</div>
+                <div class="decore-stat-value">₹{{ stats.approved|default:"0" }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift">
+            <span class="decore-stat-icon bg-warning-soft"><i class="bi-exclamation-circle"></i></span>
+            <div>
+                <div class="decore-stat-label">Pending Approval</div>
+                <div class="decore-stat-value">₹{{ stats.pending|default:"0" }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="decore-card">
+    <div class="decore-card-header flex-wrap gap-3">
+        <form class="d-flex flex-grow-1" style="max-width:320px;" role="search" onsubmit="return false;">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
+                <input type="search" class="form-control" placeholder="Search expenses...">
+            </div>
+        </form>
+        <select class="form-select form-select-sm" style="width:auto;">
+            <option selected>All Categories</option>
+            <option>Fuel</option>
+            <option>Machinery Rental</option>
+            <option>Utilities</option>
+            <option>Safety Gear</option>
+            <option>Permits</option>
+        </select>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table decore-table mb-0">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Worksite</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th class="text-end">Amount</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exp in expenses %}
+                <tr>
+                    <td>
+                        <span class="fw-bold">{{ exp.category }}</span>
+                        <div class="small text-muted">{{ exp.description }}</div>
+                    </td>
+                    <td><span class="badge bg-light text-dark border">{{ exp.worksite }}</span></td>
+                    <td><span class="fw-semibold text-muted text-uppercase small">{{ exp.category }}</span></td>
+                    <td class="text-muted small">{{ exp.date }}</td>
+                    <td>
+                        {% if exp.status == 'Approved' %}
+                        <span class="decore-status-badge badge-success"><span class="dot"></span>Approved</span>
+                        {% else %}
+                        <span class="decore-status-badge badge-warning"><span class="dot"></span>Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold text-end text-decore-primary font-monospace">₹{{ exp.amount }}</td>
+                    <td class="text-end">
+                        {% if exp.status == 'Pending' %}
+                        <button class="btn btn-sm btn-decore-primary py-1 px-2" onclick="decoreConfirm('Approve expense of ₹{{ exp.amount }}?', function(){ decoreToast('Expense Approved', 'success'); })">Approve</button>
+                        {% else %}
+                        <button class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="decoreToast('Invoice downloaded', 'success')"><i class="bi-file-earmark-arrow-down"></i></button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="decore-empty-state">
+                            <i class="bi bi-receipt"></i>
+                            <p class="mb-0">No expenses logged yet.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="decore-card-body d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 border-top">
+        <span class="text-muted small">Showing {{ expenses|length }} entries</span>
+        <nav aria-label="Expense pagination">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <div class="modal-header border-bottom border-light">
+                <h5 class="modal-title fw-bold" id="expenseModalLabel">Add Expense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="expenseForm" onsubmit="handleExpenseSubmit(event)">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Expense Category</label>
+                            <select class="form-select" id="expCategory">
+                                <option>Fuel</option>
+                                <option>Machinery Rental</option>
+                                <option>Utilities</option>
+                                <option>Safety Gear</option>
+                                <option>Permits</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Assigned Worksite</label>
+                            <select class="form-select" id="expWorksite">
+                                <option>Greenwood Condos</option>
+                                <option>Metro Heights Phase 1</option>
+                                <option>Skyline Corporate Center</option>
+                                <option>Bridge Street Plaza</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Expense Amount (₹)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" class="form-control" id="expAmount" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Expense Date</label>
+                            <input type="date" class="form-control" id="expDate" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Expense Description</label>
+                            <textarea class="form-control" rows="2" id="expDescription" placeholder="Provide detailed details about the expense (e.g. Diesel for onsite generator)" required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Expense Status</label>
+                            <select class="form-select" id="expStatus">
+                                <option>Approved</option>
+                                <option>Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-decore-primary"><i class="bi bi-check-lg me-1"></i>Save Expense</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openExpenseModal() {
+        const modalEl = document.getElementById("expenseModal");
+        const form = document.getElementById("expenseForm");
+        form.reset();
+        
+        document.getElementById("expDate").value = new Date().toISOString().split('T')[0];
+        
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+
+    function handleExpenseSubmit(event) {
+        event.preventDefault();
+        const category = document.getElementById("expCategory").value;
+        const amount = document.getElementById("expAmount").value;
+        
+        decoreShowLoading();
+        
+        setTimeout(function() {
+            decoreHideLoading();
+            const modalEl = document.getElementById("expenseModal");
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.hide();
+            decoreToast(`Expense of ₹${amount} for "${category}" recorded successfully!`, 'success');
+        }, 800);
+    }
+</script>
+{% endblock %}

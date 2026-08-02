@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% block title %}Attendance Log{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Attendance Log</h4>
+        <div class="decore-breadcrumb">Daily attendance and check-in tracking</div>
+    </div>
+    {% if employees %}
+    <a href="{% url 'attendance:sheet' %}" class="btn btn-decore-primary btn-sm"><i class="bi bi-calendar-check me-1"></i>Mark Attendance Sheet</a>
+    {% else %}
+    <button class="btn btn-decore-primary btn-sm" disabled title="Add an employee before recording attendance"><i class="bi bi-calendar-check me-1"></i>Mark Attendance</button>
+    {% endif %}
+</div>
+
+{% if not employees %}
+<div class="alert alert-info d-flex align-items-center gap-2">
+    <i class="bi bi-info-circle"></i>
+    <span>Add a worksite and at least one employee before recording attendance.</span>
+    <a href="{% url 'worksites:list' %}?add=1" class="alert-link ms-auto">Add Worksite</a>
+    <a href="{% url 'employees:list' %}" class="alert-link">Add Employee</a>
+</div>
+{% endif %}
+
+<div class="decore-card">
+    <div class="decore-card-header flex-wrap gap-3">
+        <div class="input-group" style="max-width:320px;">
+            <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
+            <input class="form-control" placeholder="Search employee..." id="searchInput">
+        </div>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+            <label class="small fw-semibold text-muted text-nowrap mb-0" for="dateFilterInput"><i class="bi bi-filter me-1"></i>Filter Date:</label>
+            <input type="date" class="form-control form-control-sm" id="dateFilterInput" value="{{ filter_date }}" style="max-width: 170px;">
+            {% if filter_date != today_date %}
+            <a href="{% url 'attendance:list' %}" class="btn btn-outline-primary btn-sm px-2" style="font-size: 0.8rem;" title="Reset to today"><i class="bi bi-arrow-counterclockwise me-1"></i>Today</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="table-responsive px-4 pb-2">
+        <table class="decore-table-premium mb-0">
+            <thead>
+                <tr>
+                    <th class="text-nowrap-custom">Employee</th>
+                    <th class="text-nowrap-custom">Worksite</th>
+                    <th class="text-nowrap-custom d-none d-md-table-cell">Date</th>
+                    <th class="text-nowrap-custom d-none d-md-table-cell">Check-in</th>
+                    <th class="text-nowrap-custom d-none d-md-table-cell">Check-out</th>
+                    <th class="text-nowrap-custom">Status</th>
+                    <th class="text-nowrap-custom text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in attendance_records %}
+                <tr class="attendance-row" data-employee-name="{{ log.employee.name|lower }}">
+                    <td class="text-nowrap-custom">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="avatar-sm bg-primary-soft text-primary rounded-circle fw-bold d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:0.85rem;">
+                                {{ log.employee.name|first|upper }}
+                            </span>
+                            <div>
+                                <span class="fw-bold text-decore-primary">{{ log.employee.name }}</span>
+                                <div class="text-muted small d-md-none" style="font-size: 0.72rem; margin-top: 2px;">
+                                    {% if log.check_in %}{{ log.check_in|time:"h:i A" }}{% else %}—{% endif %} - {% if log.check_out %}{{ log.check_out|time:"h:i A" }}{% else %}—{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-nowrap-custom"><span class="badge bg-light text-dark border">{{ log.worksite|default:"—" }}</span></td>
+                    <td class="text-nowrap-custom d-none d-md-table-cell text-muted small font-monospace">{{ log.date|date:"d M Y" }}</td>
+                    <td class="text-nowrap-custom d-none d-md-table-cell text-muted font-monospace">{{ log.check_in|time:"h:i A"|default:"—" }}</td>
+                    <td class="text-nowrap-custom d-none d-md-table-cell text-muted font-monospace">{{ log.check_out|time:"h:i A"|default:"—" }}</td>
+                    <td class="text-nowrap-custom">
+                        <span class="decore-status-badge {% if log.status == 'absent' %}badge-danger{% elif log.status == 'late' %}badge-warning{% elif log.status == 'overtime' %}badge-info{% else %}badge-success{% endif %}">
+                            <span class="dot"></span>{{ log.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="text-nowrap-custom text-end">
+                        <button class="btn btn-sm btn-icon" onclick="openAttendanceModal('edit', {{ log.id }})"><i class="bi bi-pencil"></i></button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="decore-empty-state">
+                            <i class="bi bi-calendar-check"></i>
+                            <p class="mb-0">No attendance registered for this date.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="attendanceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="attendanceModalTitle">Mark Attendance</h5>
+                    <p class="small text-muted mb-0">Record a daily attendance entry for an active employee.</p>
+                </div>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="attendanceForm">
+                <div class="modal-body p-4">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Employee</label>
+                            <select class="form-select" id="attnEmployee" name="employee" required>
+                                <option value="">Select employee</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.id }}" data-worksite="{{ emp.worksite_id|default:'' }}">{{ emp.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Worksite</label>
+                            <select class="form-select" id="attnWorksite" name="worksite">
+                                <option value="">Unassigned</option>
+                                {% for site in worksites %}
+                                <option value="{{ site.id }}">{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Date</label>
+                            <input type="date" class="form-control" name="date" id="attnDate" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Check-in</label>
+                            <input type="time" class="form-control" name="check_in" id="attnCheckIn">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Check-out</label>
+                            <input type="time" class="form-control" name="check_out" id="attnCheckOut">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Status</label>
+                            <select class="form-select" name="status" id="attnStatus">
+                                <option value="present">Present</option>
+                                <option value="late">Late</option>
+                                <option value="absent">Absent</option>
+                                <option value="overtime">Overtime</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Notes</label>
+                            <input class="form-control" name="notes" id="attnNotes" maxlength="255" placeholder="Optional note">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-decore-primary" type="submit">Save Attendance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const attendanceData = {
+    {% for log in attendance_records %}
+    "{{ log.id }}": {
+        employee: "{{ log.employee_id }}",
+        worksite: "{{ log.worksite_id|default:'' }}",
+        date: "{{ log.date|date:'Y-m-d' }}",
+        checkIn: "{{ log.check_in|time:'H:i' }}",
+        checkOut: "{{ log.check_out|time:'H:i' }}",
+        status: "{{ log.status }}",
+        notes: "{{ log.notes|escapejs }}"
+    },
+    {% endfor %}
+};
+
+let attendanceEditId = null;
+
+function openAttendanceModal(mode, id) {
+    const form = document.getElementById('attendanceForm');
+    form.reset();
+    attendanceEditId = null;
+    document.getElementById('attnDate').value = '{{ today_date }}';
+    document.getElementById('attnStatus').value = 'present';
+    document.getElementById('attendanceModalTitle').textContent = mode === 'edit' ? 'Edit Attendance' : 'Mark Attendance';
+    
+    if (mode === 'edit') {
+        const r = attendanceData[id];
+        if (r) {
+            attendanceEditId = id;
+            document.getElementById('attnEmployee').value = r.employee;
+            document.getElementById('attnWorksite').value = r.worksite;
+            document.getElementById('attnDate').value = r.date;
+            document.getElementById('attnCheckIn').value = r.checkIn;
+            document.getElementById('attnCheckOut').value = r.checkOut;
+            document.getElementById('attnStatus').value = r.status;
+            document.getElementById('attnNotes').value = r.notes;
+        }
+    }
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('attendanceModal')).show();
+}
+
+document.getElementById('attnEmployee').addEventListener('change', function() {
+    document.getElementById('attnWorksite').value = this.selectedOptions[0]?.dataset.worksite || '';
+});
+
+// Client-side search logic
+document.getElementById('searchInput').addEventListener('input', function() {
+    const filter = this.value.toLowerCase();
+    const rows = document.querySelectorAll('.attendance-row');
+    rows.forEach(row => {
+        const name = row.dataset.employeeName;
+        row.style.display = name.includes(filter) ? '' : 'none';
+    });
+});
+
+// Date filter logic
+document.getElementById('dateFilterInput').addEventListener('change', function() {
+    decoreShowLoading();
+    if (this.value) {
+        window.location.href = "?date=" + this.value;
+    } else {
+        window.location.href = "?";
+    }
+});
+
+document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    decoreShowLoading();
+    fetch(attendanceEditId ? `/attendance/${attendanceEditId}/edit/` : '{% url "attendance:create" %}', {
+        method: 'POST',
+        body: new FormData(this),
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(async r => ({ ok: r.ok, data: await r.json() }))
+    .then(({ ok, data }) => {
+        decoreHideLoading();
+        if (ok) {
+            bootstrap.Modal.getInstance(document.getElementById('attendanceModal')).hide();
+            decoreToast(data.message, 'success');
+            setTimeout(() => location.reload(), 500);
+        } else {
+            decoreToast(data.error || 'Unable to save attendance.', 'danger');
+        }
+    })
+    .catch(() => {
+        decoreHideLoading();
+        decoreToast('Connection error.', 'danger');
+    });
+});
+</script>
+{% endblock %}

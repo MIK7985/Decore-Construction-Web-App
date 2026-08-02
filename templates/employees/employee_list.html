@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% block title %}Employees{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Employees</h4>
+        <div class="decore-breadcrumb">Manage your workforce and wage configurations</div>
+    </div>
+    <button type="button" class="btn btn-decore-primary btn-sm" onclick="openEmployeeModal('add')">
+        <i class="bi bi-plus-lg me-1"></i>Add Employee
+    </button>
+</div>
+
+<div class="decore-card">
+    <div class="decore-card-header flex-wrap gap-3">
+        <form class="d-flex flex-grow-1" style="max-width:320px;" role="search" onsubmit="return false;">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
+                <input type="search" class="form-control" placeholder="Search employees...">
+            </div>
+        </form>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" style="width:auto;">
+                <option selected>All Roles</option>
+                <option>Project Manager</option>
+                <option>Lead Engineer</option>
+                <option>Supervisor</option>
+                <option>Lead Mason</option>
+                <option>Architect</option>
+                <option>Electrician</option>
+            </select>
+            <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-filter"></i> Filter</button>
+        </div>
+    </div>
+
+    <div class="table-responsive px-4 pb-2">
+        <table class="decore-table-premium mb-0">
+            <thead>
+                <tr>
+                    <th class="text-nowrap-custom">Employee</th>
+                    <th class="text-nowrap-custom d-none d-md-table-cell">Role</th>
+                    <th class="text-nowrap-custom d-none d-md-table-cell">Worksite</th>
+                    <th class="text-nowrap-custom d-none d-lg-table-cell">Phone</th>
+                    <th class="text-nowrap-custom">Daily Wage</th>
+                    <th class="text-nowrap-custom">Status</th>
+                    <th class="text-nowrap-custom text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in employees %}
+                <tr>
+                    <td class="text-nowrap-custom">
+                        <div class="d-flex align-items-center gap-3">
+                            {% if emp.photo %}
+                            <img src="{{ emp.photo.url }}" class="rounded-circle border" style="width: 40px; height: 40px; object-fit: cover; display: block;">
+                            {% else %}
+                            <span class="avatar-premium">
+                                {{ emp.name|first|upper }}
+                            </span>
+                            {% endif %}
+                            <div>
+                                <a href="{% url 'employees:detail' pk=emp.id %}" class="fw-bold text-decore-primary text-decoration-none">{{ emp.name }}</a>
+                                <div class="text-muted small d-md-none" style="font-size: 0.72rem; margin-top: 2px;">
+                                    {{ emp.role }} &bull; {{ emp.worksite|default:"Unassigned" }}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-nowrap-custom d-none d-md-table-cell"><span class="fw-semibold">{{ emp.role }}</span></td>
+                    <td class="text-nowrap-custom d-none d-md-table-cell"><span class="badge bg-light text-dark border">{{ emp.worksite }}</span></td>
+                    <td class="text-nowrap-custom d-none d-lg-table-cell text-muted font-monospace">{{ emp.phone }}</td>
+                    <td class="text-nowrap-custom fw-bold text-decore-primary font-monospace">₹{{ emp.wage }}</td>
+                    <td class="text-nowrap-custom">
+                        {% if emp.status == 'Active' %}
+                        <span class="decore-status-badge badge-success"><span class="dot"></span>Active</span>
+                        {% elif emp.status == 'On Leave' %}
+                        <span class="decore-status-badge badge-warning"><span class="dot"></span>On Leave</span>
+                        {% else %}
+                        <span class="decore-status-badge badge-danger"><span class="dot"></span>Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap-custom text-end">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-icon" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'employees:detail' pk=emp.id %}"><i class="bi bi-eye me-2"></i>View Profile</a></li>
+                                <li><button type="button" class="dropdown-item" onclick="openEmployeeModal('edit', '{{ emp.id }}')"><i class="bi bi-pencil me-2"></i>Edit Employee</button></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><button type="button" class="dropdown-item text-danger" onclick="archiveEmployee('{{ emp.id }}', '{{ emp.name|escapejs }}')"><i class="bi bi-archive me-2"></i>Archive</button></li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8">
+                        <div class="decore-empty-state">
+                            <i class="bi bi-people"></i>
+                            <p class="mb-0">No employees registered yet.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="decore-card-body d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 border-top">
+        <span class="text-muted small">Showing {{ employees|length }} of {{ employees|length }} entries</span>
+        <nav aria-label="Employee pagination">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Add/Edit Employee Modal -->
+<div class="modal fade" id="employeeModal" tabindex="-1" aria-labelledby="employeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <div class="modal-header border-bottom border-light">
+                <h5 class="modal-title fw-bold" id="employeeModalLabel">Add Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="employeeForm" enctype="multipart/form-data" onsubmit="handleFormSubmit(event)">
+                    {% csrf_token %}
+                    <input type="hidden" id="employeeIdInput" value="">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Full Name</label>
+                            <input type="text" class="form-control" id="empName" name="name" placeholder="e.g. Rajesh Kumar" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Role</label>
+                            <select class="form-select" id="empRole" name="role">
+                                <option>Project Manager</option>
+                                <option>Lead Engineer</option>
+                                <option>Supervisor</option>
+                                <option>Lead Mason</option>
+                                <option>Architect</option>
+                                <option>Electrician</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Phone Number</label>
+                            <input type="tel" class="form-control" id="empPhone" name="phone" placeholder="e.g. +91 98765 43210" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Assigned Worksite</label>
+                            <select class="form-select" id="empWorksite" name="worksite">
+                                <option value="">Unassigned</option>
+                                {% for site in worksites %}
+                                <option value="{{ site.id }}">{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Daily Wage Rate (₹)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" class="form-control" id="empWage" name="wage" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Status</label>
+                            <select class="form-select" id="empStatus" name="status">
+                                <option>Active</option>
+                                <option>On Leave</option>
+                                <option>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Residential Address</label>
+                            <textarea class="form-control" rows="2" id="empAddress" name="address" placeholder="Street, city, state" required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Photo</label>
+                            <input type="file" class="form-control" id="empPhoto" name="photo">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Upload ID (e.g. Aadhaar Photo/PDF)</label>
+                            <input type="file" class="form-control" id="empIdPhoto" name="id_photo">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-decore-primary"><i class="bi bi-check-lg me-1"></i>Save Employee</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const employeesData = {
+        {% for emp in employees %}
+        "{{ emp.id }}": {
+            name: "{{ emp.name|escapejs }}",
+            role: "{{ emp.role|escapejs }}",
+            phone: "{{ emp.phone|escapejs }}",
+
+            worksite: "{{ emp.worksite_id|default:'' }}",
+            wage: "{{ emp.wage|escapejs }}",
+            address: "{{ emp.address|escapejs }}",
+            status: "{{ emp.status|escapejs }}"
+        },
+        {% endfor %}
+    };
+
+    function openEmployeeModal(action, id) {
+        const modalEl = document.getElementById("employeeModal");
+        const modalTitle = document.getElementById("employeeModalLabel");
+        const form = document.getElementById("employeeForm");
+        
+        form.reset();
+        
+        if (action === 'add') {
+            modalTitle.textContent = "Add Employee";
+            document.getElementById("employeeIdInput").value = "";
+            document.getElementById("empStatus").value = "Active";
+        } else if (action === 'edit' && id) {
+            modalTitle.textContent = "Edit Employee";
+            const emp = employeesData[id];
+            if (emp) {
+                document.getElementById("employeeIdInput").value = id;
+                document.getElementById("empName").value = emp.name;
+                document.getElementById("empRole").value = emp.role;
+                document.getElementById("empPhone").value = emp.phone;
+
+                document.getElementById("empWorksite").value = emp.worksite;
+                document.getElementById("empWage").value = emp.wage;
+                document.getElementById("empAddress").value = emp.address;
+                document.getElementById("empStatus").value = emp.status;
+            }
+        }
+        
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+
+    function handleFormSubmit(event) {
+        event.preventDefault();
+        const form = event.target;
+        const id = document.getElementById("employeeIdInput").value;
+        const name = document.getElementById("empName").value;
+        const formData = new FormData(form);
+        
+        decoreShowLoading();
+        
+        const url = id ? `/employees/${id}/edit/` : "/employees/create/";
+        
+        fetch(url, {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                const modalEl = document.getElementById("employeeModal");
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.hide();
+                decoreToast(data.message, 'success');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                decoreToast(data.error || "Failed to save employee profile.", 'danger');
+            }
+        })
+        .catch(err => {
+            decoreHideLoading();
+            decoreToast("Connection error.", 'danger');
+        });
+    }
+
+    function archiveEmployee(id, name) {
+        decoreConfirm(`Are you sure you want to archive ${name}?`, function() {
+            decoreShowLoading();
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/employees/${id}/delete/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                decoreHideLoading();
+                if (data.success) {
+                    decoreToast(data.message, 'warning');
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    decoreToast(data.error || "Failed to archive employee.", 'danger');
+                }
+            })
+            .catch(err => {
+                decoreHideLoading();
+                decoreToast("Connection error.", 'danger');
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const employeeId = new URLSearchParams(window.location.search).get('edit');
+        if (employeeId && employeesData[employeeId]) openEmployeeModal('edit', employeeId);
+    });
+</script>
+{% endblock %}

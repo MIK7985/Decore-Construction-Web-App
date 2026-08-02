@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Mark Attendance{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Mark Attendance</h4>
+        <div class="decore-breadcrumb">
+            <a href="{% url 'attendance:list' %}" class="text-decore-primary">Attendance</a> / Mark Form
+        </div>
+    </div>
+</div>
+
+<div class="decore-card" style="max-width: 800px;">
+    <div class="decore-card-header">
+        <h6>Attendance Input Form</h6>
+        <span class="small text-muted">* All fields are mock fields in Phase 1</span>
+    </div>
+    <div class="decore-card-body">
+        <form method="post" novalidate onsubmit="event.preventDefault(); decoreShowLoading(); setTimeout(function(){ decoreHideLoading(); decoreToast('Attendance logged successfully!', 'success'); window.location.href='{% url 'attendance:list' %}'; }, 800);">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Employee</label>
+                    <select class="form-select" required>
+                        <option selected disabled>Select an employee</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.id }}">{{ emp.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Worksite</label>
+                    <select class="form-select" required>
+                        <option selected disabled>Select a worksite</option>
+                        <option>Greenwood Condos</option>
+                        <option>Metro Heights Phase 1</option>
+                        <option>Skyline Corporate Center</option>
+                        <option>Bridge Street Plaza</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Date</label>
+                    <input type="date" class="form-control" value="2026-07-18" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Check-in Time</label>
+                    <input type="time" class="form-control" value="08:00">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">Check-out Time</label>
+                    <input type="time" class="form-control" value="17:00">
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-semibold d-block">Status</label>
+                    <div class="d-flex gap-4 mt-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="attendanceStatus" id="statusPresent" checked>
+                            <label class="form-check-label small" for="statusPresent">Present</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="attendanceStatus" id="statusAbsent">
+                            <label class="form-check-label small" for="statusAbsent">Absent</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="attendanceStatus" id="statusLate">
+                            <label class="form-check-label small" for="statusLate">Late / Half Day</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="attendanceStatus" id="statusOvertime">
+                            <label class="form-check-label small" for="statusOvertime">Overtime (1.5x)</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-decore-primary"><i class="bi bi-check-lg me-1"></i>Save Attendance</button>
+                <a href="{% url 'attendance:list' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

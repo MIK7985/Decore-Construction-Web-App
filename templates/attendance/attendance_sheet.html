@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}Daily Attendance Sheet{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Daily Attendance Sheet</h4>
+        <div class="decore-breadcrumb">
+            <a href="{% url 'attendance:list' %}" class="text-decore-primary">Attendance Log</a> / Daily Sheet
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4 align-items-center">
+    <div class="col-md-4">
+        <div class="decore-card p-3">
+            <label class="form-label small fw-semibold text-muted text-uppercase mb-2">Select Attendance Date</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                <input type="date" class="form-control" id="sheetDatePicker" value="{{ selected_date }}" max="{{ today_date }}">
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8 text-md-end mt-md-4">
+        <span class="text-muted small me-3"><i class="bi bi-info-circle me-1"></i>Pre-saved records for this date will load automatically.</span>
+    </div>
+</div>
+
+<div class="decore-card">
+    <div class="table-responsive px-4 py-2">
+        <table class="decore-table-premium mb-0">
+            <thead>
+                <tr>
+                    <th class="text-nowrap-custom" style="width: 280px;">Employee</th>
+                    <th class="text-nowrap-custom" style="width: 200px;">Worksite</th>
+                    <th class="text-nowrap-custom">Attendance Status</th>
+                    <th class="text-nowrap-custom d-none d-md-table-cell" style="width: 250px;">Notes / Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in sheet_records %}
+                <tr class="employee-row" data-employee-id="{{ row.employee.id }}">
+                    <td class="text-nowrap-custom">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="avatar-sm bg-primary-soft text-primary rounded-circle fw-bold d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:0.85rem;">
+                                {{ row.employee.name|first|upper }}
+                            </span>
+                            <div>
+                                <span class="fw-bold text-decore-primary">{{ row.employee.name }}</span>
+                                <div class="text-muted small" style="font-size: 0.72rem;">{{ row.employee.role }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-nowrap-custom">
+                        <select class="form-select form-select-sm worksite-select" style="max-width: 180px;">
+                            <option value="">Unassigned</option>
+                            {% for site in worksites %}
+                            <option value="{{ site.id }}" {% if site.id == row.worksite_id %}selected{% endif %}>{{ site.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td class="text-nowrap-custom">
+                        <!-- Desktop View: Buttons Group -->
+                        <div class="btn-group btn-group-sm d-none d-md-inline-flex" role="group">
+                            <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_pres_{{ row.employee.id }}" value="present" {% if row.status == "present" %}checked{% endif %}>
+                            <label class="btn btn-outline-success" for="status_pres_{{ row.employee.id }}"><i class="bi bi-check-circle me-1"></i>Present</label>
+
+                            <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_late_{{ row.employee.id }}" value="late" {% if row.status == "late" %}checked{% endif %}>
+                            <label class="btn btn-outline-warning" for="status_late_{{ row.employee.id }}"><i class="bi bi-clock me-1"></i>Late</label>
+
+                            <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_abs_{{ row.employee.id }}" value="absent" {% if row.status == "absent" %}checked{% endif %}>
+                            <label class="btn btn-outline-danger" for="status_abs_{{ row.employee.id }}"><i class="bi bi-x-circle me-1"></i>Absent</label>
+
+                            <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_ot_{{ row.employee.id }}" value="overtime" {% if row.status == "overtime" %}checked{% endif %}>
+                            <label class="btn btn-outline-info" for="status_ot_{{ row.employee.id }}"><i class="bi bi-plus-circle me-1"></i>Overtime</label>
+                        </div>
+                        <!-- Mobile View: Dropdown select -->
+                        <select class="form-select form-select-sm status-select d-inline-block d-md-none" style="min-width: 120px;" onchange="updateSelectColor(this)">
+                            <option value="present" style="background-color: #e6fcf5; color: #099268;" {% if row.status == "present" %}selected{% endif %}>Present</option>
+                            <option value="late" style="background-color: #fff9db; color: #f08c00;" {% if row.status == "late" %}selected{% endif %}>Late</option>
+                            <option value="absent" style="background-color: #fff5f5; color: #e03131;" {% if row.status == "absent" %}selected{% endif %}>Absent</option>
+                            <option value="overtime" style="background-color: #e3fafc; color: #0c8599;" {% if row.status == "overtime" %}selected{% endif %}>Overtime</option>
+                        </select>
+                    </td>
+                    <td class="text-nowrap-custom d-none d-md-table-cell">
+                        <input type="text" class="form-control form-control-sm notes-input" value="{{ row.notes }}" placeholder="Optional notes" maxlength="255">
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">
+                        <div class="decore-empty-state">
+                            <i class="bi bi-people"></i>
+                            <p class="mb-0">Please add employees first to log attendance.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if sheet_records %}
+    <div class="decore-card-body d-flex justify-content-end gap-2 border-top">
+        <a href="{% url 'attendance:list' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="button" class="btn btn-decore-primary" onclick="submitAttendanceSheet()"><i class="bi bi-check-lg me-1"></i>Submit Attendance Sheet</button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateSelectColor(selectEl) {
+        selectEl.classList.remove('status-select-present', 'status-select-late', 'status-select-absent', 'status-select-overtime');
+        const val = selectEl.value;
+        if (val === 'present') {
+            selectEl.classList.add('status-select-present');
+        } else if (val === 'late') {
+            selectEl.classList.add('status-select-late');
+        } else if (val === 'absent') {
+            selectEl.classList.add('status-select-absent');
+        } else if (val === 'overtime') {
+            selectEl.classList.add('status-select-overtime');
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll('.status-select').forEach(select => {
+            updateSelectColor(select);
+        });
+    });
+
+    document.getElementById("sheetDatePicker").addEventListener("change", function() {
+        decoreShowLoading();
+        window.location.href = "?date=" + this.value;
+    });
+
+    function submitAttendanceSheet() {
+        const rows = document.querySelectorAll(".employee-row");
+        const date = document.getElementById("sheetDatePicker").value;
+        const records = [];
+
+        rows.forEach(row => {
+            const employeeId = row.dataset.employeeId;
+            const worksiteId = row.querySelector(".worksite-select").value;
+            const notesInput = row.querySelector(".notes-input");
+            const notes = notesInput ? notesInput.value : '';
+            
+            // Query appropriate select dropdown or checked radio button
+            let status = 'present';
+            const mobileSelect = row.querySelector(".status-select");
+            if (mobileSelect && window.getComputedStyle(mobileSelect).display !== 'none') {
+                status = mobileSelect.value;
+            } else {
+                const checkedRadio = row.querySelector(".status-radio:checked");
+                status = checkedRadio ? checkedRadio.value : 'present';
+            }
+
+            records.push({
+                employee_id: parseInt(employeeId),
+                worksite_id: worksiteId ? parseInt(worksiteId) : null,
+                status: status,
+                notes: notes
+            });
+        });
+
+        decoreShowLoading();
+
+        // Get CSRF token
+        const csrfToken = "{{ csrf_token }}";
+
+        fetch("{% url 'attendance:sheet' %}", {
+            method: "POST",
+            body: JSON.stringify({
+                date: date,
+                records: records
+            }),
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Network status " + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                decoreToast(data.message, 'success');
+                setTimeout(() => {
+                    window.location.href = "{% url 'attendance:list' %}";
+                }, 1200);
+            } else {
+                decoreToast(data.error || "Failed to save attendance sheet.", 'danger');
+            }
+        })
+        .catch(err => {
+            console.warn("Save attendance offline trigger:", err);
+            if (window.decoreSaveOfflineAttendance) {
+                window.decoreSaveOfflineAttendance(date, records)
+                .then(() => {
+                    decoreHideLoading();
+                    decoreToast("Offline: Attendance saved locally on device. Will auto-sync once internet returns.", "warning");
+                    setTimeout(() => {
+                        window.location.href = "{% url 'attendance:list' %}";
+                    }, 2000);
+                })
+                .catch(dbErr => {
+                    decoreHideLoading();
+                    console.error("IndexedDB error:", dbErr);
+                    decoreToast("Offline save failed: " + dbErr.message, "danger");
+                });
+            } else {
+                decoreHideLoading();
+                decoreToast("Connection error: Attendance could not be saved.", 'danger');
+            }
+        });
+    }
+</script>
+{% endblock %}

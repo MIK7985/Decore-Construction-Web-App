@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Worksites{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Worksites</h4>
+        <div class="decore-breadcrumb">Track active, paused, and completed construction sites with financial performance metrics</div>
+    </div>
+    <button type="button" class="btn btn-decore-primary btn-sm" onclick="openWorksiteModal('create')"><i class="bi bi-plus-lg me-1"></i>Add Worksite</button>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-geo-alt text-primary"></i></span>
+            <div>
+                <div class="decore-stat-label">Active / Total Sites</div>
+                <div class="decore-stat-value text-primary">{{ stats.active }} <span style="font-size: 1.1rem; color: var(--decore-text-muted);">/ {{ stats.total }}</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-cash-stack text-success"></i></span>
+            <div>
+                <div class="decore-stat-label">Total Value (Income)</div>
+                <div class="decore-stat-value text-success">₹{{ stats.total_income|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-graph-down text-danger"></i></span>
+            <div>
+                <div class="decore-stat-label">Total Spend (Expenses)</div>
+                <div class="decore-stat-value text-danger">₹{{ stats.total_expenses|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            {% if stats.total_profit >= 0 %}
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-graph-up-arrow text-success"></i></span>
+            <div>
+                <div class="decore-stat-label">Overall Net Profit</div>
+                <div class="decore-stat-value text-success">₹{{ stats.total_profit|intcomma }}</div>
+                <div class="small text-success mt-1" style="font-size: 0.72rem; font-weight: 700;">+{{ stats.profit_margin|floatformat:1 }}% Avg Margin</div>
+            </div>
+            {% else %}
+            <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-graph-down-arrow text-danger"></i></span>
+            <div>
+                <div class="decore-stat-label">Overall Net Profit</div>
+                <div class="decore-stat-value text-danger">-₹{{ stats.total_profit_abs|intcomma }}</div>
+                <div class="small text-danger mt-1" style="font-size: 0.72rem; font-weight: 700;">{{ stats.profit_margin|floatformat:1 }}% Avg Margin</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="decore-card">
+    <div class="decore-card-header"><div class="input-group" style="max-width:320px;"><span class="input-group-text"><i class="bi bi-search text-muted"></i></span><input type="search" class="form-control" placeholder="Search worksites..." aria-label="Search worksites"></div></div>
+    <div class="table-responsive px-4 pb-2">
+        <table class="decore-table-premium mb-0">
+            <thead>
+                <tr>
+                    <th class="text-nowrap-custom">Site Name</th>
+                    <th class="text-nowrap-custom">Location</th>
+                    <th class="text-nowrap-custom text-end">Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for site in worksites %}
+                <tr>
+                    <td class="text-nowrap-custom">
+                        <span class="fw-bold text-decore-primary">{{ site.name }}</span>
+                        <div class="small text-muted" style="font-size: 0.78rem;">Client: {{ site.client }}</div>
+                    </td>
+                    <td class="text-nowrap-custom text-muted"><i class="bi bi-geo-alt me-1"></i>{{ site.location }}</td>
+                    <td class="text-nowrap-custom text-end">
+                        <a href="{% url 'worksites:detail' pk=site.id %}" class="btn btn-outline-primary btn-sm rounded-pill px-3" style="font-size: 0.8rem; font-weight: 600;"><i class="bi bi-eye me-1"></i>View Details</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">
+                        <div class="decore-empty-state">
+                            <i class="bi bi-geo-alt"></i>
+                            <p class="mb-0">No worksites registered yet.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="worksiteModal" tabindex="-1" aria-labelledby="worksiteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <div class="modal-header border-bottom border-light">
+                <div>
+                    <h5 class="modal-title fw-bold" id="worksiteModalLabel">Add Worksite</h5>
+                    <p class="small text-muted mb-0">Set up the project essentials now; financial details will auto-calculate margins.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="worksiteForm" method="post" action="{% url 'worksites:create' %}" onsubmit="handleWorksiteFormSubmit(event)">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="siteName">Site name</label>
+                            <input class="form-control" id="siteName" name="name" required maxlength="150" placeholder="e.g. Greenwood Residency">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="siteClient">Client</label>
+                            <input class="form-control" id="siteClient" name="client" required maxlength="150" placeholder="Client or company name">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold" for="siteLocation">Location</label>
+                            <input class="form-control" id="siteLocation" name="location" required maxlength="255" placeholder="Street, city, state">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="siteSupervisor">Supervisor</label>
+                            <select class="form-select" id="siteSupervisor" name="supervisor">
+                                <option value="">Unassigned</option>
+                                {% for supervisor in supervisors_list %}
+                                <option value="{{ supervisor.id }}">{{ supervisor.get_full_name|default:supervisor.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="siteBudget">Project value / Income (Budget) (₹)</label>
+                            <input type="number" class="form-control" id="siteBudget" name="budget" required min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="siteSpend">Project Expenses / Spend (₹)</label>
+                            <input type="number" class="form-control" id="siteSpend" name="spend" required min="0" step="0.01" placeholder="0.00" value="0.00">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="siteStartDate">Start date</label>
+                            <input type="date" class="form-control" id="siteStartDate" name="start_date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="siteStatus">Status</label>
+                            <select class="form-select" id="siteStatus" name="status">
+                                <option value="active">Active</option>
+                                <option value="on_hold">On hold</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="siteProgress">Progress (%)</label>
+                            <input type="number" class="form-control" id="siteProgress" name="progress" required min="0" max="100" value="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-decore-primary"><i class="bi bi-check-lg me-1"></i>Save Worksite</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const worksitesData = {
+    {% for site in worksites %}
+    "{{ site.id }}": {
+        name: "{{ site.name|escapejs }}",
+        client: "{{ site.client|escapejs }}",
+        location: "{{ site.location|escapejs }}",
+        supervisor: "{{ site.supervisor_id|default:'' }}",
+        budget: "{{ site.budget }}",
+        spend: "{{ site.spend }}",
+        startDate: "{{ site.start_date|date:'Y-m-d' }}",
+        status: "{{ site.status }}",
+        progress: "{{ site.progress }}"
+    },
+    {% endfor %}
+};
+
+function openWorksiteModal(mode, id) {
+  const form = document.getElementById('worksiteForm');
+  form.reset();
+  
+  document.getElementById('siteStatus').value = 'active';
+  document.getElementById('siteProgress').value = 0;
+  document.getElementById('siteSpend').value = '0.00';
+  document.getElementById('siteStartDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('worksiteModalLabel').textContent = mode === 'edit' ? 'Edit Worksite' : 'Add Worksite';
+  
+  form.action = mode === 'edit' ? `/worksites/${id}/edit/` : `{% url 'worksites:create' %}`;
+  
+  if (mode === 'edit') {
+    const site = worksitesData[id];
+    if (site) {
+      document.getElementById('siteName').value = site.name;
+      document.getElementById('siteClient').value = site.client;
+      document.getElementById('siteLocation').value = site.location;
+      document.getElementById('siteSupervisor').value = site.supervisor;
+      document.getElementById('siteBudget').value = site.budget;
+      document.getElementById('siteSpend').value = site.spend;
+      document.getElementById('siteStartDate').value = site.startDate;
+      document.getElementById('siteStatus').value = site.status;
+      document.getElementById('siteProgress').value = site.progress;
+    }
+  }
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('worksiteModal')).show();
+}
+
+function handleWorksiteFormSubmit(event) {
+  event.preventDefault();
+  const form = event.target;
+  const formData = new FormData(form);
+  decoreShowLoading();
+  
+  fetch(form.action, {
+      method: "POST",
+      body: formData,
+      headers: {
+          "X-Requested-With": "XMLHttpRequest"
+      }
+  })
+  .then(response => response.json())
+  .then(data => {
+      decoreHideLoading();
+      if (data.success) {
+          const modalEl = document.getElementById("worksiteModal");
+          const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+          modal.hide();
+          decoreToast(data.message, 'success');
+          setTimeout(() => window.location.reload(), 1000);
+      } else {
+          decoreToast(data.error || "Failed to save worksite.", 'danger');
+      }
+  })
+  .catch(err => {
+      decoreHideLoading();
+      decoreToast("Connection error.", 'danger');
+  });
+}
+
+function deleteWorksite(id, name) {
+  decoreConfirm(`Are you sure you want to delete worksite "${name}"?`, function() {
+      decoreShowLoading();
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      
+      fetch(`/worksites/${id}/delete/`, {
+          method: "POST",
+          headers: {
+              "X-CSRFToken": csrfToken,
+              "X-Requested-With": "XMLHttpRequest"
+          }
+      })
+      .then(response => response.json())
+      .then(data => {
+          decoreHideLoading();
+          if (data.success) {
+              decoreToast(data.message, 'warning');
+              setTimeout(() => window.location.reload(), 1000);
+          } else {
+              decoreToast(data.error || "Failed to delete worksite.", 'danger');
+          }
+      })
+      .catch(err => {
+          decoreHideLoading();
+          decoreToast("Connection error.", 'danger');
+      });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('add')) openWorksiteModal('create');
+  else if (params.get('edit') && worksitesData[params.get('edit')]) openWorksiteModal('edit', params.get('edit'));
+});
+</script>
+{% endblock %}

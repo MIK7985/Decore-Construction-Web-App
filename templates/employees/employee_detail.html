@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Employee Detail - {{ employee.name }}{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Employee Profile</h4>
+        <div class="decore-breadcrumb">
+            <a href="{% url 'employees:list' %}" class="text-decore-primary">Employees</a> / {{ employee.name }}
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'employees:list' %}?edit={{ employee.id }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
+        <form method="post" action="{% url 'employees:delete' pk=employee.id %}">{% csrf_token %}<button class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete {{ employee.name|escapejs }}?')"><i class="bi bi-trash me-1"></i>Delete</button></form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-lg-3">
+        <div class="decore-card text-center p-4">
+            {% if employee.photo %}
+            <img src="{{ employee.photo.url }}" class="rounded-circle mb-3 border shadow-sm mx-auto" style="width: 72px; height: 72px; object-fit: cover; display: block;">
+            {% else %}
+            <span class="avatar-md bg-primary-soft text-primary rounded-circle fw-bold mx-auto mb-3" style="width: 72px; height: 72px; font-size: 2rem; display: flex; align-items: center; justify-content: center;">
+                {{ employee.name|first|upper }}
+            </span>
+            {% endif %}
+            <h5 class="fw-bold mb-1">{{ employee.name }}</h5>
+            <div class="text-muted small mb-3">{{ employee.role }}</div>
+            
+            {% if employee.status == 'Active' %}
+            <span class="decore-status-badge badge-success"><span class="dot"></span>Active</span>
+            {% elif employee.status == 'On Leave' %}
+            <span class="decore-status-badge badge-warning"><span class="dot"></span>On Leave</span>
+            {% else %}
+            <span class="decore-status-badge badge-danger"><span class="dot"></span>Inactive</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-8 col-lg-9">
+        <div class="row g-3 mb-3">
+            <div class="col-sm-4">
+                <div class="decore-card decore-stat-card">
+                    <span class="decore-stat-icon bg-success-soft"><i class="bi bi-calendar-check"></i></span>
+                    <div>
+                        <div class="decore-stat-label">Attendance Rate</div>
+                        <div class="decore-stat-value">{{ attendance_rate }}%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="decore-card decore-stat-card">
+                    <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-cash-stack"></i></span>
+                    <div>
+                        <div class="decore-stat-label">Total Earnings</div>
+                        <div class="decore-stat-value">₹{{ total_paid }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <div class="decore-card decore-stat-card">
+                    <span class="decore-stat-icon bg-secondary-soft"><i class="bi bi-hammer"></i></span>
+                    <div>
+                        <div class="decore-stat-label">Days Worked</div>
+                        <div class="decore-stat-value">{{ days_worked }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="decore-card mb-4">
+            <div class="decore-card-header"><h6>Contact &amp; Contract Details</h6></div>
+            <div class="decore-card-body">
+                <div class="row g-3">
+                    <div class="col-sm-6 col-md-4">
+                        <div class="text-muted small fw-semibold">Phone Number</div>
+                        <div class="fw-semibold mt-1">{{ employee.phone }}</div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="text-muted small fw-semibold">Daily Wage Rate</div>
+                        <div class="fw-semibold mt-1 text-success font-monospace">₹{{ employee.wage }} / day</div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="text-muted small fw-semibold">Current Worksite</div>
+                        <div class="fw-semibold mt-1"><span class="badge bg-light text-dark border">{{ employee.worksite }}</span></div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="text-muted small fw-semibold">Date Registered</div>
+                        <div class="fw-semibold mt-1">{{ employee.joined }}</div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="text-muted small fw-semibold">Residential Address</div>
+                        <div class="fw-semibold mt-1 text-muted">{{ employee.address }}</div>
+                    </div>
+                    <div class="col-sm-6 col-md-4">
+                        <div class="text-muted small fw-semibold">ID / Aadhaar Document</div>
+                        <div class="fw-semibold mt-1">
+                            {% if employee.id_photo %}
+                            <a href="{{ employee.id_photo.url }}" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-2 d-inline-flex align-items-center gap-1" style="font-size:0.75rem;"><i class="bi bi-file-earmark-text"></i>View ID Document</a>
+                            {% else %}
+                            <span class="text-muted small">No ID Uploaded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="decore-card">
+            <div class="decore-card-header"><h6>Recent Payroll Transactions</h6></div>
+            <div class="table-responsive">
+                <table class="table decore-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Payment Date</th>
+                            <th class="d-none d-md-table-cell">Reference Number</th>
+                            <th class="d-none d-md-table-cell">Method</th>
+                            <th class="text-end">Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in payments %}
+                        <tr>
+                            <td>
+                                <span>{{ p.paid_on|date:"Y-m-d" }}</span>
+                                <div class="text-muted small d-md-none" style="font-size: 0.72rem; margin-top: 2px;">{{ p.get_method_display }} &bull; <code class="text-muted">{{ p.reference_number|default:"N/A" }}</code></div>
+                            </td>
+                            <td class="d-none d-md-table-cell"><code class="text-muted">{{ p.reference_number|default:"N/A" }}</code></td>
+                            <td class="d-none d-md-table-cell">{{ p.get_method_display }}</td>
+                            <td class="fw-bold text-end text-success">₹{{ p.amount|intcomma }}</td>
+                            <td><span class="decore-status-badge badge-success"><span class="dot"></span>Cleared</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="decore-empty-state p-3 text-center">
+                                    <i class="bi bi-cash-stack text-muted fs-4"></i>
+                                    <p class="mb-0 small text-muted mt-1">No payroll payments recorded for this employee yet.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

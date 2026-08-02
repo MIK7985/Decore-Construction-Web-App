@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Materials{% endblock %}
+
+{% block content %}
+<div class="decore-page-header">
+    <div>
+        <h4 class="decore-page-title">Material Inventory</h4>
+        <div class="decore-breadcrumb">Track onsite material stock levels, procurement values, and suppliers</div>
+    </div>
+    <button type="button" class="btn btn-decore-primary btn-sm" onclick="openMaterialModal()">
+        <i class="bi bi-plus-lg me-1"></i>Add Material
+    </button>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-xl-4 col-md-6">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift">
+            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-boxes text-primary"></i></span>
+            <div>
+                <div class="decore-stat-label">Total Material Cost</div>
+                <div class="decore-stat-value text-primary">₹{{ stats.total_materials_cost|default:"0" }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift">
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-truck text-success"></i></span>
+            <div>
+                <div class="decore-stat-label">Delivered Stock</div>
+                <div class="decore-stat-value text-success">₹{{ stats.delivered_cost|default:"0" }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift">
+            <span class="decore-stat-icon bg-warning-soft"><i class="bi bi-clock-history text-warning"></i></span>
+            <div>
+                <div class="decore-stat-label">Ordered / Transit</div>
+                <div class="decore-stat-value text-warning">₹{{ stats.pending_cost|default:"0" }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="decore-card">
+    <div class="decore-card-header flex-wrap gap-3">
+        <form class="d-flex flex-grow-1" style="max-width:320px;" role="search" onsubmit="return false;">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
+                <input type="search" class="form-control" placeholder="Search materials..." id="materialsSearch">
+            </div>
+        </form>
+        <select class="form-select form-select-sm" style="width:auto;" id="worksiteFilter" onchange="filterByWorksite(this.value)">
+            <option value="">All Worksites</option>
+            {% for site in worksites %}
+            <option value="{{ site.id }}" {% if site.id|stringformat:"d" == selected_worksite_id %}selected{% endif %}>{{ site.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="table-responsive px-4 pb-2">
+        <table class="decore-table-premium mb-0">
+            <thead>
+                <tr>
+                    <th class="text-nowrap-custom">Material Type</th>
+                    <th class="text-nowrap-custom">Assigned Worksite</th>
+                    <th class="text-nowrap-custom text-end">Stock / Qty</th>
+                    <th class="text-nowrap-custom text-end">Unit Cost</th>
+                    <th class="text-nowrap-custom text-end">Total Value</th>
+                    <th class="text-nowrap-custom">Procurement Status</th>
+                    <th class="text-nowrap-custom">Supplier</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mat in materials %}
+                <tr class="material-row" data-material-name="{{ mat.name|lower }}">
+                    <td class="text-nowrap-custom"><span class="fw-bold text-decore-primary">{{ mat.name }}</span></td>
+                    <td class="text-nowrap-custom"><span class="badge bg-light text-dark border">{{ mat.worksite.name }}</span></td>
+                    <td class="text-nowrap-custom text-end font-monospace fw-semibold">{{ mat.quantity }} <span class="text-muted text-uppercase small" style="font-size:0.7rem;">{{ mat.unit }}</span></td>
+                    <td class="text-nowrap-custom text-end font-monospace">₹{{ mat.unit_price }}</td>
+                    <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost }}</td>
+                    <td class="text-nowrap-custom">
+                        {% if mat.status == 'Delivered' %}
+                        <span class="decore-status-badge badge-success"><span class="dot"></span>Delivered</span>
+                        {% elif mat.status == 'Ordered' %}
+                        <span class="decore-status-badge badge-warning"><span class="dot"></span>Ordered</span>
+                        {% else %}
+                        <span class="decore-status-badge badge-secondary"><span class="dot"></span>Pending</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-nowrap-custom text-muted small">{{ mat.supplier }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="decore-empty-state">
+                            <i class="bi bi-boxes"></i>
+                            <p class="mb-0">No materials registered in inventory yet.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Material Modal -->
+<div class="modal fade" id="materialModal" tabindex="-1" aria-labelledby="materialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <div class="modal-header border-bottom border-light">
+                <div>
+                    <h5 class="modal-title fw-bold" id="materialModalLabel">Add Material</h5>
+                    <p class="small text-muted mb-0">Record new stock inventory deliveries or transit orders.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="materialForm" method="post" action="{% url 'materials:create' %}" onsubmit="handleMaterialSubmit(event)">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="matName">Material Name</label>
+                            <input type="text" class="form-control" id="matName" name="name" placeholder="e.g. Portland Cement" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="matWorksite">Assigned Worksite</label>
+                            <select class="form-select" id="matWorksite" name="worksite" required>
+                                <option value="">Select worksite</option>
+                                {% for site in worksites %}
+                                <option value="{{ site.id }}">{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold" for="matQty">Quantity</label>
+                            <input type="number" step="0.01" class="form-control" id="matQty" name="quantity" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold" for="matUnit">Measurement Unit</label>
+                            <input type="text" class="form-control" id="matUnit" name="unit" placeholder="e.g. Bags, Tons, Pcs" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold" for="matPrice">Unit Price (₹)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" step="0.01" class="form-control" id="matPrice" name="unit_price" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="matSupplier">Supplier Name</label>
+                            <input type="text" class="form-control" id="matSupplier" name="supplier" placeholder="e.g. BuildMart Materials" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="matStatus">Procurement Status</label>
+                            <select class="form-select" id="matStatus" name="status" required>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Ordered">Ordered</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-decore-primary"><i class="bi bi-check-lg me-1"></i>Save Material</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openMaterialModal() {
+        const modalEl = document.getElementById("materialModal");
+        const form = document.getElementById("materialForm");
+        form.reset();
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+
+    function filterByWorksite(val) {
+        decoreShowLoading();
+        if (val) {
+            window.location.href = "?worksite=" + val;
+        } else {
+            window.location.href = "?";
+        }
+    }
+
+    // Client-side instant search filtering
+    document.getElementById("materialsSearch").addEventListener("input", function() {
+        const query = this.value.toLowerCase();
+        const rows = document.querySelectorAll(".material-row");
+        rows.forEach(row => {
+            const name = row.dataset.materialName;
+            row.style.display = name.includes(query) ? "" : "none";
+        });
+    });
+
+    function handleMaterialSubmit(event) {
+        event.preventDefault();
+        decoreShowLoading();
+        
+        const form = event.target;
+        fetch(form.action, {
+            method: "POST",
+            body: new FormData(form),
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById("materialModal")).hide();
+                decoreToast(data.message, 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 800);
+            } else {
+                decoreToast(data.error || "Failed to add material.", 'danger');
+            }
+        })
+        .catch(err => {
+            decoreHideLoading();
+            decoreToast("Connection error.", 'danger');
+        });
+    }
+</script>
+{% endblock %}
