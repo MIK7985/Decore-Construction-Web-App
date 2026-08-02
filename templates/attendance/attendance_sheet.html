@@ -3,10 +3,15 @@
 
 {% block content %}
 <div class="decore-page-header">
-    <div>
-        <h4 class="decore-page-title">Daily Attendance Sheet</h4>
-        <div class="decore-breadcrumb">
-            <a href="{% url 'attendance:list' %}" class="text-decore-primary">Attendance Log</a> / Daily Sheet
+    <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'attendance:list' %}" class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; padding: 0;">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h4 class="decore-page-title mb-0">Daily Attendance Sheet</h4>
+            <div class="decore-breadcrumb">
+                <a href="{% url 'attendance:list' %}" class="text-decore-primary">Attendance Log</a> / Daily Sheet
+            </div>
         </div>
     </div>
 </div>
