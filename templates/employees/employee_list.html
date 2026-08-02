@@ -4,12 +4,23 @@
 {% block content %}
 <div class="decore-page-header">
     <div>
-        <h4 class="decore-page-title">Employees</h4>
-        <div class="decore-breadcrumb">Manage your workforce and wage configurations</div>
+        <h4 class="decore-page-title">{% if show_archived %}Archived Employees{% else %}Employees{% endif %}</h4>
+        <div class="decore-breadcrumb">{% if show_archived %}View and restore archived workforce profiles{% else %}Manage your active workforce and wage configurations{% endif %}</div>
     </div>
-    <button type="button" class="btn btn-decore-primary btn-sm" onclick="openEmployeeModal('add')">
-        <i class="bi bi-plus-lg me-1"></i>Add Employee
-    </button>
+    <div class="d-flex gap-2">
+        {% if show_archived %}
+        <a href="{% url 'employees:list' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-people me-1"></i>View Active
+        </a>
+        {% else %}
+        <a href="?show_archived=true" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-archive me-1"></i>View Archived
+        </a>
+        <button type="button" class="btn btn-decore-primary btn-sm" onclick="openEmployeeModal('add')">
+            <i class="bi bi-plus-lg me-1"></i>Add Employee
+        </button>
+        {% endif %}
+    </div>
 </div>
 
 <div class="decore-card">
@@ -81,6 +92,11 @@
                         {% endif %}
                     </td>
                     <td class="text-nowrap-custom text-end">
+                        {% if show_archived %}
+                        <button class="btn btn-sm btn-outline-success px-3 rounded-pill" onclick="unarchiveEmployee('{{ emp.id }}', '{{ emp.name|escapejs }}')">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Restore
+                        </button>
+                        {% else %}
                         <div class="dropdown">
                             <button class="btn btn-sm btn-icon" data-bs-toggle="dropdown" data-bs-boundary="viewport"><i class="bi bi-three-dots-vertical"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end">
@@ -90,6 +106,7 @@
                                 <li><button type="button" class="dropdown-item text-danger" onclick="archiveEmployee('{{ emp.id }}', '{{ emp.name|escapejs }}')"><i class="bi bi-archive me-2"></i>Archive</button></li>
                             </ul>
                         </div>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}
@@ -375,6 +392,35 @@
                     setTimeout(() => window.location.href = window.location.pathname, 1000);
                 } else {
                     decoreToast(data.error || "Failed to archive employee.", 'danger');
+                }
+            })
+            .catch(err => {
+                decoreHideLoading();
+                decoreToast("Connection error.", 'danger');
+            });
+        });
+    }
+
+    function unarchiveEmployee(id, name) {
+        decoreConfirm(`Are you sure you want to restore "${name}"?`, function() {
+            decoreShowLoading();
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/employees/${id}/unarchive/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                decoreHideLoading();
+                if (data.success) {
+                    decoreToast(data.message, 'success');
+                    setTimeout(() => window.location.href = window.location.pathname, 1000);
+                } else {
+                    decoreToast(data.error || "Failed to restore employee.", 'danger');
                 }
             })
             .catch(err => {

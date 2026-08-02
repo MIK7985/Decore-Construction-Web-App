@@ -19,11 +19,15 @@ class EmployeeListView(LoginRequiredMixin, ListView):
     context_object_name = "employees"
 
     def get_queryset(self):
+        show_archived = self.request.GET.get('show_archived') == 'true'
+        if show_archived:
+            return Employee.objects.filter(is_archived=True).select_related("worksite")
         return Employee.objects.filter(is_archived=False).select_related("worksite")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["worksites"] = Worksite.objects.all()
+        context["show_archived"] = self.request.GET.get('show_archived') == 'true'
         return context
 
 class EmployeeCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
@@ -92,3 +96,14 @@ class EmployeeDeleteView(LoginRequiredMixin, EngineerRequiredMixin, View):
         employee.status = EmployeeStatus.INACTIVE
         employee.save(update_fields=["is_archived", "status"])
         return JsonResponse({'success': True, 'message': f'Employee "{name}" archived successfully!'})
+
+
+class EmployeeUnarchiveView(LoginRequiredMixin, EngineerRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        employee = get_object_or_404(Employee, pk=pk)
+        name = employee.name
+        employee.is_archived = False
+        employee.status = EmployeeStatus.ACTIVE
+        employee.save(update_fields=["is_archived", "status"])
+        return JsonResponse({'success': True, 'message': f'Employee "{name}" restored successfully!'})
+
