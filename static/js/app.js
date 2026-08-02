@@ -367,4 +367,19 @@
     setTimeout(window.decoreSyncPendingAttendance, 2000);
   });
   window.addEventListener("online", window.decoreSyncPendingAttendance);
+
+  // iOS PWA Standalone Mode Navigation Hack
+  // Prevents internal links from launching standard Safari browser wrapper
+  if (("standalone" in window.navigator) && window.navigator.standalone) {
+    document.addEventListener('click', function(event) {
+      var noddy = event.target;
+      while (noddy && noddy.nodeName !== "A" && noddy.nodeName !== "HTML") {
+        noddy = noddy.parentNode;
+      }
+      if (noddy && 'href' in noddy && noddy.href.indexOf('http') !== -1 && (noddy.href.indexOf(document.location.host) !== -1)) {
+        event.preventDefault();
+        document.location.href = noddy.href;
+      }
+    }, false);
+  }
 })();
