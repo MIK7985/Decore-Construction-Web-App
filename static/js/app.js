@@ -362,11 +362,28 @@
     });
   };
 
+  function updateOnlineStatus() {
+    var badge = document.getElementById("decoreOfflineBadge");
+    if (!badge) return;
+    if (navigator.onLine) {
+      badge.classList.add("d-none");
+      badge.classList.remove("d-inline-flex");
+    } else {
+      badge.classList.remove("d-none");
+      badge.classList.add("d-inline-flex");
+    }
+  }
+
   // Run auto-sync triggers
   document.addEventListener("DOMContentLoaded", function () {
+    updateOnlineStatus();
     setTimeout(window.decoreSyncPendingAttendance, 2000);
   });
-  window.addEventListener("online", window.decoreSyncPendingAttendance);
+  window.addEventListener("online", function() {
+    updateOnlineStatus();
+    window.decoreSyncPendingAttendance();
+  });
+  window.addEventListener("offline", updateOnlineStatus);
 
   // iOS PWA Standalone Mode Navigation Hack
   // Prevents internal links from launching standard Safari browser wrapper
