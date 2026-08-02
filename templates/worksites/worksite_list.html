@@ -26,7 +26,7 @@
             <span class="decore-stat-icon bg-success-soft"><i class="bi bi-cash-stack text-success"></i></span>
             <div>
                 <div class="decore-stat-label">Total Value (Income)</div>
-                <div class="decore-stat-value text-success">₹{{ stats.total_income|intcomma }}</div>
+                <div class="decore-stat-value text-success">₹{{ stats.total_income|floatformat:2|intcomma }}</div>
             </div>
         </div>
     </div>
@@ -35,7 +35,7 @@
             <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-graph-down text-danger"></i></span>
             <div>
                 <div class="decore-stat-label">Total Spend (Expenses)</div>
-                <div class="decore-stat-value text-danger">₹{{ stats.total_expenses|intcomma }}</div>
+                <div class="decore-stat-value text-danger">₹{{ stats.total_expenses|floatformat:2|intcomma }}</div>
             </div>
         </div>
     </div>
@@ -45,14 +45,14 @@
             <span class="decore-stat-icon bg-success-soft"><i class="bi bi-graph-up-arrow text-success"></i></span>
             <div>
                 <div class="decore-stat-label">Overall Net Profit</div>
-                <div class="decore-stat-value text-success">₹{{ stats.total_profit|intcomma }}</div>
+                <div class="decore-stat-value text-success">₹{{ stats.total_profit|floatformat:2|intcomma }}</div>
                 <div class="small text-success mt-1" style="font-size: 0.72rem; font-weight: 700;">+{{ stats.profit_margin|floatformat:1 }}% Avg Margin</div>
             </div>
             {% else %}
             <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-graph-down-arrow text-danger"></i></span>
             <div>
                 <div class="decore-stat-label">Overall Net Profit</div>
-                <div class="decore-stat-value text-danger">-₹{{ stats.total_profit_abs|intcomma }}</div>
+                <div class="decore-stat-value text-danger">-₹{{ stats.total_profit_abs|floatformat:2|intcomma }}</div>
                 <div class="small text-danger mt-1" style="font-size: 0.72rem; font-weight: 700;">{{ stats.profit_margin|floatformat:1 }}% Avg Margin</div>
             </div>
             {% endif %}

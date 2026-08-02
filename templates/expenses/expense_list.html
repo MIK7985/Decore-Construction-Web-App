@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %}Expenses{% endblock %}
 
 {% block content %}
@@ -18,7 +19,7 @@
             <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-receipt"></i></span>
             <div>
                 <div class="decore-stat-label">Total Outgoings</div>
-                <div class="decore-stat-value">₹{{ stats.total_expenses|default:"0" }}</div>
+                <div class="decore-stat-value">₹{{ stats.total_expenses|default:"0.00"|floatformat:2|intcomma }}</div>
             </div>
         </div>
     </div>
@@ -27,7 +28,7 @@
             <span class="decore-stat-icon bg-success-soft"><i class="bi bi-check-circle"></i></span>
             <div>
                 <div class="decore-stat-label">Approved</div>
-                <div class="decore-stat-value">₹{{ stats.approved|default:"0" }}</div>
+                <div class="decore-stat-value">₹{{ stats.approved|default:"0.00"|floatformat:2|intcomma }}</div>
             </div>
         </div>
     </div>
@@ -36,7 +37,7 @@
             <span class="decore-stat-icon bg-warning-soft"><i class="bi-exclamation-circle"></i></span>
             <div>
                 <div class="decore-stat-label">Pending Approval</div>
-                <div class="decore-stat-value">₹{{ stats.pending|default:"0" }}</div>
+                <div class="decore-stat-value">₹{{ stats.pending|default:"0.00"|floatformat:2|intcomma }}</div>
             </div>
         </div>
     </div>

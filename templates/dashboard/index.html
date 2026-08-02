@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Dashboard{% endblock %}
 
@@ -41,7 +42,7 @@
             <span class="decore-stat-icon bg-success-soft"><i class="bi bi-cash-stack"></i></span>
             <div>
                 <div class="decore-stat-label">Payments This Month</div>
-                <div class="decore-stat-value">₹{{ stats.payments_month|default:"0" }}</div>
+                <div class="decore-stat-value">₹{{ stats.payments_month|default:"0.00"|floatformat:2|intcomma }}</div>
                 <div class="decore-stat-trend text-success"><i class="bi bi-arrow-up-short"></i>12% vs last month</div>
             </div>
         </div>
@@ -51,7 +52,7 @@
             <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-receipt"></i></span>
             <div>
                 <div class="decore-stat-label">Pending Expenses</div>
-                <div class="decore-stat-value">₹{{ stats.pending_expenses|default:"0" }}</div>
+                <div class="decore-stat-value">₹{{ stats.pending_expenses|default:"0.00"|floatformat:2|intcomma }}</div>
                 <div class="decore-stat-trend text-warning"><i class="bi bi-exclamation-triangle"></i>Requires review</div>
             </div>
         </div>
