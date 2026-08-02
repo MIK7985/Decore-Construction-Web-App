@@ -1,6 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
-from django.db.models import Sum, F, ExpressionWrapper, DecimalField
+from django.db.models import Sum, F, ExpressionWrapper
+from django.db import models
 
 from employees.models import Employee
 from worksites.models import Worksite
@@ -20,7 +21,7 @@ class ReportsView(LoginRequiredMixin, TemplateView):
         payments_total = Payment.objects.aggregate(total=Sum('amount'))['total'] or 0
         
         materials_total = Material.objects.annotate(
-            cost=ExpressionWrapper(F('quantity') * F('unit_price'), output_field=DecimalField(max_digits=15, decimal_places=2))
+            cost=ExpressionWrapper(F('quantity') * F('unit_price'), output_field=models.DecimalField(max_digits=15, decimal_places=2))
         ).aggregate(total=Sum('cost'))['total'] or 0
         
         expenses_total = Expense.objects.aggregate(total=Sum('amount'))['total'] or 0
