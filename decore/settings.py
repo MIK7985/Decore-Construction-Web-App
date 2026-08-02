@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,14 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-v-3nzh$sdpk7##@c+3s70m5s+n9_j7=t$aahcqdsru9jnmk$s6'
+SECRET_KEY = os.environ.get('DECORE_SECRET_KEY', 'django-insecure-v-3nzh$sdpk7##@c+3s70m5s+n9_j7=t$aahcqdsru9jnmk$s6')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DECORE_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 # Local development hosts and Django's test client. Set production hosts through
 # environment-specific settings before deployment.
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "testserver"]
+ALLOWED_HOSTS = os.environ.get('DECORE_ALLOWED_HOSTS', '127.0.0.1,localhost,testserver').split(',')
 
 
 # Application definition
@@ -88,12 +89,21 @@ WSGI_APPLICATION = 'decore.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+try:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+            conn_max_age=600
+        )
     }
-}
+except ImportError:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
