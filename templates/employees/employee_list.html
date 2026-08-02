@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Employees{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+{% endblock %}
+
 {% block content %}
 <div class="decore-page-header">
     <div>
@@ -188,7 +192,11 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Photo</label>
-                            <input type="file" class="form-control" id="empPhoto" name="photo">
+                            <input type="file" class="form-control" id="empPhoto" name="photo" accept="image/*">
+                            <div id="croppedPreviewContainer" class="mt-2 d-none align-items-center gap-2">
+                                <img id="croppedPreview" class="rounded border shadow-sm" style="width: 48px; height: 48px; object-fit: cover;">
+                                <span class="text-muted small"><i class="bi bi-check-circle text-success me-1"></i>Cropped square image ready</span>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Upload ID (e.g. Aadhaar Photo/PDF)</label>
@@ -205,10 +213,35 @@
         </div>
     </div>
 </div>
+
+<!-- Image Cropping Modal -->
+<div class="modal fade" id="cropperModal" tabindex="-1" aria-labelledby="cropperModalLabel" aria-hidden="true" style="z-index: 2200;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <div class="modal-header border-bottom border-light">
+                <h5 class="modal-title fw-bold" id="cropperModalLabel">Crop Profile Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="img-container" style="max-height: 400px; width: 100%; overflow: hidden; background-color: #000; border-radius: 8px;">
+                    <img id="cropperImage" src="" style="max-width: 100%; display: block; margin: 0 auto;">
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-decore-primary" id="cropSaveButton"><i class="bi bi-crop me-1"></i>Crop &amp; Use</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 <script>
+    let cropper = null;
+    let croppedPhotoBlob = null;
+
     const employeesData = {
         {% for emp in employees %}
         "{{ emp.id }}": {
@@ -230,6 +263,12 @@
         const form = document.getElementById("employeeForm");
         
         form.reset();
+        
+        // Reset cropped image preview
+        croppedPhotoBlob = null;
+        document.getElementById('croppedPreviewContainer').classList.remove('d-flex');
+        document.getElementById('croppedPreviewContainer').classList.add('d-none');
+        document.getElementById('croppedPreview').src = '';
         
         if (action === 'add') {
             modalTitle.textContent = "Add Employee";
@@ -334,7 +373,9 @@
         const photoInput = document.getElementById("empPhoto");
         const idPhotoInput = document.getElementById("empIdPhoto");
 
-        if (photoInput && photoInput.files.length > 0) {
+        if (croppedPhotoBlob) {
+            formData.append("photo", croppedPhotoBlob, "profile_cropped.jpg");
+        } else if (photoInput && photoInput.files.length > 0) {
             const compressedPhoto = await compressImage(photoInput.files[0], 1000, 1000, 0.75);
             formData.append("photo", compressedPhoto);
         }
@@ -460,6 +501,74 @@
 
         if (searchInput) searchInput.addEventListener('input', filterEmployees);
         if (roleSelect) roleSelect.addEventListener('change', filterEmployees);
+
+        // Cropper Event Listeners
+        const photoInput = document.getElementById('empPhoto');
+        if (photoInput) {
+            photoInput.addEventListener('change', function(e) {
+                const files = e.target.files;
+                if (files && files.length > 0) {
+                    const file = files[0];
+                    if (!file.type.startsWith('image/')) {
+                        decoreToast('Please select a valid image file.', 'danger');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const cropperImage = document.getElementById('cropperImage');
+                        cropperImage.src = event.target.result;
+                        
+                        const cropperModalEl = document.getElementById('cropperModal');
+                        const cropperModal = bootstrap.Modal.getOrCreateInstance(cropperModalEl);
+                        cropperModal.show();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        const cropperModalEl = document.getElementById('cropperModal');
+        if (cropperModalEl) {
+            cropperModalEl.addEventListener('shown.bs.modal', function() {
+                const cropperImage = document.getElementById('cropperImage');
+                cropper = new Cropper(cropperImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    autoCropArea: 1,
+                    responsive: true
+                });
+            });
+
+            cropperModalEl.addEventListener('hidden.bs.modal', function() {
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+            });
+        }
+
+        const cropSaveButton = document.getElementById('cropSaveButton');
+        if (cropSaveButton) {
+            cropSaveButton.addEventListener('click', function() {
+                if (cropper) {
+                    cropper.getCroppedCanvas({
+                        width: 400,
+                        height: 400
+                    }).toBlob(function(blob) {
+                        croppedPhotoBlob = blob;
+                        
+                        const previewUrl = URL.createObjectURL(blob);
+                        document.getElementById('croppedPreview').src = previewUrl;
+                        document.getElementById('croppedPreviewContainer').classList.remove('d-none');
+                        document.getElementById('croppedPreviewContainer').classList.add('d-flex');
+                        
+                        bootstrap.Modal.getOrCreateInstance(cropperModalEl).hide();
+                        decoreToast('Image cropped successfully!', 'success');
+                    }, 'image/jpeg', 0.85);
+                }
+            });
+        }
     });
 </script>
 {% endblock %}
