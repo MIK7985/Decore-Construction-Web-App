@@ -138,7 +138,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold" for="siteBudget">Project value / Income (Budget) (₹) <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="siteBudget" name="budget" required min="0" step="0.01" placeholder="0.00">
+                            <input type="number" class="form-control" id="siteBudget" name="budget" required min="0.01" step="0.01" placeholder="0.00">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold" for="siteSpend">Project Expenses / Spend (₹) <span class="text-danger">*</span></label>
@@ -222,6 +222,19 @@ function openWorksiteModal(mode, id) {
 function handleWorksiteFormSubmit(event) {
   event.preventDefault();
   const form = event.target;
+  
+  const budget = parseFloat(document.getElementById("siteBudget").value);
+  const spend = parseFloat(document.getElementById("siteSpend").value);
+  
+  if (isNaN(budget) || budget <= 0) {
+      decoreToast("Project value (budget) must be greater than 0.", "danger");
+      return;
+  }
+  if (isNaN(spend) || spend < 0) {
+      decoreToast("Project expenses (spend) cannot be negative.", "danger");
+      return;
+  }
+  
   const formData = new FormData(form);
   decoreShowLoading();
   

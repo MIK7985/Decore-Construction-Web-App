@@ -293,6 +293,13 @@
         const form = event.target;
         const id = document.getElementById("employeeIdInput").value;
         const name = document.getElementById("empName").value;
+        const address = document.getElementById("empAddress").value.trim();
+        
+        // Address validation: must contain at least one letter
+        if (!/[a-zA-Z]/.test(address)) {
+            decoreToast("Address must contain letters, not just numbers or symbols.", "danger");
+            return;
+        }
         
         decoreShowLoading();
 

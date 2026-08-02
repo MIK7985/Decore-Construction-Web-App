@@ -140,7 +140,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold" for="matQty">Quantity <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" class="form-control" id="matQty" name="quantity" placeholder="0.00" required>
+                            <input type="number" step="0.01" min="0.01" class="form-control" id="matQty" name="quantity" placeholder="0.00" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold" for="matUnit">Measurement Unit <span class="text-danger">*</span></label>
@@ -150,7 +150,7 @@
                             <label class="form-label small fw-semibold" for="matPrice">Unit Price (₹) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">₹</span>
-                                <input type="number" step="0.01" class="form-control" id="matPrice" name="unit_price" placeholder="0.00" required>
+                                <input type="number" step="0.01" min="0.01" class="form-control" id="matPrice" name="unit_price" placeholder="0.00" required>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -208,6 +208,19 @@
 
     function handleMaterialSubmit(event) {
         event.preventDefault();
+        
+        const qty = parseFloat(document.getElementById("matQty").value);
+        const price = parseFloat(document.getElementById("matPrice").value);
+        
+        if (isNaN(qty) || qty <= 0) {
+            decoreToast("Quantity must be greater than 0.", "danger");
+            return;
+        }
+        if (isNaN(price) || price <= 0) {
+            decoreToast("Unit price must be greater than 0.", "danger");
+            return;
+        }
+        
         decoreShowLoading();
         
         const form = event.target;
