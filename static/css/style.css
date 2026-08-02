@@ -1104,3 +1104,37 @@ a:hover {
   background-color: var(--decore-bg-color) !important;
   color: var(--decore-text) !important;
 }
+
+/* =========================================================
+   Skeleton Loading Animation
+   ========================================================= */
+.decore-skeleton {
+  background: linear-gradient(90deg, var(--decore-border) 25%, rgba(148, 163, 184, 0.15) 50%, var(--decore-border) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-glow 1.5s infinite ease-in-out;
+  border-radius: 6px;
+  display: inline-block;
+  height: 1.25em;
+  width: 100%;
+  vertical-align: middle;
+}
+
+@keyframes skeleton-glow {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* =========================================================
+   Smooth Theme Morph Transition
+   ========================================================= */
+.theme-transitioning,
+.theme-transitioning *,
+.theme-transitioning ::before,
+.theme-transitioning ::after {
+  transition: background 0.4s ease, background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease !important;
+  transition-delay: 0s !important;
+}

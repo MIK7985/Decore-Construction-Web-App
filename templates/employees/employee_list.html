@@ -177,6 +177,9 @@
                                 <span class="input-group-text">₹</span>
                                 <input type="number" class="form-control" id="empWage" name="wage" placeholder="0.00" required>
                             </div>
+                            <div id="wageCalculationHelper" class="small text-muted mt-1 d-none" style="font-size:0.75rem;">
+                                Est. Monthly Income: <span class="fw-semibold text-decore-primary" id="wageCalculationValue">₹0.00</span> (based on standard 26 workdays)
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Status</label>
@@ -288,6 +291,11 @@
                 document.getElementById("empAddress").value = emp.address;
                 document.getElementById("empStatus").value = emp.status;
             }
+        }
+        
+        // Trigger wage calculation preview
+        if (typeof updateWageHelper === 'function') {
+            updateWageHelper();
         }
         
         const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
@@ -568,6 +576,27 @@
                     }, 'image/jpeg', 0.85);
                 }
             });
+        }
+
+        // Real-time Wage calculation preview
+        const empWageInput = document.getElementById('empWage');
+        const wageHelper = document.getElementById('wageCalculationHelper');
+        const wageValue = document.getElementById('wageCalculationValue');
+
+        window.updateWageHelper = function() {
+            if (!empWageInput || !wageHelper || !wageValue) return;
+            const val = parseFloat(empWageInput.value);
+            if (!isNaN(val) && val > 0) {
+                const estMonthly = val * 26;
+                wageValue.textContent = '₹' + estMonthly.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                wageHelper.classList.remove('d-none');
+            } else {
+                wageHelper.classList.add('d-none');
+            }
+        };
+
+        if (empWageInput) {
+            empWageInput.addEventListener('input', window.updateWageHelper);
         }
     });
 </script>

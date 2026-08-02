@@ -222,7 +222,38 @@ document.getElementById('searchInput').addEventListener('input', function() {
 
 // Date filter logic
 document.getElementById('dateFilterInput').addEventListener('change', function() {
-    decoreShowLoading();
+    const tbody = document.querySelector('.decore-table-premium tbody');
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td><div class="d-flex align-items-center gap-2"><span class="decore-skeleton" style="width:32px; height:32px; border-radius:50%;"></span><span class="decore-skeleton" style="width:120px;"></span></div></td>
+                <td><span class="decore-skeleton" style="width:100px;"></span></td>
+                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:80px;"></span></td>
+                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
+                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
+                <td><span class="decore-skeleton" style="width:80px; height:24px; border-radius:50rem;"></span></td>
+                <td><span class="decore-skeleton" style="width:40px;"></span></td>
+            </tr>
+            <tr>
+                <td><div class="d-flex align-items-center gap-2"><span class="decore-skeleton" style="width:32px; height:32px; border-radius:50%;"></span><span class="decore-skeleton" style="width:140px;"></span></div></td>
+                <td><span class="decore-skeleton" style="width:110px;"></span></td>
+                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:80px;"></span></td>
+                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
+                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
+                <td><span class="decore-skeleton" style="width:80px; height:24px; border-radius:50rem;"></span></td>
+                <td><span class="decore-skeleton" style="width:40px;"></span></td>
+            </tr>
+            <tr>
+                <td><div class="d-flex align-items-center gap-2"><span class="decore-skeleton" style="width:32px; height:32px; border-radius:50%;"></span><span class="decore-skeleton" style="width:90px;"></span></div></td>
+                <td><span class="decore-skeleton" style="width:90px;"></span></td>
+                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:80px;"></span></td>
+                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
+                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
+                <td><span class="decore-skeleton" style="width:80px; height:24px; border-radius:50rem;"></span></td>
+                <td><span class="decore-skeleton" style="width:40px;"></span></td>
+            </tr>
+        `;
+    }
     if (this.value) {
         window.location.href = "?date=" + this.value;
     } else {

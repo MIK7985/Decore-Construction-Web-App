@@ -14,6 +14,7 @@
     initDarkModeToggle();
     initTooltips();
     hideInitialLoader();
+    initProgressBarAnimations();
   });
 
   /* ---------------------------------------------------------
@@ -115,8 +116,13 @@
     var root = document.documentElement;
 
     function applyTheme(theme) {
+      root.classList.add("theme-transitioning");
       root.setAttribute("data-bs-theme", theme);
       localStorage.setItem("decore-theme", theme);
+
+      setTimeout(function() {
+        root.classList.remove("theme-transitioning");
+      }, 500);
 
       // Sync header icon
       if (toggle) {
@@ -398,5 +404,20 @@
         document.location.href = noddy.href;
       }
     }, false);
+  }
+
+  /* ---------------------------------------------------------
+     Worksite Progress Bar Animations
+     --------------------------------------------------------- */
+  function initProgressBarAnimations() {
+    setTimeout(function() {
+      var progressBars = document.querySelectorAll('.progress-bar');
+      progressBars.forEach(function (bar) {
+        var target = bar.getAttribute('data-progress');
+        if (target !== null) {
+          bar.style.width = target + '%';
+        }
+      });
+    }, 150);
   }
 })();

@@ -137,7 +137,23 @@
     });
 
     document.getElementById("sheetDatePicker").addEventListener("change", function() {
-        decoreShowLoading();
+        const tbody = document.querySelector('.decore-table-premium tbody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td><div class="d-flex align-items-center gap-2"><span class="decore-skeleton" style="width:32px; height:32px; border-radius:50%;"></span><span class="decore-skeleton" style="width:120px;"></span></div></td>
+                    <td><span class="decore-skeleton" style="width:110px;"></span></td>
+                    <td><span class="decore-skeleton" style="width:150px; height:24px; border-radius:50rem;"></span></td>
+                    <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:180px;"></span></td>
+                </tr>
+                <tr>
+                    <td><div class="d-flex align-items-center gap-2"><span class="decore-skeleton" style="width:32px; height:32px; border-radius:50%;"></span><span class="decore-skeleton" style="width:140px;"></span></div></td>
+                    <td><span class="decore-skeleton" style="width:100px;"></span></td>
+                    <td><span class="decore-skeleton" style="width:150px; height:24px; border-radius:50rem;"></span></td>
+                    <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:140px;"></span></td>
+                </tr>
+            `;
+        }
         window.location.href = "?date=" + this.value;
     });
 
