@@ -104,18 +104,6 @@
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-
-    <div class="decore-card-body d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 border-top">
-        <span class="text-muted small">Showing {{ employees|length }} of {{ employees|length }} entries</span>
-        <nav aria-label="Employee pagination">
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
-                <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
-            </ul>
-        </nav>
-    </div>
 </div>
 
 <!-- Add/Edit Employee Modal -->
@@ -133,7 +121,7 @@
                     
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Full Name</label>
+                            <label class="form-label small fw-semibold">Full Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="empName" name="name" placeholder="e.g. Rajesh Kumar" required>
                         </div>
                         <div class="col-md-6">
@@ -148,7 +136,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Phone Number</label>
+                            <label class="form-label small fw-semibold">Phone Number <span class="text-danger">*</span></label>
                             <input type="tel" class="form-control" id="empPhone" name="phone" placeholder="e.g. +91 98765 43210" required>
                         </div>
 
@@ -162,7 +150,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Daily Wage Rate (₹)</label>
+                            <label class="form-label small fw-semibold">Daily Wage Rate (₹) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">₹</span>
                                 <input type="number" class="form-control" id="empWage" name="wage" placeholder="0.00" required>
@@ -177,7 +165,7 @@
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label small fw-semibold">Residential Address</label>
+                            <label class="form-label small fw-semibold">Residential Address <span class="text-danger">*</span></label>
                             <textarea class="form-control" rows="2" id="empAddress" name="address" placeholder="Street, city, state" required></textarea>
                         </div>
                         <div class="col-md-6">

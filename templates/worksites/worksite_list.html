@@ -116,15 +116,15 @@
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="siteName">Site name</label>
+                            <label class="form-label small fw-semibold" for="siteName">Site name <span class="text-danger">*</span></label>
                             <input class="form-control" id="siteName" name="name" required maxlength="150" placeholder="e.g. Greenwood Residency">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="siteClient">Client</label>
+                            <label class="form-label small fw-semibold" for="siteClient">Client <span class="text-danger">*</span></label>
                             <input class="form-control" id="siteClient" name="client" required maxlength="150" placeholder="Client or company name">
                         </div>
                         <div class="col-12">
-                            <label class="form-label small fw-semibold" for="siteLocation">Location</label>
+                            <label class="form-label small fw-semibold" for="siteLocation">Location <span class="text-danger">*</span></label>
                             <input class="form-control" id="siteLocation" name="location" required maxlength="255" placeholder="Street, city, state">
                         </div>
                         <div class="col-md-6">
@@ -137,15 +137,15 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="siteBudget">Project value / Income (Budget) (₹)</label>
+                            <label class="form-label small fw-semibold" for="siteBudget">Project value / Income (Budget) (₹) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="siteBudget" name="budget" required min="0" step="0.01" placeholder="0.00">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="siteSpend">Project Expenses / Spend (₹)</label>
+                            <label class="form-label small fw-semibold" for="siteSpend">Project Expenses / Spend (₹) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="siteSpend" name="spend" required min="0" step="0.01" placeholder="0.00" value="0.00">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="siteStartDate">Start date</label>
+                            <label class="form-label small fw-semibold" for="siteStartDate">Start date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" id="siteStartDate" name="start_date" required>
                         </div>
                         <div class="col-md-6">
@@ -157,7 +157,7 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="siteProgress">Progress (%)</label>
+                            <label class="form-label small fw-semibold" for="siteProgress">Progress (%) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="siteProgress" name="progress" required min="0" max="100" value="0">
                         </div>
                     </div>

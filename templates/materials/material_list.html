@@ -126,11 +126,11 @@
                     {% csrf_token %}
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="matName">Material Name</label>
+                            <label class="form-label small fw-semibold" for="matName">Material Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="matName" name="name" placeholder="e.g. Portland Cement" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="matWorksite">Assigned Worksite</label>
+                            <label class="form-label small fw-semibold" for="matWorksite">Assigned Worksite <span class="text-danger">*</span></label>
                             <select class="form-select" id="matWorksite" name="worksite" required>
                                 <option value="">Select worksite</option>
                                 {% for site in worksites %}
@@ -139,22 +139,22 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-semibold" for="matQty">Quantity</label>
+                            <label class="form-label small fw-semibold" for="matQty">Quantity <span class="text-danger">*</span></label>
                             <input type="number" step="0.01" class="form-control" id="matQty" name="quantity" placeholder="0.00" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-semibold" for="matUnit">Measurement Unit</label>
+                            <label class="form-label small fw-semibold" for="matUnit">Measurement Unit <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="matUnit" name="unit" placeholder="e.g. Bags, Tons, Pcs" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-semibold" for="matPrice">Unit Price (₹)</label>
+                            <label class="form-label small fw-semibold" for="matPrice">Unit Price (₹) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">₹</span>
                                 <input type="number" step="0.01" class="form-control" id="matPrice" name="unit_price" placeholder="0.00" required>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="matSupplier">Supplier Name</label>
+                            <label class="form-label small fw-semibold" for="matSupplier">Supplier Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="matSupplier" name="supplier" placeholder="e.g. BuildMart Materials" required>
                         </div>
                         <div class="col-md-6">
