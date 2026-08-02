@@ -1,9 +1,8 @@
-"""
-expenses admin configuration.
-
-Phase 1 placeholder — no models are registered yet.
-TODO: Register expenses models with the admin site once they exist.
-"""
 from django.contrib import admin
+from .models import Expense
 
-# TODO: admin.site.register(YourModel)
+@admin.register(Expense)
+class ExpenseAdmin(admin.ModelAdmin):
+    list_display = ("category", "worksite", "amount", "date", "status")
+    list_filter = ("category", "status", "date")
+    search_fields = ("description", "worksite__name")

@@ -75,7 +75,7 @@
             </thead>
             <tbody>
                 {% for exp in expenses %}
-                <tr class="expense-row" data-desc="{{ exp.description|lower }} {{ exp.category|lower }} {{ exp.worksite|lower }}" data-cat="{{ exp.category }}">
+                <tr class="expense-row" data-desc="{{ exp.description|lower }} {{ exp.category|lower }} {{ exp.worksite.name|lower }}" data-cat="{{ exp.category }}">
                     <td>
                         <span class="fw-bold">{{ exp.category }}</span>
                         <div class="small text-muted">{{ exp.description }}</div>
@@ -83,7 +83,7 @@
                             Date: {{ exp.date }}
                         </div>
                     </td>
-                    <td><span class="badge bg-light text-dark border">{{ exp.worksite }}</span></td>
+                    <td><span class="badge bg-light text-dark border">{{ exp.worksite.name }}</span></td>
                     <td class="d-none d-md-table-cell"><span class="fw-semibold text-muted text-uppercase small">{{ exp.category }}</span></td>
                     <td class="d-none d-lg-table-cell text-muted small">{{ exp.date }}</td>
                     <td>
@@ -96,7 +96,7 @@
                     <td class="fw-bold text-end text-decore-primary font-monospace">₹{{ exp.amount }}</td>
                     <td class="text-end">
                         {% if exp.status == 'Pending' %}
-                        <button class="btn btn-sm btn-decore-primary py-1 px-2" onclick="decoreConfirm('Approve expense of ₹{{ exp.amount }}?', function(){ decoreToast('Expense Approved', 'success'); })">Approve</button>
+                        <button class="btn btn-sm btn-decore-primary py-1 px-2" onclick="approveExpense({{ exp.id }}, '{{ exp.amount|escapejs }}')">Approve</button>
                         {% else %}
                         <button class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="decoreToast('Invoice downloaded', 'success')"><i class="bi-file-earmark-arrow-down"></i></button>
                         {% endif %}
@@ -140,12 +140,12 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Assigned Worksite</label>
-                            <select class="form-select" id="expWorksite">
-                                <option>Greenwood Condos</option>
-                                <option>Metro Heights Phase 1</option>
-                                <option>Skyline Corporate Center</option>
-                                <option>Bridge Street Plaza</option>
+                            <label class="form-label small fw-semibold">Assigned Worksite <span class="text-danger">*</span></label>
+                            <select class="form-select" id="expWorksite" required>
+                                <option value="">Select worksite</option>
+                                {% for site in worksites %}
+                                <option value="{{ site.id }}">{{ site.name }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -198,23 +198,91 @@
 
     function handleExpenseSubmit(event) {
         event.preventDefault();
-        const category = document.getElementById("expCategory").value;
-        const amount = parseFloat(document.getElementById("expAmount").value);
         
-        if (isNaN(amount) || amount <= 0) {
-            decoreToast("Expense amount must be greater than 0.", "danger");
+        const category = document.getElementById("expCategory").value;
+        const worksite = document.getElementById("expWorksite").value;
+        const amount = parseFloat(document.getElementById("expAmount").value);
+        const date = document.getElementById("expDate").value;
+        const description = document.getElementById("expDescription").value.trim();
+        const status = document.getElementById("expStatus").value;
+        
+        if (!category || !worksite || isNaN(amount) || amount <= 0 || !date || !description) {
+            decoreToast("All fields are required and amount must be positive.", "danger");
+            return;
+        }
+        
+        // Address-style check: description must contain letters
+        if (!/[a-zA-Z]/.test(description)) {
+            decoreToast("Description must contain letters.", "danger");
             return;
         }
         
         decoreShowLoading();
         
-        setTimeout(function() {
+        const formData = new FormData();
+        formData.append("category", category);
+        formData.append("worksite", worksite);
+        formData.append("amount", amount);
+        formData.append("date", date);
+        formData.append("description", description);
+        formData.append("status", status);
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch("{% url 'expenses:create' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": csrfToken,
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
             decoreHideLoading();
-            const modalEl = document.getElementById("expenseModal");
-            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-            modal.hide();
-            decoreToast(`Expense of ₹${amount} for "${category}" recorded successfully!`, 'success');
-        }, 800);
+            if (data.success) {
+                const modalEl = document.getElementById("expenseModal");
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.hide();
+                decoreToast(data.message, 'success');
+                setTimeout(() => window.location.href = window.location.pathname, 1000);
+            } else {
+                decoreToast(data.error || "Failed to save expense.", 'danger');
+            }
+        })
+        .catch(err => {
+            decoreHideLoading();
+            decoreToast("Connection error.", 'danger');
+        });
+    }
+
+    function approveExpense(id, amount) {
+        decoreConfirm(`Are you sure you want to approve this expense of ₹${amount}?`, function() {
+            decoreShowLoading();
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/expenses/${id}/approve/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                decoreHideLoading();
+                if (data.success) {
+                    decoreToast(data.message, 'success');
+                    setTimeout(() => window.location.href = window.location.pathname, 1000);
+                } else {
+                    decoreToast(data.error || "Failed to approve expense.", 'danger');
+                }
+            })
+            .catch(err => {
+                decoreHideLoading();
+                decoreToast("Connection error.", 'danger');
+            });
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function () {

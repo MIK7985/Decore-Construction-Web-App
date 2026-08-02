@@ -9,4 +9,6 @@ app_name = "expenses"
 
 urlpatterns = [
     path("", views.ExpenseListView.as_view(), name="list"),
+    path("create/", views.ExpenseCreateView.as_view(), name="create"),
+    path("<int:pk>/approve/", views.ExpenseApproveView.as_view(), name="approve"),
 ]
