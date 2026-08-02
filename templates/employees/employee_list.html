@@ -348,7 +348,7 @@
                 const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
                 modal.hide();
                 decoreToast(data.message, 'success');
-                setTimeout(() => window.location.reload(), 1000);
+                setTimeout(() => window.location.href = window.location.pathname, 1000);
             } else {
                 decoreToast(data.error || "Failed to save employee profile.", 'danger');
             }
@@ -376,7 +376,7 @@
                 decoreHideLoading();
                 if (data.success) {
                     decoreToast(data.message, 'warning');
-                    setTimeout(() => window.location.reload(), 1000);
+                    setTimeout(() => window.location.href = window.location.pathname, 1000);
                 } else {
                     decoreToast(data.error || "Failed to archive employee.", 'danger');
                 }
