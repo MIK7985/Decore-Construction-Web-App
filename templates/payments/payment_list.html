@@ -3,5 +3,56 @@
 {% block content %}
 <div class="decore-page-header"><div><h4 class="decore-page-title">Payments</h4><div class="decore-breadcrumb">Completed salary disbursements</div></div></div>
 <div class="row g-3 mb-4"><div class="col-md-4"><div class="decore-card decore-stat-card"><span class="decore-stat-icon bg-success-soft"><i class="bi bi-cash-stack"></i></span><div><div class="decore-stat-label">Total Payments</div><div class="decore-stat-value">₹{{ stats.total_payments }}</div></div></div></div><div class="col-md-4"><div class="decore-card decore-stat-card"><span class="decore-stat-icon bg-primary-soft"><i class="bi bi-check-circle"></i></span><div><div class="decore-stat-label">Completed</div><div class="decore-stat-value">₹{{ stats.cleared }}</div></div></div></div></div>
-<div class="decore-card"><div class="decore-card-header"><h6 class="mb-0">Payment History</h6></div><div class="table-responsive"><table class="table decore-table mb-0"><thead><tr><th>Employee</th><th>Payroll Period</th><th>Amount</th><th>Method</th><th>Reference</th><th>Paid On</th><th>Status</th></tr></thead><tbody>{% for payment in payments %}<tr><td><div class="fw-bold">{{ payment.employee.name }}</div><div class="small text-muted">{{ payment.employee.role }}</div></td><td>{{ payment.salary.month }}/{{ payment.salary.year }}</td><td class="fw-bold text-success">₹{{ payment.amount }}</td><td>{{ payment.get_method_display }}</td><td>{{ payment.reference_number|default:"—" }}</td><td>{{ payment.paid_on|date:"d M Y, h:i A" }}</td><td><span class="decore-status-badge badge-success"><span class="dot"></span>Completed</span></td></tr>{% empty %}<tr><td colspan="7"><div class="decore-empty-state"><i class="bi bi-credit-card"></i><p class="mb-0">No salary payments recorded yet.</p></div></td></tr>{% endfor %}</tbody></table></div></div>
+<div class="decore-card">
+    <div class="decore-card-header">
+        <h6 class="mb-0">Payment History</h6>
+    </div>
+    <div class="table-responsive px-4 pb-2">
+        <table class="decore-table-premium mb-0">
+            <thead>
+                <tr>
+                    <th class="text-nowrap-custom">Employee</th>
+                    <th class="text-nowrap-custom">Payroll Period</th>
+                    <th class="text-nowrap-custom text-end">Amount</th>
+                    <th class="text-nowrap-custom d-none d-md-table-cell">Method</th>
+                    <th class="text-nowrap-custom d-none d-lg-table-cell">Reference</th>
+                    <th class="text-nowrap-custom d-none d-md-table-cell">Paid On</th>
+                    <th class="text-nowrap-custom">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td class="text-nowrap-custom">
+                        <div class="fw-bold text-decore-primary">{{ payment.employee.name }}</div>
+                        <div class="small text-muted">{{ payment.employee.role }}</div>
+                    </td>
+                    <td class="text-nowrap-custom text-muted">
+                        <span>{{ payment.salary.month }}/{{ payment.salary.year }}</span>
+                        <div class="text-muted small d-md-none" style="font-size: 0.72rem; margin-top: 2px;">
+                            {{ payment.get_method_display }} &bull; {{ payment.reference_number|default:"No Ref" }}
+                        </div>
+                    </td>
+                    <td class="text-nowrap-custom text-end fw-bold text-success font-monospace">₹{{ payment.amount }}</td>
+                    <td class="text-nowrap-custom d-none d-md-table-cell">{{ payment.get_method_display }}</td>
+                    <td class="text-nowrap-custom d-none d-lg-table-cell"><code class="text-muted">{{ payment.reference_number|default:"—" }}</code></td>
+                    <td class="text-nowrap-custom d-none d-md-table-cell text-muted small font-monospace">{{ payment.paid_on|date:"d M Y, h:i A" }}</td>
+                    <td class="text-nowrap-custom">
+                        <span class="decore-status-badge badge-success"><span class="dot"></span>Completed</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="decore-empty-state">
+                            <i class="bi bi-credit-card"></i>
+                            <p class="mb-0">No salary payments recorded yet.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

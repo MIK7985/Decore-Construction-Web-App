@@ -65,19 +65,24 @@
                     <th class="text-nowrap-custom">Material Type</th>
                     <th class="text-nowrap-custom">Assigned Worksite</th>
                     <th class="text-nowrap-custom text-end">Stock / Qty</th>
-                    <th class="text-nowrap-custom text-end">Unit Cost</th>
+                    <th class="text-nowrap-custom text-end d-none d-md-table-cell">Unit Cost</th>
                     <th class="text-nowrap-custom text-end">Total Value</th>
                     <th class="text-nowrap-custom">Procurement Status</th>
-                    <th class="text-nowrap-custom">Supplier</th>
+                    <th class="text-nowrap-custom d-none d-lg-table-cell">Supplier</th>
                 </tr>
             </thead>
             <tbody>
                 {% for mat in materials %}
                 <tr class="material-row" data-material-name="{{ mat.name|lower }}">
-                    <td class="text-nowrap-custom"><span class="fw-bold text-decore-primary">{{ mat.name }}</span></td>
+                    <td class="text-nowrap-custom">
+                        <span class="fw-bold text-decore-primary">{{ mat.name }}</span>
+                        <div class="text-muted small d-md-none" style="font-size: 0.72rem; margin-top: 2px;">
+                            Supplier: {{ mat.supplier }} &bull; Unit: ₹{{ mat.unit_price }}
+                        </div>
+                    </td>
                     <td class="text-nowrap-custom"><span class="badge bg-light text-dark border">{{ mat.worksite.name }}</span></td>
                     <td class="text-nowrap-custom text-end font-monospace fw-semibold">{{ mat.quantity }} <span class="text-muted text-uppercase small" style="font-size:0.7rem;">{{ mat.unit }}</span></td>
-                    <td class="text-nowrap-custom text-end font-monospace">₹{{ mat.unit_price }}</td>
+                    <td class="text-nowrap-custom text-end font-monospace d-none d-md-table-cell">₹{{ mat.unit_price }}</td>
                     <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost }}</td>
                     <td class="text-nowrap-custom">
                         {% if mat.status == 'Delivered' %}
@@ -88,7 +93,7 @@
                         <span class="decore-status-badge badge-secondary"><span class="dot"></span>Pending</span>
                         {% endif %}
                     </td>
-                    <td class="text-nowrap-custom text-muted small">{{ mat.supplier }}</td>
+                    <td class="text-nowrap-custom text-muted small d-none d-lg-table-cell">{{ mat.supplier }}</td>
                 </tr>
                 {% empty %}
                 <tr>

@@ -66,8 +66,8 @@
                 <tr>
                     <th>Description</th>
                     <th>Worksite</th>
-                    <th>Category</th>
-                    <th>Date</th>
+                    <th class="d-none d-md-table-cell">Category</th>
+                    <th class="d-none d-lg-table-cell">Date</th>
                     <th>Status</th>
                     <th class="text-end">Amount</th>
                     <th class="text-end">Actions</th>
@@ -79,10 +79,13 @@
                     <td>
                         <span class="fw-bold">{{ exp.category }}</span>
                         <div class="small text-muted">{{ exp.description }}</div>
+                        <div class="text-muted small d-lg-none" style="font-size: 0.72rem; margin-top: 2px;">
+                            Date: {{ exp.date }}
+                        </div>
                     </td>
                     <td><span class="badge bg-light text-dark border">{{ exp.worksite }}</span></td>
-                    <td><span class="fw-semibold text-muted text-uppercase small">{{ exp.category }}</span></td>
-                    <td class="text-muted small">{{ exp.date }}</td>
+                    <td class="d-none d-md-table-cell"><span class="fw-semibold text-muted text-uppercase small">{{ exp.category }}</span></td>
+                    <td class="d-none d-lg-table-cell text-muted small">{{ exp.date }}</td>
                     <td>
                         {% if exp.status == 'Approved' %}
                         <span class="decore-status-badge badge-success"><span class="dot"></span>Approved</span>
