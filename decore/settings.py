@@ -167,6 +167,15 @@ if AWS_STORAGE_BUCKET_NAME:
         AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
         AWS_DEFAULT_ACL = 'public-read'
         AWS_QUERYSTRING_AUTH = False
+        
+        # Supabase S3 public URL resolver
+        if 'supabase.co' in AWS_S3_ENDPOINT_URL:
+            try:
+                project_ref = AWS_S3_ENDPOINT_URL.split('//')[1].split('.')[0]
+                AWS_S3_CUSTOM_DOMAIN = f"{project_ref}.supabase.co/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}"
+            except Exception:
+                pass
+
         STORAGES = {
             "default": {
                 "BACKEND": "storages.backends.s3.S3Storage",
