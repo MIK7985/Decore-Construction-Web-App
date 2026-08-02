@@ -61,7 +61,7 @@
 </div>
 
 <div class="decore-card">
-    <div class="decore-card-header"><div class="input-group" style="max-width:320px;"><span class="input-group-text"><i class="bi bi-search text-muted"></i></span><input type="search" class="form-control" placeholder="Search worksites..." aria-label="Search worksites"></div></div>
+    <div class="decore-card-header"><div class="input-group" style="max-width:320px;"><span class="input-group-text"><i class="bi bi-search text-muted"></i></span><input type="search" class="form-control" placeholder="Search worksites..." aria-label="Search worksites" id="siteSearchInput"></div></div>
     <div class="table-responsive px-4 pb-2">
         <table class="decore-table-premium mb-0">
             <thead>
@@ -73,7 +73,7 @@
             </thead>
             <tbody>
                 {% for site in worksites %}
-                <tr>
+                <tr class="worksite-row" data-search="{{ site.name|lower }} {{ site.client|lower }} {{ site.location|lower }}">
                     <td class="text-nowrap-custom">
                         <span class="fw-bold text-decore-primary">{{ site.name }}</span>
                         <div class="small text-muted" style="font-size: 0.78rem;">
@@ -284,6 +284,20 @@ document.addEventListener('DOMContentLoaded', function () {
   const params = new URLSearchParams(window.location.search);
   if (params.has('add')) openWorksiteModal('create');
   else if (params.get('edit') && worksitesData[params.get('edit')]) openWorksiteModal('edit', params.get('edit'));
+
+  // Client-side search filtering
+  const searchInput = document.getElementById('siteSearchInput');
+  const rows = document.querySelectorAll('.worksite-row');
+
+  if (searchInput) {
+      searchInput.addEventListener('input', function() {
+          const query = this.value.toLowerCase().trim();
+          rows.forEach(row => {
+              const text = row.getAttribute('data-search') || '';
+              row.style.display = text.includes(query) ? '' : 'none';
+          });
+      });
+  }
 });
 </script>
 {% endblock %}

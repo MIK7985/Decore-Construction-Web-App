@@ -17,11 +17,11 @@
         <form class="d-flex flex-grow-1" style="max-width:320px;" role="search" onsubmit="return false;">
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
-                <input type="search" class="form-control" placeholder="Search employees...">
+                <input type="search" class="form-control" placeholder="Search employees..." id="empSearchInput">
             </div>
         </form>
         <div class="d-flex gap-2">
-            <select class="form-select form-select-sm" style="width:auto;">
+            <select class="form-select form-select-sm" style="width:auto;" id="empRoleSelect">
                 <option selected>All Roles</option>
                 <option>Project Manager</option>
                 <option>Lead Engineer</option>
@@ -49,7 +49,7 @@
             </thead>
             <tbody>
                 {% for emp in employees %}
-                <tr>
+                <tr class="employee-row" data-name="{{ emp.name|lower }}" data-role="{{ emp.role }}">
                     <td class="text-nowrap-custom">
                         <div class="d-flex align-items-center gap-3">
                             {% if emp.photo %}
@@ -379,6 +379,33 @@
     document.addEventListener('DOMContentLoaded', function () {
         const employeeId = new URLSearchParams(window.location.search).get('edit');
         if (employeeId && employeesData[employeeId]) openEmployeeModal('edit', employeeId);
+
+        // Client-side search and role filtering
+        const searchInput = document.getElementById('empSearchInput');
+        const roleSelect = document.getElementById('empRoleSelect');
+        const rows = document.querySelectorAll('.employee-row');
+
+        function filterEmployees() {
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const role = roleSelect ? roleSelect.value : 'All Roles';
+
+            rows.forEach(row => {
+                const name = row.getAttribute('data-name') || '';
+                const empRole = row.getAttribute('data-role') || '';
+
+                const matchesSearch = name.includes(query);
+                const matchesRole = (role === 'All Roles' || empRole === role);
+
+                if (matchesSearch && matchesRole) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        if (searchInput) searchInput.addEventListener('input', filterEmployees);
+        if (roleSelect) roleSelect.addEventListener('change', filterEmployees);
     });
 </script>
 {% endblock %}

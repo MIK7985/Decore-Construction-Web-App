@@ -47,10 +47,10 @@
         <form class="d-flex flex-grow-1" style="max-width:320px;" role="search" onsubmit="return false;">
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
-                <input type="search" class="form-control" placeholder="Search expenses...">
+                <input type="search" class="form-control" placeholder="Search expenses..." id="expSearchInput">
             </div>
         </form>
-        <select class="form-select form-select-sm" style="width:auto;">
+        <select class="form-select form-select-sm" style="width:auto;" id="expCategorySelect">
             <option selected>All Categories</option>
             <option>Fuel</option>
             <option>Machinery Rental</option>
@@ -75,7 +75,7 @@
             </thead>
             <tbody>
                 {% for exp in expenses %}
-                <tr>
+                <tr class="expense-row" data-desc="{{ exp.description|lower }} {{ exp.category|lower }} {{ exp.worksite|lower }}" data-cat="{{ exp.category }}">
                     <td>
                         <span class="fw-bold">{{ exp.category }}</span>
                         <div class="small text-muted">{{ exp.description }}</div>
@@ -210,5 +210,34 @@
             decoreToast(`Expense of ₹${amount} for "${category}" recorded successfully!`, 'success');
         }, 800);
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Client-side search and category filtering
+        const searchInput = document.getElementById('expSearchInput');
+        const categorySelect = document.getElementById('expCategorySelect');
+        const rows = document.querySelectorAll('.expense-row');
+
+        function filterExpenses() {
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const category = categorySelect ? categorySelect.value : 'All Categories';
+
+            rows.forEach(row => {
+                const desc = row.getAttribute('data-desc') || '';
+                const cat = row.getAttribute('data-cat') || '';
+
+                const matchesSearch = desc.includes(query);
+                const matchesCategory = (category === 'All Categories' || cat === category);
+
+                if (matchesSearch && matchesCategory) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        if (searchInput) searchInput.addEventListener('input', filterExpenses);
+        if (categorySelect) categorySelect.addEventListener('change', filterExpenses);
+    });
 </script>
 {% endblock %}
