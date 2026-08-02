@@ -50,7 +50,11 @@
 <div class="decore-card mb-4">
     <div class="decore-card-header">
         <h6>Operational Cost Summary (₹)</h6>
+        {% if report_stats.is_live_data %}
         <span class="decore-status-badge badge-success"><span class="dot"></span>Live data</span>
+        {% else %}
+        <span class="decore-status-badge badge-warning"><span class="dot"></span>Demo data</span>
+        {% endif %}
     </div>
     <div class="decore-card-body">
         <div class="decore-chart-wrap" style="height:320px;">
@@ -75,10 +79,10 @@
                     labels: ["Salaries (₹)", "Disbursements (₹)", "Materials (₹)", "Expenses (₹)"],
                     datasets: [{
                         data: [
-                            {{ report_stats.salaries_total|default:"0" }},
-                            {{ report_stats.payments_total|default:"16390" }},
-                            {{ report_stats.materials_total|default:"12565" }},
-                            {{ report_stats.expenses_total|default:"3850" }}
+                            {{ report_stats.salaries_total }},
+                            {{ report_stats.payments_total }},
+                            {{ report_stats.materials_total }},
+                            {{ report_stats.expenses_total }}
                         ],
                         backgroundColor: ["#6366F1", "#0EA5E9", "#10B981", "#EF4444"],
                         borderRadius: 8,
