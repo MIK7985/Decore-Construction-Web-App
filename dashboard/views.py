@@ -1,8 +1,8 @@
+from decimal import Decimal
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
 from django.db.models import Sum, Q
 from django.utils import timezone
-import datetime
 
 from employees.models import Employee
 from worksites.models import Worksite, WorksiteStatus, ClientPayment
@@ -10,6 +10,15 @@ from attendance.models import Attendance, AttendanceStatus
 from materials.models import Material
 from expenses.models import Expense, ExpenseStatus
 from salaries.models import SalaryRecord, SalaryStatus
+
+
+def make_dt(d, default_now=None):
+    if not d:
+        return default_now or timezone.now()
+    dt = timezone.datetime.combine(d, timezone.datetime.min.time())
+    if timezone.is_naive(dt):
+        return timezone.make_aware(dt)
+    return dt
 
 
 class IndexView(LoginRequiredMixin, TemplateView):
@@ -20,8 +29,8 @@ class IndexView(LoginRequiredMixin, TemplateView):
         now = timezone.now()
         today = timezone.localdate()
 
-        worksites = Worksite.objects.all()
-        active_worksites_qs = worksites.filter(status=WorksiteStatus.ACTIVE)
+        worksites = list(Worksite.objects.all())
+        active_worksites_qs = Worksite.objects.filter(status=WorksiteStatus.ACTIVE)
         total_employees = Employee.objects.filter(is_archived=False)
 
         # 1. Quick Statistics (6 Key Cards)
@@ -38,14 +47,11 @@ class IndexView(LoginRequiredMixin, TemplateView):
             status__in=[AttendanceStatus.ABSENT, 'absent']
         ).count()
 
-        if today_attendance.count() == 0 and total_employees_cnt > 0:
-            # Fallback for display if today's attendance isn't marked yet
-            today_summary_marked = False
-        else:
-            today_summary_marked = True
+        today_summary_marked = today_attendance.exists()
 
-        total_revenue = sum(w.budget for w in worksites)
-        total_expenses = sum(w.total_spend for w in worksites) + (Expense.objects.aggregate(total=Sum('amount'))['total'] or 0.00)
+        total_revenue = sum((w.budget for w in worksites), Decimal("0.00"))
+        exp_sum = Expense.objects.aggregate(total=Sum('amount'))['total'] or Decimal("0.00")
+        total_expenses = sum((w.total_spend for w in worksites), Decimal("0.00")) + exp_sum
         net_profit = total_revenue - total_expenses
 
         context["stats"] = {
@@ -60,8 +66,8 @@ class IndexView(LoginRequiredMixin, TemplateView):
         }
 
         # 2. Today's Summary
-        today_income_val = ClientPayment.objects.filter(payment_date=today).aggregate(total=Sum('amount'))['total'] or 0.00
-        today_expenses_val = Expense.objects.filter(date=today).aggregate(total=Sum('amount'))['total'] or 0.00
+        today_income_val = ClientPayment.objects.filter(payment_date=today).aggregate(total=Sum('amount'))['total'] or Decimal("0.00")
+        today_expenses_val = Expense.objects.filter(date=today).aggregate(total=Sum('amount'))['total'] or Decimal("0.00")
 
         context["today_summary"] = {
             "present_workers": present_today_cnt,
@@ -84,8 +90,8 @@ class IndexView(LoginRequiredMixin, TemplateView):
                 "icon": "bi-calendar-check text-success",
                 "title": f"Marked attendance: {att.employee.name} ({att.get_status_display()})",
                 "subtitle": att.worksite.name if att.worksite else "General Site",
-                "time": att.date.strftime("%b %d"),
-                "timestamp": timezone.make_aware(timezone.datetime.combine(att.date, timezone.datetime.min.time()))
+                "time": att.date.strftime("%b %d") if att.date else "-",
+                "timestamp": make_dt(att.date, now)
             })
 
         # Expenses Recorded
@@ -95,8 +101,8 @@ class IndexView(LoginRequiredMixin, TemplateView):
                 "icon": "bi-receipt text-danger",
                 "title": f"Expense recorded: {exp.category} (₹{exp.amount:,.2f})",
                 "subtitle": exp.worksite.name if exp.worksite else "General",
-                "time": exp.date.strftime("%b %d"),
-                "timestamp": timezone.make_aware(timezone.datetime.combine(exp.date, timezone.datetime.min.time()))
+                "time": exp.date.strftime("%b %d") if exp.date else "-",
+                "timestamp": make_dt(exp.date, now)
             })
 
         # Materials Added
@@ -116,7 +122,7 @@ class IndexView(LoginRequiredMixin, TemplateView):
             activities.append({
                 "icon": "bi-cash-stack text-info",
                 "title": f"Salary paid: {sal.employee.name} (₹{sal.net_salary:,.2f})",
-                "subtitle": f"Week ending {sal.week_end_date.strftime('%b %d')}",
+                "subtitle": f"Week ending {sal.week_end_date.strftime('%b %d')}" if sal.week_end_date else "Weekly",
                 "time": sal.paid_at.strftime("%b %d") if sal.paid_at else "Recent",
                 "timestamp": sal.paid_at if sal.paid_at else now
             })
@@ -128,18 +134,18 @@ class IndexView(LoginRequiredMixin, TemplateView):
                 "icon": "bi-wallet2 text-success",
                 "title": f"Client payment: {pay.milestone} (₹{pay.amount:,.2f})",
                 "subtitle": pay.worksite.name,
-                "time": pay.payment_date.strftime("%b %d"),
-                "timestamp": timezone.make_aware(timezone.datetime.combine(pay.payment_date, timezone.datetime.min.time()))
+                "time": pay.payment_date.strftime("%b %d") if pay.payment_date else "-",
+                "timestamp": make_dt(pay.payment_date, now)
             })
 
         activities.sort(key=lambda x: x["timestamp"], reverse=True)
         context["recent_activities"] = activities[:5]
 
-        # 5. Smart Operational Alerts (Only add if actionable alert exists)
+        # 5. Smart Operational Alerts
         alerts = []
 
         # Alert A: High Client Receivables Balance
-        total_balance_val = sum(w.client_balance for w in worksites if w.client_balance > 0)
+        total_balance_val = sum((w.client_balance for w in worksites if w.client_balance > 0), Decimal("0.00"))
         if total_balance_val > 0:
             alerts.append({
                 "type": "warning",
