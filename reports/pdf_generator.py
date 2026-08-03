@@ -415,7 +415,7 @@ def generate_salary_receipt_pdf(data):
     story.append(Spacer(1, 14))
 
     # Financial Breakdown Table
-    table_headers = ["Earnings &amp; Deductions Item", "Calculation Unit", "Rate (₹)", "Subtotal (₹)"]
+    table_headers = ["Earnings &amp; Deductions Item", "Calculation Unit", "Rate (Rs.)", "Subtotal (Rs.)"]
     hdr_p = [Paragraph(f"<b><font color='#ffffff' size='8.5'>{h}</font></b>", styles['Normal']) for h in table_headers]
 
     cell_s = ParagraphStyle('Cell', parent=styles['Normal'], fontSize=8.5, leading=11)
@@ -434,20 +434,20 @@ def generate_salary_receipt_pdf(data):
         [
             Paragraph("Basic Days Worked Wage", cell_s),
             Paragraph(f"{pres_days} Days", cell_s),
-            Paragraph(f"₹{d_wage:,.2f}", cell_r),
-            Paragraph(f"₹{gross_wage:,.2f}", cell_r)
+            Paragraph(f"Rs. {d_wage:,.2f}", cell_r),
+            Paragraph(f"Rs. {gross_wage:,.2f}", cell_r)
         ],
         [
             Paragraph("Weekly Overtime / Performance Bonus", cell_s),
             Paragraph("Additional", cell_s),
             Paragraph("—", cell_r),
-            Paragraph(f"+₹{bonus:,.2f}", cell_r)
+            Paragraph(f"+Rs. {bonus:,.2f}", cell_r)
         ],
         [
             Paragraph("Salary Advances / Deductions", cell_s),
             Paragraph("Deductions", cell_s),
             Paragraph("—", cell_r),
-            Paragraph(f"-₹{deductions:,.2f}", cell_r)
+            Paragraph(f"-Rs. {deductions:,.2f}", cell_r)
         ]
     ]
 
@@ -466,7 +466,7 @@ def generate_salary_receipt_pdf(data):
 
     # Net Amount Paid Banner Box
     net_box_p = Paragraph(
-        f"<b>TOTAL SALARY DISBURSED TO WORKER:</b> &nbsp;&nbsp;<font size='14' color='#16a34a'><b>₹{paid_amt:,.2f}</b></font>",
+        f"<b>TOTAL SALARY DISBURSED TO WORKER:</b> &nbsp;&nbsp;<font size='14' color='#16a34a'><b>Rs. {paid_amt:,.2f}</b></font>",
         ParagraphStyle('NetBox', parent=styles['Normal'], alignment=2)
     )
     net_table = Table([[net_box_p]], colWidths=[7.5*inch])
