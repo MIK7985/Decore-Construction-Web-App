@@ -25,7 +25,6 @@ class MaterialListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # We calculate statistics on the unfiltered database first for dashboard accuracy
         all_materials = Material.objects.all()
         
         total_materials_cost = sum(m.total_cost for m in all_materials)
@@ -45,8 +44,40 @@ class MaterialCreateView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         form = MaterialForm(request.POST)
         if form.is_valid():
-            mat = form.save()
-            return JsonResponse({"success": True, "message": f'Material "{mat.name}" added successfully!'})
+            name_clean = form.cleaned_data["name"].strip()
+            unit_clean = form.cleaned_data["unit"].strip()
+            worksite = form.cleaned_data["worksite"]
+            quantity = form.cleaned_data["quantity"]
+            unit_price = form.cleaned_data["unit_price"]
+            supplier = form.cleaned_data["supplier"].strip()
+            status = form.cleaned_data["status"]
+
+            # Look for an existing material entry at this worksite with matching name & unit (case-insensitive)
+            existing = Material.objects.filter(
+                worksite=worksite,
+                name__iexact=name_clean,
+                unit__iexact=unit_clean
+            ).first()
+
+            if existing:
+                existing.quantity += quantity
+                if unit_price and unit_price > 0:
+                    existing.unit_price = unit_price
+                if supplier:
+                    existing.supplier = supplier
+                if status:
+                    existing.status = status
+                existing.save()
+                return JsonResponse({
+                    "success": True,
+                    "message": f'Merged stock! Added {quantity} {unit_clean} to existing {existing.name}. Total stock is now {existing.quantity} {unit_clean} on {worksite.name}.'
+                })
+            else:
+                mat = form.save()
+                return JsonResponse({
+                    "success": True,
+                    "message": f'Material "{mat.name}" ({mat.quantity} {mat.unit}) added successfully!'
+                })
         else:
             errors = ", ".join([f"{k}: {v[0]}" for k, v in form.errors.items()])
             return JsonResponse({"success": False, "error": errors})
