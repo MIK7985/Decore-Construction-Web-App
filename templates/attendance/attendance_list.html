@@ -5,7 +5,7 @@
 <div class="decore-page-header">
     <div>
         <h4 class="decore-page-title">Attendance Log</h4>
-        <div class="decore-breadcrumb">Daily attendance and check-in tracking</div>
+        <div class="decore-breadcrumb">Daily attendance status &amp; roster log</div>
     </div>
     {% if employees %}
     <a href="{% url 'attendance:sheet' %}" class="btn btn-decore-primary btn-sm"><i class="bi bi-calendar-check me-1"></i>Mark Attendance Sheet</a>
@@ -45,8 +45,6 @@
                     <th class="text-nowrap-custom">Employee</th>
                     <th class="text-nowrap-custom">Worksite</th>
                     <th class="text-nowrap-custom d-none d-md-table-cell">Date</th>
-                    <th class="text-nowrap-custom d-none d-md-table-cell">Check-in</th>
-                    <th class="text-nowrap-custom d-none d-md-table-cell">Check-out</th>
                     <th class="text-nowrap-custom">Status</th>
                     <th class="text-nowrap-custom text-end">Action</th>
                 </tr>
@@ -56,21 +54,21 @@
                 <tr class="attendance-row" data-employee-name="{{ log.employee.name|lower }}">
                     <td class="text-nowrap-custom">
                         <div class="d-flex align-items-center gap-2">
-                            <span class="avatar-sm bg-primary-soft text-primary rounded-circle fw-bold d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:0.85rem;">
-                                {{ log.employee.name|first|upper }}
-                            </span>
+                            {% if log.employee.photo %}
+                                <img src="{{ log.employee.photo.url }}" class="rounded-circle border" style="width:32px; height:32px; object-fit:cover;">
+                            {% else %}
+                                <span class="avatar-sm bg-primary-soft text-primary rounded-circle fw-bold d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size:0.85rem;">
+                                    {{ log.employee.name|first|upper }}
+                                </span>
+                            {% endif %}
                             <div>
                                 <span class="fw-bold text-decore-primary">{{ log.employee.name }}</span>
-                                <div class="text-muted small d-md-none" style="font-size: 0.72rem; margin-top: 2px;">
-                                    {% if log.check_in %}{{ log.check_in|time:"h:i A" }}{% else %}—{% endif %} - {% if log.check_out %}{{ log.check_out|time:"h:i A" }}{% else %}—{% endif %}
-                                </div>
+                                <div class="text-muted small d-md-none" style="font-size: 0.72rem;">{{ log.employee.role }}</div>
                             </div>
                         </div>
                     </td>
                     <td class="text-nowrap-custom"><span class="badge bg-light text-dark border">{{ log.worksite|default:"—" }}</span></td>
                     <td class="text-nowrap-custom d-none d-md-table-cell text-muted small font-monospace">{{ log.date|date:"d M Y" }}</td>
-                    <td class="text-nowrap-custom d-none d-md-table-cell text-muted font-monospace">{{ log.check_in|time:"h:i A"|default:"—" }}</td>
-                    <td class="text-nowrap-custom d-none d-md-table-cell text-muted font-monospace">{{ log.check_out|time:"h:i A"|default:"—" }}</td>
                     <td class="text-nowrap-custom">
                         <span class="decore-status-badge {% if log.status == 'absent' %}badge-danger{% elif log.status == 'late' %}badge-warning{% elif log.status == 'overtime' %}badge-info{% else %}badge-success{% endif %}">
                             <span class="dot"></span>{{ log.get_status_display }}
@@ -82,7 +80,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7">
+                    <td colspan="5">
                         <div class="decore-empty-state">
                             <i class="bi bi-calendar-check"></i>
                             <p class="mb-0">No attendance registered for this date.</p>
@@ -96,7 +94,7 @@
 </div>
 
 <div class="modal fade" id="attendanceModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content decore-card border-0 shadow-lg">
             <div class="modal-header">
                 <div>
@@ -127,17 +125,9 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label small fw-semibold">Date</label>
                             <input type="date" class="form-control" name="date" id="attnDate" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-semibold">Check-in</label>
-                            <input type="time" class="form-control" name="check_in" id="attnCheckIn">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-semibold">Check-out</label>
-                            <input type="time" class="form-control" name="check_out" id="attnCheckOut">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Status</label>
@@ -148,7 +138,7 @@
                                 <option value="overtime">Overtime</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <label class="form-label small fw-semibold">Notes</label>
                             <input class="form-control" name="notes" id="attnNotes" maxlength="255" placeholder="Optional note">
                         </div>
@@ -172,8 +162,6 @@ const attendanceData = {
         employee: "{{ log.employee_id }}",
         worksite: "{{ log.worksite_id|default:'' }}",
         date: "{{ log.date|date:'Y-m-d' }}",
-        checkIn: "{{ log.check_in|time:'H:i' }}",
-        checkOut: "{{ log.check_out|time:'H:i' }}",
         status: "{{ log.status }}",
         notes: "{{ log.notes|escapejs }}"
     },
@@ -197,8 +185,6 @@ function openAttendanceModal(mode, id) {
             document.getElementById('attnEmployee').value = r.employee;
             document.getElementById('attnWorksite').value = r.worksite;
             document.getElementById('attnDate').value = r.date;
-            document.getElementById('attnCheckIn').value = r.checkIn;
-            document.getElementById('attnCheckOut').value = r.checkOut;
             document.getElementById('attnStatus').value = r.status;
             document.getElementById('attnNotes').value = r.notes;
         }
@@ -229,8 +215,6 @@ document.getElementById('dateFilterInput').addEventListener('change', function()
                 <td><div class="d-flex align-items-center gap-2"><span class="decore-skeleton" style="width:32px; height:32px; border-radius:50%;"></span><span class="decore-skeleton" style="width:120px;"></span></div></td>
                 <td><span class="decore-skeleton" style="width:100px;"></span></td>
                 <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:80px;"></span></td>
-                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
-                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
                 <td><span class="decore-skeleton" style="width:80px; height:24px; border-radius:50rem;"></span></td>
                 <td><span class="decore-skeleton" style="width:40px;"></span></td>
             </tr>
@@ -238,17 +222,6 @@ document.getElementById('dateFilterInput').addEventListener('change', function()
                 <td><div class="d-flex align-items-center gap-2"><span class="decore-skeleton" style="width:32px; height:32px; border-radius:50%;"></span><span class="decore-skeleton" style="width:140px;"></span></div></td>
                 <td><span class="decore-skeleton" style="width:110px;"></span></td>
                 <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:80px;"></span></td>
-                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
-                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
-                <td><span class="decore-skeleton" style="width:80px; height:24px; border-radius:50rem;"></span></td>
-                <td><span class="decore-skeleton" style="width:40px;"></span></td>
-            </tr>
-            <tr>
-                <td><div class="d-flex align-items-center gap-2"><span class="decore-skeleton" style="width:32px; height:32px; border-radius:50%;"></span><span class="decore-skeleton" style="width:90px;"></span></div></td>
-                <td><span class="decore-skeleton" style="width:90px;"></span></td>
-                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:80px;"></span></td>
-                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
-                <td class="d-none d-md-table-cell"><span class="decore-skeleton" style="width:70px;"></span></td>
                 <td><span class="decore-skeleton" style="width:80px; height:24px; border-radius:50rem;"></span></td>
                 <td><span class="decore-skeleton" style="width:40px;"></span></td>
             </tr>

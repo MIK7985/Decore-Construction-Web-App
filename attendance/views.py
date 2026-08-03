@@ -14,7 +14,7 @@ from .models import Attendance
 class AttendanceForm(forms.ModelForm):
     class Meta:
         model = Attendance
-        fields = ("employee", "worksite", "date", "check_in", "check_out", "status", "notes")
+        fields = ("employee", "worksite", "date", "status", "notes")
 
     def clean(self):
         cleaned = super().clean()
