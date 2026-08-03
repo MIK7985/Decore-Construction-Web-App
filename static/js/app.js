@@ -8,7 +8,14 @@
 (function () {
   "use strict";
 
-  document.addEventListener("DOMContentLoaded", function () {
+  // DOM-ready guard: fires immediately if DOM is already parsed (e.g. script at
+  // bottom of body), or waits for DOMContentLoaded if loaded early (e.g. defer/async).
+  function ready(fn) {
+    if (document.readyState !== "loading") { fn(); }
+    else { document.addEventListener("DOMContentLoaded", fn); }
+  }
+
+  ready(function () {
     restorePersistedStates();
     initSidebarToggle();
     initDarkModeToggle();
