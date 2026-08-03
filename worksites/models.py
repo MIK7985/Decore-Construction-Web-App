@@ -72,3 +72,50 @@ class Worksite(models.Model):
         return self.budget - self.client_paid
 
 
+class DocumentCategory(models.TextChoices):
+    PERMIT = "permit", "Building Permit"
+    DRAWING = "drawing", "Approved Drawing"
+    PHOTO = "photo", "Site Photo"
+    AGREEMENT = "agreement", "Agreement / Contract"
+    BOQ = "boq", "BOQ (Bill of Quantities)"
+    INVOICE = "invoice", "Material Invoice"
+    OTHER = "other", "Other Attachment"
+
+
+class WorksiteDocument(models.Model):
+    worksite = models.ForeignKey(Worksite, on_delete=models.CASCADE, related_name="documents")
+    title = models.CharField(max_length=255)
+    category = models.CharField(max_length=32, choices=DocumentCategory.choices, default=DocumentCategory.OTHER)
+    file = models.FileField(upload_to="worksites/documents/")
+    file_size = models.PositiveIntegerField(default=0)  # in bytes
+    notes = models.CharField(max_length=255, blank=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="uploaded_documents")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def __str__(self):
+        return f"{self.title} ({self.get_category_display()})"
+
+    @property
+    def formatted_size(self):
+        size = self.file_size or (self.file.size if self.file and hasattr(self.file, 'size') else 0)
+        if size < 1024:
+            return f"{size} B"
+        elif size < 1024 * 1024:
+            return f"{size / 1024:.1f} KB"
+        else:
+            return f"{size / (1024 * 1024):.2f} MB"
+
+    @property
+    def file_extension(self):
+        if self.file and self.file.name:
+            import os
+            ext = os.path.splitext(self.file.name)[1].lower()
+            return ext.replace('.', '')
+        return ''
+
+    @property
+    def is_image(self):
+        return self.file_extension in ['jpg', 'jpeg', 'png', 'webp', 'gif']

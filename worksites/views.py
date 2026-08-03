@@ -3,7 +3,7 @@ from django.views.generic import ListView, DetailView, View
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.models import User
-from .models import Worksite
+from .models import Worksite, WorksiteDocument, DocumentCategory
 from employees.models import Employee
 from django import forms
 
@@ -82,7 +82,49 @@ class WorksiteDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Fetch real employees assigned to this worksite
         context['assigned_employees'] = self.object.employees.all()
         context['materials'] = self.object.materials.all()
+        context['documents'] = self.object.documents.all()
+        context['document_categories'] = DocumentCategory.choices
         return context
+
+
+class WorksiteDocumentUploadView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        site = get_object_or_404(Worksite, pk=pk)
+        title = request.POST.get("title", "").strip()
+        category = request.POST.get("category", DocumentCategory.OTHER)
+        notes = request.POST.get("notes", "").strip()
+        file_obj = request.FILES.get("file")
+
+        if not file_obj:
+            return JsonResponse({"success": False, "error": "Please select a file to upload."}, status=400)
+        
+        if not title:
+            title = file_obj.name
+
+        doc = WorksiteDocument.objects.create(
+            worksite=site,
+            title=title,
+            category=category,
+            file=file_obj,
+            file_size=file_obj.size,
+            notes=notes,
+            uploaded_by=request.user if request.user.is_authenticated else None
+        )
+        return JsonResponse({
+            "success": True,
+            "message": f'Document "{doc.title}" uploaded successfully!'
+        })
+
+
+class WorksiteDocumentDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        doc = get_object_or_404(WorksiteDocument, pk=pk)
+        title = doc.title
+        site_pk = doc.worksite.pk
+        doc.file.delete(save=False)
+        doc.delete()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': f'Document "{title}" deleted successfully!'})
+        return redirect('worksites:detail', pk=site_pk)
