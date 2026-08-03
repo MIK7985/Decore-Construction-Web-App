@@ -317,6 +317,65 @@ class SalaryPayView(LoginRequiredMixin, EngineerRequiredMixin, View):
         return redirect(f"{reverse('salaries:list')}?period={end_date.strftime('%Y-%m-%d')}")
 
 
+class SalaryPayAllView(LoginRequiredMixin, EngineerRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        period = request.POST.get("period", "")
+        start_date, end_date = parse_week_period(period)
+
+        paid_count = 0
+        total_paid_amount = Decimal("0.00")
+
+        with transaction.atomic():
+            # Get all preview rows for the week
+            salaries = payroll_preview(start_date, end_date)
+            for row in salaries:
+                if row.unpaid_balance > 0:
+                    # Retrieve or create SalaryRecord
+                    salary, created = SalaryRecord.objects.get_or_create(
+                        employee=row.employee,
+                        week_end_date=end_date,
+                        defaults={
+                            'daily_wage': row.daily_wage,
+                            'present_days': row.present_days,
+                            'bonus': row.bonus,
+                            'deductions': row.deductions,
+                            'net_salary': row.net_salary,
+                            'status': SalaryStatus.PENDING
+                        }
+                    )
+                    
+                    if not created:
+                        salary.daily_wage = row.daily_wage
+                        salary.present_days = row.present_days
+                        salary.bonus = row.bonus
+                        salary.deductions = row.deductions
+                        salary.recalculate()
+                    
+                    # Log the full pending balance payment
+                    unpaid = salary.net_salary - sum(p.amount for p in salary.payments.all())
+                    if unpaid > 0:
+                        Payment.objects.create(
+                            salary=salary,
+                            employee=row.employee,
+                            amount=unpaid,
+                            method=Payment.Method.CASH,  # default to cash for bulk pay
+                            reference_number="BULK-PAY",
+                        )
+                        salary.status = SalaryStatus.COMPLETED
+                        salary.paid_at = timezone.now()
+                        salary.save()
+
+                        paid_count += 1
+                        total_paid_amount += unpaid
+
+        if paid_count > 0:
+            messages.success(request, f"Successfully recorded bulk weekly payments of ₹{total_paid_amount:,.2f} for {paid_count} workers.")
+        else:
+            messages.info(request, "No pending salary balances found for this period.")
+
+        return redirect(f"{reverse('salaries:list')}?period={end_date.strftime('%Y-%m-%d')}")
+
+
 class SalaryReceiptPdfView(LoginRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
         salary = get_object_or_404(SalaryRecord, pk=pk)
