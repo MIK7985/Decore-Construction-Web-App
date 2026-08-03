@@ -1,25 +1,36 @@
 {% extends "base.html" %}
 {% load humanize %}
-{% block title %}Worksite Detail - {{ worksite.name }}{% endblock %}
+{% block title %}Worksite Profile - {{ worksite.name }}{% endblock %}
 
 {% block content %}
-<div class="decore-page-header">
+<!-- Page Header & Top Action Bar -->
+<div class="decore-page-header flex-wrap gap-2">
     <div class="d-flex align-items-center gap-3">
-        <a href="{% url 'worksites:list' %}" class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; padding: 0;">
-            <i class="bi bi-arrow-left"></i>
+        <a href="{% url 'worksites:list' %}" class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; padding: 0;">
+            <i class="bi bi-arrow-left fs-6"></i>
         </a>
         <div>
-            <h4 class="decore-page-title mb-0">Worksite Profile</h4>
-            <div class="decore-breadcrumb">
-                <a href="{% url 'worksites:list' %}" class="text-decore-primary">Worksites</a> / {{ worksite.name }}
+            <div class="d-flex align-items-center gap-2">
+                <h4 class="decore-page-title mb-0">{{ worksite.name }}</h4>
+                {% if worksite.status == 'active' %}
+                <span class="decore-status-badge badge-success"><span class="dot"></span>Active</span>
+                {% elif worksite.status == 'completed' %}
+                <span class="decore-status-badge badge-success"><span class="dot"></span>Completed</span>
+                {% else %}
+                <span class="decore-status-badge badge-warning"><span class="dot"></span>On Hold</span>
+                {% endif %}
+            </div>
+            <div class="decore-breadcrumb mt-1">
+                <a href="{% url 'worksites:list' %}" class="text-decore-primary">Worksites</a> / <i class="bi bi-geo-alt me-1"></i>{{ worksite.location }}
             </div>
         </div>
     </div>
-    <div class="d-flex gap-2">
-        <button type="button" class="btn btn-decore-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
-            <i class="bi bi-upload me-1"></i>Upload Document
+
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button type="button" class="btn btn-decore-primary btn-sm rounded-pill px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+            <i class="bi bi-cloud-arrow-up me-1"></i>Upload File
         </button>
-        <a href="{% url 'worksites:list' %}?edit={{ worksite.id }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="bi bi-pencil me-1"></i>Edit</a>
+        <a href="{% url 'worksites:list' %}?edit={{ worksite.id }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3"><i class="bi bi-pencil me-1"></i>Edit Site</a>
         <form id="deleteWorksiteForm" method="post" action="{% url 'worksites:delete' pk=worksite.id %}" style="display:inline;">
             {% csrf_token %}
             <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="decoreConfirm('Are you sure you want to delete this worksite? Assigned employees will be unassigned.', function() { document.getElementById('deleteWorksiteForm').submit(); })">
@@ -29,42 +40,43 @@
     </div>
 </div>
 
+<!-- Executive Stats KPI Cards Grid -->
 <div class="row g-3 mb-4">
     <div class="col-xl-3 col-md-6">
-        <div class="decore-card decore-stat-card h-100">
-            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-cash-stack text-success"></i></span>
+        <div class="decore-card decore-stat-card h-100 shadow-sm">
+            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-cash-stack text-primary"></i></span>
             <div>
-                <div class="decore-stat-label">Project Value / Income</div>
-                <div class="decore-stat-value text-success">₹{{ worksite.budget|floatformat:2|intcomma }}</div>
+                <div class="decore-stat-label">Project Budget Value</div>
+                <div class="decore-stat-value text-primary">₹{{ worksite.budget|floatformat:2|intcomma }}</div>
+                <div class="small text-muted mt-1" style="font-size: 0.72rem;">Client Contract Value</div>
             </div>
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
-        <div class="decore-card decore-stat-card h-100">
+        <div class="decore-card decore-stat-card h-100 shadow-sm">
             <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-graph-down text-danger"></i></span>
             <div>
                 <div class="decore-stat-label">Total Expenses / Spend</div>
                 <div class="decore-stat-value text-danger">₹{{ worksite.total_spend|floatformat:2|intcomma }}</div>
-                <div class="small text-danger mt-1 font-monospace" style="font-size: 0.65rem; line-height: 1.25; font-weight: 700;">
-                    Mat: ₹{{ worksite.material_cost|floatformat:2|intcomma }} &bull;
-                    Lab: ₹{{ worksite.labor_cost|floatformat:2|intcomma }}
+                <div class="small text-danger mt-1 font-monospace" style="font-size: 0.68rem; font-weight: 600;">
+                    Mat: ₹{{ worksite.material_cost|floatformat:0|intcomma }} &bull; Lab: ₹{{ worksite.labor_cost|floatformat:0|intcomma }}
                 </div>
             </div>
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
-        <div class="decore-card decore-stat-card h-100">
+        <div class="decore-card decore-stat-card h-100 shadow-sm">
             {% if worksite.profit >= 0 %}
             <span class="decore-stat-icon bg-success-soft"><i class="bi bi-graph-up-arrow text-success"></i></span>
             <div>
-                <div class="decore-stat-label">Net Profit</div>
+                <div class="decore-stat-label">Net Profit Margin</div>
                 <div class="decore-stat-value text-success">₹{{ worksite.profit|floatformat:2|intcomma }}</div>
-                <div class="small text-success mt-1" style="font-size: 0.72rem; font-weight: 700;">+{{ worksite.profit_margin|floatformat:1 }}% Margin</div>
+                <div class="small text-success mt-1" style="font-size: 0.72rem; font-weight: 700;">+{{ worksite.profit_margin|floatformat:1 }}% Profit Margin</div>
             </div>
             {% else %}
             <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-graph-down-arrow text-danger"></i></span>
             <div>
-                <div class="decore-stat-label">Net Profit</div>
+                <div class="decore-stat-label">Net Profit Margin</div>
                 <div class="decore-stat-value text-danger">-₹{{ worksite.profit_abs|floatformat:2|intcomma }}</div>
                 <div class="small text-danger mt-1" style="font-size: 0.72rem; font-weight: 700;">{{ worksite.profit_margin|floatformat:1 }}% Margin</div>
             </div>
@@ -72,274 +84,358 @@
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
-        <div class="decore-card decore-stat-card h-100">
-            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-people text-primary"></i></span>
+        <div class="decore-card decore-stat-card h-100 shadow-sm">
+            <span class="decore-stat-icon bg-warning-soft"><i class="bi bi-wallet2 text-warning"></i></span>
             <div>
-                <div class="decore-stat-label">Project Status & Crew</div>
-                <div class="decore-stat-value mb-1" style="font-size: 1.15rem; font-weight: 700;">
-                    {% if worksite.status == 'active' %}
-                    <span class="decore-status-badge badge-success"><span class="dot"></span>Active</span>
-                    {% elif worksite.status == 'completed' %}
-                    <span class="decore-status-badge badge-success"><span class="dot"></span>Completed</span>
-                    {% else %}
-                    <span class="decore-status-badge badge-warning"><span class="dot"></span>On Hold</span>
-                    {% endif %}
-                </div>
-                <div class="small text-muted" style="font-size: 0.75rem;">{{ assigned_employees|length }} Assigned Crew</div>
+                <div class="decore-stat-label">Client Receivables</div>
+                <div class="decore-stat-value text-warning">₹{{ worksite.client_balance|floatformat:2|intcomma }}</div>
+                <div class="small text-success mt-1" style="font-size: 0.72rem; font-weight: 600;">Paid: ₹{{ worksite.client_paid|floatformat:0|intcomma }}</div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row g-3 mb-4">
-    <!-- Left Column: Site Info and Visual Analytics -->
-    <div class="col-lg-5">
-        <div class="decore-card mb-3">
-            <div class="decore-card-header">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-building text-decore-primary fs-5"></i>
-                    <h6 class="mb-0">Site Information</h6>
+<!-- Navigation Tabs Bar -->
+<div class="decore-card p-2 mb-4 shadow-sm">
+    <ul class="nav nav-pills nav-fill flex-column flex-sm-row gap-1" id="worksiteTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold rounded-pill py-2" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-pane" type="button" role="tab">
+                <i class="bi bi-grid-1x2 me-1"></i>Overview &amp; Analytics
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold rounded-pill py-2" id="crew-tab" data-bs-toggle="tab" data-bs-target="#crew-pane" type="button" role="tab">
+                <i class="bi bi-people me-1"></i>Assigned Crew <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ assigned_employees|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold rounded-pill py-2" id="materials-tab" data-bs-toggle="tab" data-bs-target="#materials-pane" type="button" role="tab">
+                <i class="bi bi-boxes me-1"></i>Materials Stock <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ materials|length }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold rounded-pill py-2" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents-pane" type="button" role="tab">
+                <i class="bi bi-folder2-open me-1"></i>Documents &amp; Permits <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ documents|length }}</span>
+            </button>
+        </li>
+    </ul>
+</div>
+
+<!-- Tab Content Container -->
+<div class="tab-content" id="worksiteTabContent">
+    <!-- TAB 1: OVERVIEW & ANALYTICS -->
+    <div class="tab-pane fade show active" id="overview-pane" role="tabpanel">
+        <div class="row g-3">
+            <!-- Left Column: Site Info -->
+            <div class="col-lg-6">
+                <div class="decore-card h-100 shadow-sm">
+                    <div class="decore-card-header border-bottom">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-building text-decore-primary fs-5"></i>
+                            <h6 class="mb-0 fw-bold">Site Profile Details</h6>
+                        </div>
+                    </div>
+                    <div class="decore-card-body p-4">
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="p-2 rounded-circle bg-primary-soft text-primary"><i class="bi bi-person fs-5"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Client Name</div>
+                                    <div class="fw-bold fs-6 mt-1 text-decore-primary">{{ worksite.client }}</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="p-2 rounded-circle bg-primary-soft text-primary"><i class="bi bi-person-badge fs-5"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Site Supervisor</div>
+                                    <div class="fw-bold mt-1">
+                                        {% if worksite.supervisor %}
+                                            {{ worksite.supervisor.get_full_name|default:worksite.supervisor.username }}
+                                        {% else %}
+                                            <span class="text-muted small italic">Unassigned</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="p-2 rounded-circle bg-primary-soft text-primary"><i class="bi bi-geo-alt fs-5"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Site Address / Location</div>
+                                    <div class="fw-semibold mt-1 text-muted">{{ worksite.location }}</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="p-2 rounded-circle bg-primary-soft text-primary"><i class="bi bi-calendar-event fs-5"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Project Start Date</div>
+                                    <div class="fw-semibold mt-1 text-muted">{{ worksite.start_date|date:"F d, Y" }}</div>
+                                </div>
+                            </div>
+
+                            <hr class="my-1 border-light">
+
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.7rem;">Worksite Progress Completion</div>
+                                    <span class="fw-bold text-primary font-monospace">{{ worksite.progress }}%</span>
+                                </div>
+                                <div class="progress" style="height: 10px; border-radius: 10px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 0%;" data-progress="{{ worksite.progress }}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="decore-card-body p-4">
-                <div class="d-flex flex-column gap-3">
-                    <div class="d-flex align-items-start gap-3">
-                        <div class="p-2 rounded bg-light text-muted"><i class="bi bi-person"></i></div>
-                        <div>
-                            <div class="text-muted small fw-semibold">Client Name</div>
-                            <div class="fw-bold mt-1 text-decore-primary">{{ worksite.client }}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex align-items-start gap-3">
-                        <div class="p-2 rounded bg-light text-muted"><i class="bi bi-person-badge"></i></div>
-                        <div>
-                            <div class="text-muted small fw-semibold">Site Supervisor</div>
-                            <div class="fw-bold mt-1">
-                                {% if worksite.supervisor %}
-                                    {{ worksite.supervisor.get_full_name|default:worksite.supervisor.username }}
-                                {% else %}
-                                    <span class="text-muted small italic">Unassigned</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex align-items-start gap-3">
-                        <div class="p-2 rounded bg-light text-muted"><i class="bi bi-calendar-event"></i></div>
-                        <div>
-                            <div class="text-muted small fw-semibold">Start Date</div>
-                            <div class="fw-bold mt-1 text-muted">{{ worksite.start_date }}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex align-items-start gap-3">
-                        <div class="p-2 rounded bg-light text-muted"><i class="bi bi-geo-alt"></i></div>
-                        <div>
-                            <div class="text-muted small fw-semibold">Location Address</div>
-                            <div class="fw-bold mt-1 text-muted">{{ worksite.location }}</div>
-                        </div>
-                    </div>
-                    
-                    <hr class="my-1 border-light">
-                    
-                    <div class="d-flex align-items-start gap-3">
-                        <div class="p-2 rounded bg-light text-muted"><i class="bi bi-wallet2"></i></div>
-                        <div class="w-100">
-                            <div class="text-muted small fw-semibold mb-1">Client Billing Status</div>
-                            <div class="d-flex justify-content-between text-muted small mt-1">
-                                <span>Amount Paid:</span>
-                                <span class="fw-bold text-success font-monospace">₹{{ worksite.client_paid|floatformat:2|intcomma }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between text-muted small mt-1">
-                                <span>Balance Due:</span>
-                                <span class="fw-bold text-warning font-monospace">₹{{ worksite.client_balance|floatformat:2|intcomma }}</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <hr class="my-1 border-light">
-
-                    <div>
-                        <div class="text-muted small fw-semibold mb-2">Progress Completion</div>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="progress flex-grow-1" style="height: 8px; border-radius: 10px;">
-                                <div class="progress-bar bg-primary" role="progressbar" style="width: 0%;" data-progress="{{ worksite.progress }}"></div>
+            <!-- Right Column: Visual Financial Doughnut Analytics -->
+            <div class="col-lg-6">
+                <div class="decore-card h-100 shadow-sm">
+                    <div class="decore-card-header border-bottom">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-pie-chart text-decore-primary fs-5"></i>
+                            <h6 class="mb-0 fw-bold">Financial Visual Analytics</h6>
+                        </div>
+                    </div>
+                    <div class="decore-card-body p-4">
+                        <div class="row g-3 text-center align-items-center">
+                            <div class="col-6 border-end border-light">
+                                <div class="d-flex justify-content-center align-items-center mb-2" style="height: 140px; position: relative;">
+                                    <canvas id="budgetBreakdownChart" style="max-width: 130px; max-height: 130px;"></canvas>
+                                </div>
+                                <div class="small fw-bold text-muted" style="font-size: 0.75rem;">BUDGET UTILIZATION</div>
+                                <div class="small text-muted font-monospace mt-1" style="font-size: 0.7rem;">Spend vs Profit</div>
                             </div>
-                            <span class="small fw-bold">{{ worksite.progress }}%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Financial Visual Analytics Doughnut Charts -->
-        <div class="decore-card">
-            <div class="decore-card-header">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-pie-chart text-decore-primary fs-5"></i>
-                    <h6 class="mb-0">Financial Analytics</h6>
-                </div>
-            </div>
-            <div class="decore-card-body p-3">
-                <div class="row g-2 text-center">
-                    <div class="col-6 border-end border-light">
-                        <div class="d-flex justify-content-center align-items-center mb-2" style="height: 120px; position: relative;">
-                            <canvas id="budgetBreakdownChart" style="max-width: 110px; max-height: 110px;"></canvas>
+                            <div class="col-6">
+                                <div class="d-flex justify-content-center align-items-center mb-2" style="height: 140px; position: relative;">
+                                    <canvas id="billingStatusChart" style="max-width: 130px; max-height: 130px;"></canvas>
+                                </div>
+                                <div class="small fw-bold text-muted" style="font-size: 0.75rem;">CLIENT RECEIVABLES</div>
+                                <div class="small text-muted font-monospace mt-1" style="font-size: 0.7rem;">Paid vs Balance</div>
+                            </div>
                         </div>
-                        <div class="small fw-bold text-muted" style="font-size: 0.72rem;">BUDGET UTILIZATION</div>
-                        <div class="small text-muted font-monospace mt-1" style="font-size: 0.68rem;">Spend vs Profit</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="d-flex justify-content-center align-items-center mb-2" style="height: 120px; position: relative;">
-                            <canvas id="billingStatusChart" style="max-width: 110px; max-height: 110px;"></canvas>
-                        </div>
-                        <div class="small fw-bold text-muted" style="font-size: 0.72rem;">CLIENT RECEIVABLES</div>
-                        <div class="small text-muted font-monospace mt-1" style="font-size: 0.68rem;">Paid vs Balance</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Right Column: Assigned Crew Members list -->
-    <div class="col-lg-7">
-        <div class="decore-card h-100">
-            <div class="decore-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <!-- TAB 2: ASSIGNED CREW MEMBERS -->
+    <div class="tab-pane fade" id="crew-pane" role="tabpanel">
+        <div class="decore-card shadow-sm">
+            <div class="decore-card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-people text-decore-primary fs-5"></i>
-                    <h6 class="mb-0">Assigned Crew Members</h6>
+                    <h6 class="mb-0 fw-bold">Assigned Crew Members</h6>
                 </div>
                 <span class="badge bg-primary-soft text-primary rounded-pill px-3">{{ assigned_employees|length }} Assigned</span>
             </div>
-            <div class="table-responsive">
-                <table class="table decore-table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Employee Name</th>
-                            <th class="d-none d-md-table-cell">Role / Occupation</th>
-                            <th class="d-none d-md-table-cell">Phone Link</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for emp in assigned_employees %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    {% if emp.photo %}
-                                        <img src="{{ emp.photo.url }}" class="rounded-circle border" style="width: 32px; height: 32px; object-fit: cover;">
-                                    {% else %}
-                                        <span class="avatar-sm bg-primary-soft text-primary rounded-circle fw-bold d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size: 0.75rem;">
-                                            {{ emp.name|first|upper }}
-                                        </span>
-                                    {% endif %}
-                                    <div>
-                                        <a href="{% url 'employees:detail' pk=emp.id %}" class="fw-bold text-decore-primary text-decoration-none hover-underline">{{ emp.name }}</a>
-                                        <div class="text-muted small d-md-none" style="font-size: 0.72rem; margin-top: 2px;">{{ emp.role }}</div>
+
+            <!-- Desktop View (d-none d-md-block) -->
+            <div class="d-none d-md-block">
+                <div class="table-responsive px-4 pb-2">
+                    <table class="decore-table-premium mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-nowrap-custom">Employee</th>
+                                <th class="text-nowrap-custom">Role / Occupation</th>
+                                <th class="text-nowrap-custom">Phone Contact</th>
+                                <th class="text-nowrap-custom">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for emp in assigned_employees %}
+                            <tr>
+                                <td class="text-nowrap-custom">
+                                    <div class="d-flex align-items-center gap-3">
+                                        {% if emp.photo %}
+                                            <img src="{{ emp.photo.url }}" class="rounded-circle border" style="width: 36px; height: 36px; object-fit: cover;">
+                                        {% else %}
+                                            <span class="avatar-sm bg-primary-soft text-primary rounded-circle fw-bold d-inline-flex align-items-center justify-content-center" style="width:36px; height:36px; font-size: 0.85rem;">
+                                                {{ emp.name|first|upper }}
+                                            </span>
+                                        {% endif %}
+                                        <div>
+                                            <a href="{% url 'employees:detail' pk=emp.id %}" class="fw-bold text-decore-primary text-decoration-none hover-underline">{{ emp.name }}</a>
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="d-none d-md-table-cell fw-semibold text-muted">{{ emp.role }}</td>
-                            <td class="d-none d-md-table-cell">
-                                <a href="tel:{{ emp.phone }}" class="text-decoration-none small text-muted hover-underline"><i class="bi bi-telephone me-1 text-primary"></i>{{ emp.phone }}</a>
-                            </td>
-                            <td>
-                                {% if emp.status == 'active' %}
-                                    <span class="decore-status-badge badge-success"><span class="dot"></span>Active</span>
-                                {% else %}
-                                    <span class="decore-status-badge badge-secondary"><span class="dot"></span>{{ emp.status }}</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="bi bi-people fs-2 mb-2 d-block"></i>
-                                    <span>No crew members currently assigned to this worksite.</span>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </td>
+                                <td class="text-nowrap-custom fw-semibold text-muted">{{ emp.role }}</td>
+                                <td class="text-nowrap-custom">
+                                    <a href="tel:{{ emp.phone }}" class="btn btn-outline-primary btn-sm rounded-pill px-3"><i class="bi bi-telephone me-1"></i>{{ emp.phone }}</a>
+                                </td>
+                                <td class="text-nowrap-custom">
+                                    {% if emp.status == 'active' %}
+                                        <span class="decore-status-badge badge-success"><span class="dot"></span>Active</span>
+                                    {% else %}
+                                        <span class="decore-status-badge badge-secondary"><span class="dot"></span>{{ emp.status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="decore-empty-state">
+                                        <i class="bi bi-people fs-2 mb-2 d-block text-muted"></i>
+                                        <p class="mb-0 text-muted">No crew members currently assigned to this worksite.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mobile View (d-block d-md-none) -->
+            <div class="d-block d-md-none p-3">
+                {% for emp in assigned_employees %}
+                <div class="decore-card p-3 mb-3 shadow-sm border">
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                        <div class="d-flex align-items-center gap-3">
+                            {% if emp.photo %}
+                                <img src="{{ emp.photo.url }}" class="rounded-circle border" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                                <span class="avatar-md bg-primary-soft text-primary rounded-circle fw-bold d-inline-flex align-items-center justify-content-center" style="width:40px; height:40px; font-size: 1rem;">
+                                    {{ emp.name|first|upper }}
+                                </span>
+                            {% endif %}
+                            <div>
+                                <a href="{% url 'employees:detail' pk=emp.id %}" class="fw-bold text-decore-primary text-decoration-none d-block mb-0">{{ emp.name }}</a>
+                                <div class="text-muted small" style="font-size: 0.75rem;">{{ emp.role }}</div>
+                            </div>
+                        </div>
+
+                        {% if emp.status == 'active' %}
+                            <span class="decore-status-badge badge-success"><span class="dot"></span>Active</span>
+                        {% else %}
+                            <span class="decore-status-badge badge-secondary"><span class="dot"></span>{{ emp.status }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="mt-2 pt-2 border-top">
+                        <a href="tel:{{ emp.phone }}" class="btn btn-outline-primary btn-sm w-100 rounded-pill"><i class="bi bi-telephone me-1"></i>Call {{ emp.phone }}</a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="decore-empty-state py-5 text-center">
+                    <i class="bi bi-people text-muted fs-2 mb-2 d-block"></i>
+                    <p class="mb-0 text-muted">No crew members currently assigned to this worksite.</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
-</div>
 
-<!-- Onsite Materials Inventory -->
-<div class="row g-3 mb-4">
-    <div class="col-12">
-        <div class="decore-card">
-            <div class="decore-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <!-- TAB 3: MATERIALS INVENTORY -->
+    <div class="tab-pane fade" id="materials-pane" role="tabpanel">
+        <div class="decore-card shadow-sm">
+            <div class="decore-card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-boxes text-decore-primary fs-5"></i>
-                    <h6 class="mb-0">Onsite Materials Inventory</h6>
+                    <h6 class="mb-0 fw-bold">Onsite Materials Inventory</h6>
                 </div>
                 <div class="fw-bold text-decore-primary font-monospace bg-primary-soft px-3 py-1 rounded-pill" style="font-size: 0.825rem;">
                     Total Material Spend: ₹{{ worksite.material_cost|floatformat:2|intcomma }}
                 </div>
             </div>
-            <div class="table-responsive px-4 pb-2">
-                <table class="decore-table-premium mb-0">
-                    <thead>
-                        <tr>
-                            <th class="text-nowrap-custom">Material Type</th>
-                            <th class="text-nowrap-custom text-end">Quantity / Stock</th>
-                            <th class="text-nowrap-custom text-end d-none d-md-table-cell">Unit Cost</th>
-                            <th class="text-nowrap-custom text-end">Total Cost</th>
-                            <th class="text-nowrap-custom">Status</th>
-                            <th class="text-nowrap-custom d-none d-lg-table-cell">Supplier</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for mat in materials %}
-                        <tr>
-                            <td class="text-nowrap-custom">
-                                <span class="fw-bold text-decore-primary">{{ mat.name }}</span>
-                                <div class="text-muted small d-lg-none" style="font-size: 0.72rem; margin-top: 2px;">{{ mat.supplier }}</div>
-                            </td>
-                            <td class="text-nowrap-custom text-end font-monospace fw-semibold">{{ mat.quantity }} <span class="text-muted text-uppercase small" style="font-size: 0.7rem;">{{ mat.unit }}</span></td>
-                            <td class="text-nowrap-custom text-end font-monospace d-none d-md-table-cell">₹{{ mat.unit_price|floatformat:2|intcomma }}</td>
-                            <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost|floatformat:2|intcomma }}</td>
-                            <td class="text-nowrap-custom">
-                                {% if mat.status == 'Delivered' %}
-                                <span class="decore-status-badge badge-success"><span class="dot"></span>Delivered</span>
-                                {% elif mat.status == 'Ordered' %}
-                                <span class="decore-status-badge badge-warning"><span class="dot"></span>Ordered</span>
-                                {% else %}
-                                <span class="decore-status-badge badge-secondary"><span class="dot"></span>Pending</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-nowrap-custom text-muted small d-none d-lg-table-cell">{{ mat.supplier }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6">
-                                <div class="decore-empty-state py-5 text-center">
-                                    <i class="bi bi-boxes text-muted fs-2 mb-2 d-block"></i>
-                                    <p class="mb-0 text-muted">No materials allocated to this worksite yet.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+            <!-- Desktop View (d-none d-md-block) -->
+            <div class="d-none d-md-block">
+                <div class="table-responsive px-4 pb-2">
+                    <table class="decore-table-premium mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-nowrap-custom">Material Type</th>
+                                <th class="text-nowrap-custom text-end">Quantity / Stock</th>
+                                <th class="text-nowrap-custom text-end">Unit Cost</th>
+                                <th class="text-nowrap-custom text-end">Total Cost</th>
+                                <th class="text-nowrap-custom">Status</th>
+                                <th class="text-nowrap-custom">Supplier</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mat in materials %}
+                            <tr>
+                                <td class="text-nowrap-custom">
+                                    <span class="fw-bold text-decore-primary">{{ mat.name }}</span>
+                                </td>
+                                <td class="text-nowrap-custom text-end font-monospace fw-semibold">{{ mat.quantity }} <span class="text-muted text-uppercase small" style="font-size: 0.7rem;">{{ mat.unit }}</span></td>
+                                <td class="text-nowrap-custom text-end font-monospace">₹{{ mat.unit_price|floatformat:2|intcomma }}</td>
+                                <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost|floatformat:2|intcomma }}</td>
+                                <td class="text-nowrap-custom">
+                                    {% if mat.status == 'Delivered' %}
+                                    <span class="decore-status-badge badge-success"><span class="dot"></span>Delivered</span>
+                                    {% elif mat.status == 'Ordered' %}
+                                    <span class="decore-status-badge badge-warning"><span class="dot"></span>Ordered</span>
+                                    {% else %}
+                                    <span class="decore-status-badge badge-secondary"><span class="dot"></span>Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-nowrap-custom text-muted small">{{ mat.supplier }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6">
+                                    <div class="decore-empty-state py-5 text-center">
+                                        <i class="bi bi-boxes text-muted fs-2 mb-2 d-block"></i>
+                                        <p class="mb-0 text-muted">No materials allocated to this worksite yet.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mobile View (d-block d-md-none) -->
+            <div class="d-block d-md-none p-3">
+                {% for mat in materials %}
+                <div class="decore-card p-3 mb-3 shadow-sm border">
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2 pb-2 border-bottom">
+                        <span class="fw-bold text-decore-primary fs-6">{{ mat.name }}</span>
+                        {% if mat.status == 'Delivered' %}
+                        <span class="decore-status-badge badge-success"><span class="dot"></span>Delivered</span>
+                        {% elif mat.status == 'Ordered' %}
+                        <span class="decore-status-badge badge-warning"><span class="dot"></span>Ordered</span>
+                        {% else %}
+                        <span class="decore-status-badge badge-secondary"><span class="dot"></span>Pending</span>
+                        {% endif %}
+                    </div>
+                    <div class="row g-2 text-center my-2" style="font-size: 0.8rem;">
+                        <div class="col-6 border-end">
+                            <div class="text-muted small" style="font-size: 0.68rem;">QUANTITY</div>
+                            <div class="fw-bold font-monospace">{{ mat.quantity }} {{ mat.unit }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted small" style="font-size: 0.68rem;">TOTAL COST</div>
+                            <div class="fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost|floatformat:0|intcomma }}</div>
+                        </div>
+                    </div>
+                    <div class="text-muted small text-end" style="font-size: 0.72rem;">Supplier: {{ mat.supplier }}</div>
+                </div>
+                {% empty %}
+                <div class="decore-empty-state py-5 text-center">
+                    <i class="bi bi-boxes text-muted fs-2 mb-2 d-block"></i>
+                    <p class="mb-0 text-muted">No materials allocated to this worksite yet.</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
-</div>
 
-<!-- Worksite Documents & Site Attachments Section -->
-<div class="row g-3">
-    <div class="col-12">
-        <div class="decore-card">
-            <div class="decore-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <!-- TAB 4: DOCUMENTS & PERMITS -->
+    <div class="tab-pane fade" id="documents-pane" role="tabpanel">
+        <div class="decore-card shadow-sm">
+            <div class="decore-card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-folder2-open text-decore-primary fs-5"></i>
-                    <h6 class="mb-0">Worksite Documents &amp; Site Attachments</h6>
+                    <h6 class="mb-0 fw-bold">Worksite Documents &amp; Permits</h6>
                     <span class="badge bg-primary-soft text-primary rounded-pill px-3">{{ documents|length }} Files</span>
                 </div>
                 <button type="button" class="btn btn-decore-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
@@ -358,81 +454,122 @@
                 <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill doc-filter-btn" data-category="invoice" onclick="filterDocuments('invoice', this)">🧾 Invoices</button>
             </div>
 
-            <div class="table-responsive px-4 pb-2">
-                <table class="decore-table-premium mb-0">
-                    <thead>
-                        <tr>
-                            <th class="text-nowrap-custom">Document Title</th>
-                            <th class="text-nowrap-custom">Category</th>
-                            <th class="text-nowrap-custom d-none d-md-table-cell">Uploaded By</th>
-                            <th class="text-nowrap-custom d-none d-md-table-cell text-end">File Size</th>
-                            <th class="text-nowrap-custom text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="documentsTableBody">
-                        {% for doc in documents %}
-                        <tr class="document-row" data-category="{{ doc.category }}">
-                            <td class="text-nowrap-custom">
-                                <div class="d-flex align-items-center gap-2">
-                                    {% if doc.is_image %}
-                                        <i class="bi bi-file-earmark-image fs-4 text-primary"></i>
-                                    {% elif doc.file_extension == 'pdf' %}
-                                        <i class="bi bi-file-earmark-pdf fs-4 text-danger"></i>
-                                    {% elif doc.file_extension == 'xlsx' or doc.file_extension == 'xls' or doc.file_extension == 'csv' %}
-                                        <i class="bi bi-file-earmark-excel fs-4 text-success"></i>
-                                    {% elif doc.file_extension == 'docx' or doc.file_extension == 'doc' %}
-                                        <i class="bi bi-file-earmark-word fs-4 text-primary"></i>
-                                    {% else %}
-                                        <i class="bi bi-file-earmark-text fs-4 text-secondary"></i>
-                                    {% endif %}
-                                    <div>
-                                        <a href="{{ doc.file.url }}" target="_blank" class="fw-bold text-decore-primary text-decoration-none hover-underline d-block">{{ doc.title }}</a>
-                                        {% if doc.notes %}
-                                        <div class="text-muted small" style="font-size: 0.72rem;">{{ doc.notes }}</div>
+            <!-- Desktop View -->
+            <div class="d-none d-md-block">
+                <div class="table-responsive px-4 pb-2">
+                    <table class="decore-table-premium mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-nowrap-custom">Document Title</th>
+                                <th class="text-nowrap-custom">Category</th>
+                                <th class="text-nowrap-custom">Uploaded By</th>
+                                <th class="text-nowrap-custom text-end">File Size</th>
+                                <th class="text-nowrap-custom text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="documentsTableBody">
+                            {% for doc in documents %}
+                            <tr class="document-row" data-category="{{ doc.category }}">
+                                <td class="text-nowrap-custom">
+                                    <div class="d-flex align-items-center gap-2">
+                                        {% if doc.is_image %}
+                                            <i class="bi bi-file-earmark-image fs-4 text-primary"></i>
+                                        {% elif doc.file_extension == 'pdf' %}
+                                            <i class="bi bi-file-earmark-pdf fs-4 text-danger"></i>
+                                        {% elif doc.file_extension == 'xlsx' or doc.file_extension == 'xls' or doc.file_extension == 'csv' %}
+                                            <i class="bi bi-file-earmark-excel fs-4 text-success"></i>
+                                        {% elif doc.file_extension == 'docx' or doc.file_extension == 'doc' %}
+                                            <i class="bi bi-file-earmark-word fs-4 text-primary"></i>
+                                        {% else %}
+                                            <i class="bi bi-file-earmark-text fs-4 text-secondary"></i>
                                         {% endif %}
+                                        <div>
+                                            <a href="{{ doc.file.url }}" target="_blank" class="fw-bold text-decore-primary text-decoration-none hover-underline d-block">{{ doc.title }}</a>
+                                            {% if doc.notes %}
+                                            <div class="text-muted small" style="font-size: 0.72rem;">{{ doc.notes }}</div>
+                                            {% endif %}
+                                        </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="text-nowrap-custom">
-                                <span class="badge {% if doc.category == 'permit' %}bg-primary-soft text-primary{% elif doc.category == 'drawing' %}bg-info-soft text-info{% elif doc.category == 'photo' %}bg-success-soft text-success{% elif doc.category == 'invoice' %}bg-warning-soft text-warning{% else %}bg-secondary-soft text-secondary{% endif %} border">
-                                    {{ doc.get_category_display }}
-                                </span>
-                            </td>
-                            <td class="text-nowrap-custom d-none d-md-table-cell text-muted small">
-                                {{ doc.uploaded_by.username|default:"Supervisor" }} &bull; {{ doc.uploaded_at|date:"M d, Y" }}
-                            </td>
-                            <td class="text-nowrap-custom d-none d-md-table-cell text-end font-monospace small">
-                                {{ doc.formatted_size }}
-                            </td>
-                            <td class="text-nowrap-custom text-end">
-                                <div class="d-flex justify-content-end gap-1">
-                                    <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px;" title="Open / Preview">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px;" title="Share / Save File" onclick="shareOrDownloadFile('{{ doc.file.url }}', '{{ doc.title|escapejs }}')">
-                                        <i class="bi bi-share"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px;" title="Delete Document" onclick="deleteDocument({{ doc.id }}, '{{ doc.title|escapejs }}')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr id="noDocsRow">
-                            <td colspan="5">
-                                <div class="decore-empty-state py-5 text-center">
-                                    <i class="bi bi-folder2-open text-muted fs-2 mb-2 d-block"></i>
-                                    <p class="mb-0 text-muted">No documents uploaded for this worksite yet.</p>
-                                    <button type="button" class="btn btn-decore-primary btn-sm rounded-pill mt-2 px-3" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
-                                        <i class="bi bi-cloud-arrow-up me-1"></i>Upload Building Permits, Drawings, or Invoices
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </td>
+                                <td class="text-nowrap-custom">
+                                    <span class="badge {% if doc.category == 'permit' %}bg-primary-soft text-primary{% elif doc.category == 'drawing' %}bg-info-soft text-info{% elif doc.category == 'photo' %}bg-success-soft text-success{% elif doc.category == 'invoice' %}bg-warning-soft text-warning{% else %}bg-secondary-soft text-secondary{% endif %} border">
+                                        {{ doc.get_category_display }}
+                                    </span>
+                                </td>
+                                <td class="text-nowrap-custom text-muted small">
+                                    {{ doc.uploaded_by.username|default:"Supervisor" }} &bull; {{ doc.uploaded_at|date:"M d, Y" }}
+                                </td>
+                                <td class="text-nowrap-custom text-end font-monospace small">
+                                    {{ doc.formatted_size }}
+                                </td>
+                                <td class="text-nowrap-custom text-end">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px;" title="Open / Preview">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px;" title="Share / Save File" onclick="shareOrDownloadFile('{{ doc.file.url }}', '{{ doc.title|escapejs }}')">
+                                            <i class="bi bi-share"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width:32px; height:32px;" title="Delete Document" onclick="deleteDocument({{ doc.id }}, '{{ doc.title|escapejs }}')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr id="noDocsRow">
+                                <td colspan="5">
+                                    <div class="decore-empty-state py-5 text-center">
+                                        <i class="bi bi-folder2-open text-muted fs-2 mb-2 d-block"></i>
+                                        <p class="mb-0 text-muted">No documents uploaded for this worksite yet.</p>
+                                        <button type="button" class="btn btn-decore-primary btn-sm rounded-pill mt-2 px-3" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                                            <i class="bi bi-cloud-arrow-up me-1"></i>Upload Building Permits, Drawings, or Invoices
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mobile View (d-block d-md-none) -->
+            <div class="d-block d-md-none p-3">
+                {% for doc in documents %}
+                <div class="decore-card p-3 mb-3 shadow-sm border document-row-mobile" data-category="{{ doc.category }}">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        {% if doc.is_image %}
+                            <i class="bi bi-file-earmark-image fs-4 text-primary"></i>
+                        {% elif doc.file_extension == 'pdf' %}
+                            <i class="bi bi-file-earmark-pdf fs-4 text-danger"></i>
+                        {% else %}
+                            <i class="bi bi-file-earmark-text fs-4 text-secondary"></i>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <a href="{{ doc.file.url }}" target="_blank" class="fw-bold text-decore-primary text-decoration-none d-block mb-0">{{ doc.title }}</a>
+                            <span class="badge {% if doc.category == 'permit' %}bg-primary-soft text-primary{% elif doc.category == 'drawing' %}bg-info-soft text-info{% elif doc.category == 'photo' %}bg-success-soft text-success{% else %}bg-secondary-soft text-secondary{% endif %} border mt-1" style="font-size: 0.68rem;">
+                                {{ doc.get_category_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="text-muted small mb-3" style="font-size: 0.72rem;">
+                        Size: {{ doc.formatted_size }} &bull; Date: {{ doc.uploaded_at|date:"M d, Y" }}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a href="{{ doc.file.url }}" target="_blank" class="btn btn-outline-primary btn-sm flex-fill rounded-pill"><i class="bi bi-eye me-1"></i>Open</a>
+                        <button type="button" class="btn btn-outline-success btn-sm flex-fill rounded-pill" onclick="shareOrDownloadFile('{{ doc.file.url }}', '{{ doc.title|escapejs }}')"><i class="bi bi-share me-1"></i>Share</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle" style="width: 32px; height: 32px;" onclick="deleteDocument({{ doc.id }}, '{{ doc.title|escapejs }}')"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="decore-empty-state py-5 text-center">
+                    <i class="bi bi-folder2-open text-muted fs-2 mb-2 d-block"></i>
+                    <p class="mb-0 text-muted">No documents uploaded for this worksite yet.</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -502,11 +639,13 @@
         const rows = document.querySelectorAll('.document-row');
         rows.forEach(row => {
             const cat = row.getAttribute('data-category');
-            if (category === 'all' || cat === category) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+            row.style.display = (category === 'all' || cat === category) ? '' : 'none';
+        });
+
+        const mobileCards = document.querySelectorAll('.document-row-mobile');
+        mobileCards.forEach(card => {
+            const cat = card.getAttribute('data-category');
+            card.style.display = (category === 'all' || cat === category) ? '' : 'none';
         });
     }
 
@@ -585,7 +724,10 @@
             if (data.success) {
                 bootstrap.Modal.getInstance(document.getElementById('uploadDocumentModal')).hide();
                 decoreToast(data.message, 'success');
-                setTimeout(() => location.reload(), 600);
+                setTimeout(() => {
+                    window.location.hash = '#documents-pane';
+                    location.reload();
+                }, 600);
             } else {
                 decoreToast(data.error || 'Failed to upload document.', 'danger');
             }
@@ -597,8 +739,6 @@
     });
 
     document.addEventListener("DOMContentLoaded", function() {
-        const isDark = document.documentElement.getAttribute("data-bs-theme") === "dark";
-
         const spend = parseFloat("{{ worksite.total_spend|stringformat:'.2f' }}");
         const profit = parseFloat("{{ worksite.profit|stringformat:'.2f' }}");
         const clientPaid = parseFloat("{{ worksite.client_paid|stringformat:'.2f' }}");
@@ -661,6 +801,15 @@
                 cutout: '72%'
             }
         });
+
+        // Check if hash present in URL to activate specific tab
+        const hash = window.location.hash;
+        if (hash) {
+            const triggerEl = document.querySelector(`button[data-bs-target="${hash}"]`);
+            if (triggerEl) {
+                bootstrap.Tab.getOrCreateInstance(triggerEl).show();
+            }
+        }
     });
 </script>
 {% endblock %}
