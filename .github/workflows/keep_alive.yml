@@ -1,15 +1,16 @@
-name: Keep Alive Ping
+name: Keep Render Alive
 
 on:
   schedule:
-    # Run every 3 days at midnight (UTC)
-    - cron: '0 0 */3 * *'
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+    # Runs every 10 minutes — prevents Render free tier sleep
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Web App and Database
+      - name: Ping Render app
         run: |
-          curl -I https://decore-construction-web-app.onrender.com/
+          curl -s -o /dev/null -w "HTTP %{http_code} — App is awake" \
+            https://your-app-name.onrender.com/
