@@ -1412,4 +1412,108 @@ html[data-bs-theme="dark"] .text-decore-primary,
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
 }
 
+/* =========================================================
+   COMPREHENSIVE FORM UI/UX UPGRADE SYSTEM
+   ========================================================= */
+.form-label {
+  font-weight: 600 !important;
+  font-size: 0.825rem !important;
+  color: var(--decore-text) !important;
+  margin-bottom: 0.4rem !important;
+  letter-spacing: 0.01em !important;
+}
+
+.form-control,
+.form-select {
+  border-radius: 0.85rem !important;
+  padding: 0.65rem 1rem !important;
+  font-size: 0.9rem !important;
+  border: 1.5px solid var(--decore-border) !important;
+  background-color: var(--decore-card-bg) !important;
+  color: var(--decore-text) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+}
+
+.form-control:hover,
+.form-select:hover {
+  border-color: rgba(99, 102, 241, 0.4) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--decore-primary) !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.18) !important;
+  background-color: var(--decore-card-bg) !important;
+  outline: none !important;
+}
+
+.input-group-text {
+  border-radius: 0.85rem 0 0 0.85rem !important;
+  border: 1.5px solid var(--decore-border) !important;
+  border-right: none !important;
+  background-color: rgba(99, 102, 241, 0.08) !important;
+  color: var(--decore-primary) !important;
+  font-weight: 700 !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+.input-group > .form-control {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+.form-text {
+  font-size: 0.75rem !important;
+  color: var(--decore-text-muted) !important;
+  margin-top: 0.35rem !important;
+}
+
+/* Valid & Invalid State Highlights */
+.form-control:valid:not(:placeholder-shown) {
+  border-color: rgba(16, 185, 129, 0.5) !important;
+}
+
+.form-control:invalid:not(:placeholder-shown) {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+}
+
+/* Modal Form Headers & Action Footers */
+.modal-content {
+  border-radius: 1.25rem !important;
+  overflow: hidden !important;
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem !important;
+  background: transparent !important;
+  border-bottom: 1px solid var(--decore-border) !important;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem !important;
+  border-top: 1px solid var(--decore-border) !important;
+}
+
+/* Dark Mode Form Overrides */
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+.dark-mode .form-control,
+.dark-mode .form-select {
+  background-color: #0F172A !important;
+  border-color: #334155 !important;
+  color: #F8FAFC !important;
+}
+
+[data-bs-theme="dark"] .input-group-text,
+[data-theme="dark"] .input-group-text,
+.dark-mode .input-group-text {
+  background-color: rgba(99, 102, 241, 0.2) !important;
+  border-color: #334155 !important;
+  color: #A5B4FC !important;
+}
+
+
 
