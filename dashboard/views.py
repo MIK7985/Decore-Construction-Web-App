@@ -1,13 +1,15 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.utils import timezone
 import datetime
 
 from employees.models import Employee
-from worksites.models import Worksite, WorksiteStatus, DailySiteLog, ClientPayment
-from payments.models import Payment
+from worksites.models import Worksite, WorksiteStatus, ClientPayment
+from attendance.models import Attendance, AttendanceStatus
+from materials.models import Material
 from expenses.models import Expense, ExpenseStatus
+from salaries.models import SalaryRecord, SalaryStatus
 
 
 class IndexView(LoginRequiredMixin, TemplateView):
@@ -16,99 +18,175 @@ class IndexView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         now = timezone.now()
-        
+        today = timezone.localdate()
+
         worksites = Worksite.objects.all()
         active_worksites_qs = worksites.filter(status=WorksiteStatus.ACTIVE)
+        total_employees = Employee.objects.filter(is_archived=False)
+
+        # 1. Quick Statistics (6 Key Cards)
+        active_worksites_cnt = active_worksites_qs.count()
+        total_employees_cnt = total_employees.count()
+
+        # Present Today
+        today_attendance = Attendance.objects.filter(date=today)
+        present_today_cnt = today_attendance.filter(
+            status__in=[AttendanceStatus.PRESENT, AttendanceStatus.LATE, AttendanceStatus.OVERTIME, 'present', 'late', 'overtime']
+        ).count()
         
-        payments_month_val = Payment.objects.filter(paid_on__year=now.year, paid_on__month=now.month).aggregate(total=Sum('amount'))['total'] or 0.00
-        pending_expenses_val = Expense.objects.filter(status=ExpenseStatus.PENDING).aggregate(total=Sum('amount'))['total'] or 0.00
-        
-        total_budget = sum(w.budget for w in worksites)
-        total_paid = sum(w.client_paid for w in worksites)
-        total_balance = sum(w.client_balance for w in worksites)
-        total_spend = sum(w.total_spend for w in worksites)
-        
+        absent_today_cnt = today_attendance.filter(
+            status__in=[AttendanceStatus.ABSENT, 'absent']
+        ).count()
+
+        if today_attendance.count() == 0 and total_employees_cnt > 0:
+            # Fallback for display if today's attendance isn't marked yet
+            today_summary_marked = False
+        else:
+            today_summary_marked = True
+
+        total_revenue = sum(w.budget for w in worksites)
+        total_expenses = sum(w.total_spend for w in worksites) + (Expense.objects.aggregate(total=Sum('amount'))['total'] or 0.00)
+        net_profit = total_revenue - total_expenses
+
         context["stats"] = {
-            "total_employees": Employee.objects.filter(is_archived=False).count(),
-            "active_worksites": active_worksites_qs.count(),
-            "total_worksites": worksites.count(),
-            "payments_month": float(payments_month_val),
-            "pending_expenses": float(pending_expenses_val),
-            "total_budget": float(total_budget),
-            "total_paid": float(total_paid),
-            "total_balance": float(total_balance),
-            "total_spend": float(total_spend),
+            "active_worksites": active_worksites_cnt,
+            "total_employees": total_employees_cnt,
+            "present_today": present_today_cnt,
+            "total_revenue": float(total_revenue),
+            "total_expenses": float(total_expenses),
+            "net_profit": float(net_profit),
+            "net_profit_abs": abs(float(net_profit)),
+            "is_profit_positive": net_profit >= 0,
         }
-        
-        # 1. Worksite distribution for Doughnut Chart
-        active_count = active_worksites_qs.count()
-        on_hold_count = worksites.filter(status=WorksiteStatus.ON_HOLD).count()
-        completed_count = worksites.filter(status=WorksiteStatus.COMPLETED).count()
-        context["worksite_status_counts"] = [active_count, on_hold_count, completed_count]
-        
-        # 2. Monthly Expenses data for Line Chart
-        months_labels = []
-        months_data = []
-        today = datetime.date.today()
-        for i in range(5, -1, -1):
-            d = today - datetime.timedelta(days=i*30)
-            months_labels.append(d.strftime("%b"))
-            sum_val = Expense.objects.filter(date__year=d.year, date__month=d.month).aggregate(total=Sum('amount'))['total'] or 0
-            months_data.append(float(sum_val))
-            
-        if sum(months_data) == 0:
-            months_labels = ["Feb", "Mar", "Apr", "May", "Jun", "Jul"]
-            months_data = [12000, 18500, 24000, 15000, 29000, 38500]
-            
-        context["chart_labels"] = months_labels
-        context["chart_data"] = months_data
 
-        # 3. Active worksites list with progress
-        context["active_worksites_list"] = active_worksites_qs.order_by("-id")[:4]
-        
-        # 4. Recent Daily Site Logs
-        context["recent_site_logs"] = DailySiteLog.objects.select_related("worksite", "logged_by").order_by("-date", "-created_at")[:4]
+        # 2. Today's Summary
+        today_income_val = ClientPayment.objects.filter(payment_date=today).aggregate(total=Sum('amount'))['total'] or 0.00
+        today_expenses_val = Expense.objects.filter(date=today).aggregate(total=Sum('amount'))['total'] or 0.00
 
-        # 5. Build live recent operational activities
+        context["today_summary"] = {
+            "present_workers": present_today_cnt,
+            "absent_workers": absent_today_cnt if today_summary_marked else 0,
+            "today_income": float(today_income_val),
+            "today_expenses": float(today_expenses_val),
+            "marked": today_summary_marked
+        }
+
+        # 3. Active Worksites (Top 3 latest)
+        context["latest_active_worksites"] = active_worksites_qs.order_by("-id")[:3]
+
+        # 4. Recent Activity (Latest 5 items across system)
         activities = []
-        
-        recent_employees = Employee.objects.filter(is_archived=False).select_related("worksite").order_by("-id")[:4]
-        for emp in recent_employees:
+
+        # Attendance Marked
+        recent_att = Attendance.objects.select_related("employee", "worksite").order_by("-date", "-id")[:2]
+        for att in recent_att:
             activities.append({
-                "icon": "bi-person-plus text-primary",
-                "title": f"Registered employee: {emp.name}",
-                "worksite": emp.worksite.name if emp.worksite else "Unassigned",
-                "user": "System Admin",
-                "status": "Success",
-                "time": emp.joined.strftime("%b %d") if emp.joined else "-",
-                "timestamp": timezone.make_aware(timezone.datetime.combine(emp.joined, timezone.datetime.min.time())) if emp.joined else now
+                "icon": "bi-calendar-check text-success",
+                "title": f"Marked attendance: {att.employee.name} ({att.get_status_display()})",
+                "subtitle": att.worksite.name if att.worksite else "General Site",
+                "time": att.date.strftime("%b %d"),
+                "timestamp": timezone.make_aware(timezone.datetime.combine(att.date, timezone.datetime.min.time()))
             })
-            
-        recent_expenses = Expense.objects.select_related("worksite").order_by("-id")[:4]
+
+        # Expenses Recorded
+        recent_expenses = Expense.objects.select_related("worksite").order_by("-id")[:2]
         for exp in recent_expenses:
             activities.append({
                 "icon": "bi-receipt text-danger",
-                "title": f"Logged expense: {exp.category} (₹{exp.amount:,.2f})",
-                "worksite": exp.worksite.name if exp.worksite else "-",
-                "user": "Supervisor",
-                "status": exp.status,
+                "title": f"Expense recorded: {exp.category} (₹{exp.amount:,.2f})",
+                "subtitle": exp.worksite.name if exp.worksite else "General",
                 "time": exp.date.strftime("%b %d"),
-                "timestamp": timezone.make_aware(timezone.datetime.combine(exp.date, timezone.datetime.min.time())) if exp.date else now
+                "timestamp": timezone.make_aware(timezone.datetime.combine(exp.date, timezone.datetime.min.time()))
             })
-            
-        recent_payments = ClientPayment.objects.select_related("worksite").order_by("-id")[:4]
+
+        # Materials Added
+        recent_mats = Material.objects.select_related("worksite").order_by("-id")[:2]
+        for mat in recent_mats:
+            activities.append({
+                "icon": "bi-boxes text-primary",
+                "title": f"Material added: {mat.name} ({mat.quantity} {mat.unit})",
+                "subtitle": mat.worksite.name if mat.worksite else "General Stock",
+                "time": "Recent",
+                "timestamp": now
+            })
+
+        # Salaries Paid
+        recent_sal = SalaryRecord.objects.select_related("employee").filter(status=SalaryStatus.COMPLETED).order_by("-paid_at", "-id")[:2]
+        for sal in recent_sal:
+            activities.append({
+                "icon": "bi-cash-stack text-info",
+                "title": f"Salary paid: {sal.employee.name} (₹{sal.net_salary:,.2f})",
+                "subtitle": f"Week ending {sal.week_end_date.strftime('%b %d')}",
+                "time": sal.paid_at.strftime("%b %d") if sal.paid_at else "Recent",
+                "timestamp": sal.paid_at if sal.paid_at else now
+            })
+
+        # Client Payment
+        recent_payments = ClientPayment.objects.select_related("worksite").order_by("-id")[:2]
         for pay in recent_payments:
             activities.append({
-                "icon": "bi-cash-stack text-success",
+                "icon": "bi-wallet2 text-success",
                 "title": f"Client payment: {pay.milestone} (₹{pay.amount:,.2f})",
-                "worksite": pay.worksite.name,
-                "user": pay.logged_by.username if pay.logged_by else "Client Billing",
-                "status": "Approved",
+                "subtitle": pay.worksite.name,
                 "time": pay.payment_date.strftime("%b %d"),
-                "timestamp": timezone.make_aware(timezone.datetime.combine(pay.payment_date, timezone.datetime.min.time())) if pay.payment_date else now
+                "timestamp": timezone.make_aware(timezone.datetime.combine(pay.payment_date, timezone.datetime.min.time()))
             })
 
         activities.sort(key=lambda x: x["timestamp"], reverse=True)
-        context["activities"] = activities[:6]
-        
+        context["recent_activities"] = activities[:5]
+
+        # 5. Smart Operational Alerts (Only add if actionable alert exists)
+        alerts = []
+
+        # Alert A: High Client Receivables Balance
+        total_balance_val = sum(w.client_balance for w in worksites if w.client_balance > 0)
+        if total_balance_val > 0:
+            alerts.append({
+                "type": "warning",
+                "icon": "bi-exclamation-triangle-fill text-warning",
+                "title": f"Pending Client Receivables: ₹{total_balance_val:,.2f}",
+                "description": "Outstanding client milestone payments due across active construction sites.",
+                "action_url": "/worksites/",
+                "action_text": "View Receivables"
+            })
+
+        # Alert B: Low Material Stock
+        low_mats = Material.objects.filter(quantity__lte=5)
+        if low_mats.exists():
+            count_low = low_mats.count()
+            first_mat = low_mats.first()
+            alerts.append({
+                "type": "danger",
+                "icon": "bi-box-seam-fill text-danger",
+                "title": f"Low Stock Alert: {count_low} Material(s)",
+                "description": f"Item '{first_mat.name}' is running low ({first_mat.quantity} {first_mat.unit} remaining).",
+                "action_url": "/materials/",
+                "action_text": "Reorder Stock"
+            })
+
+        # Alert C: Pending Expense Approvals
+        pending_exp_cnt = Expense.objects.filter(status=ExpenseStatus.PENDING).count()
+        if pending_exp_cnt > 0:
+            alerts.append({
+                "type": "info",
+                "icon": "bi-receipt text-info",
+                "title": f"{pending_exp_cnt} Expense(s) Awaiting Approval",
+                "description": "Supervisor site outgoings require executive approval.",
+                "action_url": "/expenses/",
+                "action_text": "Review Expenses"
+            })
+
+        # Alert D: Pending Weekly Payroll
+        pending_payroll_cnt = SalaryRecord.objects.filter(status=SalaryStatus.PENDING).count()
+        if pending_payroll_cnt > 0:
+            alerts.append({
+                "type": "primary",
+                "icon": "bi-cash-stack text-primary",
+                "title": f"{pending_payroll_cnt} Weekly Pay Slips Unpaid",
+                "description": "Finalized weekly worker payroll balances are ready for payment.",
+                "action_url": "/salaries/",
+                "action_text": "Process Payroll"
+            })
+
+        context["alerts"] = alerts
         return context
