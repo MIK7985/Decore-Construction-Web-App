@@ -7,4 +7,6 @@ urlpatterns = [
     path("", views.MaterialListView.as_view(), name="list"),
     path("create/", views.MaterialCreateView.as_view(), name="create"),
     path("catalog/create/", views.MaterialCatalogCreateView.as_view(), name="catalog_create"),
+    path("catalog/<int:pk>/edit/", views.MaterialCatalogUpdateView.as_view(), name="catalog_edit"),
+    path("catalog/<int:pk>/delete/", views.MaterialCatalogDeleteView.as_view(), name="catalog_delete"),
 ]

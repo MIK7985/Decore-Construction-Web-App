@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, View
 from .models import Material, MaterialStatus, MaterialCatalog
 from worksites.models import Worksite
@@ -137,3 +138,46 @@ class MaterialCatalogCreateView(LoginRequiredMixin, View):
                 "default_supplier": cat.default_supplier
             }
         })
+
+
+class MaterialCatalogUpdateView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        cat = get_object_or_404(MaterialCatalog, pk=pk)
+        name = request.POST.get("name", "").strip()
+        default_unit = request.POST.get("default_unit", "").strip()
+        default_unit_price = request.POST.get("default_unit_price", "0")
+        default_supplier = request.POST.get("default_supplier", "").strip()
+
+        if not name or not default_unit:
+            return JsonResponse({"success": False, "error": "Material Name and Default Unit are required."}, status=400)
+
+        try:
+            price = Decimal(str(default_unit_price))
+        except Exception:
+            price = Decimal("0.00")
+
+        cat.name = name
+        cat.default_unit = default_unit
+        cat.default_unit_price = price
+        cat.default_supplier = default_supplier
+        cat.save()
+
+        return JsonResponse({
+            "success": True,
+            "message": f'Master Material "{cat.name}" updated successfully!',
+            "catalog_item": {
+                "id": cat.id,
+                "name": cat.name,
+                "default_unit": cat.default_unit,
+                "default_unit_price": float(cat.default_unit_price),
+                "default_supplier": cat.default_supplier
+            }
+        })
+
+
+class MaterialCatalogDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        cat = get_object_or_404(MaterialCatalog, pk=pk)
+        name = cat.name
+        cat.delete()
+        return JsonResponse({"success": True, "message": f'Master Material "{name}" removed from catalog.'})

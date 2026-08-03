@@ -136,13 +136,13 @@
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="form-label small fw-semibold mb-0" for="matCatalogSelect"><i class="bi bi-journal-bookmark me-1 text-primary"></i>Select Material from Master Catalog</label>
                                 <button type="button" class="btn btn-link text-decore-primary text-decoration-none p-0 small fw-bold" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#masterCatalogModal">
-                                    <i class="bi bi-plus-circle me-1"></i>+ Add New Item to Catalog
+                                    <i class="bi bi-plus-circle me-1"></i>Manage Catalog Items
                                 </button>
                             </div>
                             <select class="form-select fw-semibold border-primary shadow-sm" id="matCatalogSelect" onchange="handleCatalogSelect(this)">
                                 <option value="">-- Choose Material --</option>
                                 {% for cat in catalog_items %}
-                                <option value="{{ cat.id }}" data-name="{{ cat.name }}" data-unit="{{ cat.default_unit }}" data-price="{{ cat.default_unit_price }}" data-supplier="{{ cat.default_supplier }}">
+                                <option value="{{ cat.id }}" id="opt_cat_{{ cat.id }}" data-name="{{ cat.name }}" data-unit="{{ cat.default_unit }}" data-price="{{ cat.default_unit_price }}" data-supplier="{{ cat.default_supplier }}">
                                     {{ cat.name }} ({{ cat.default_unit }}) — ₹{{ cat.default_unit_price|floatformat:2 }}
                                 </option>
                                 {% endfor %}
@@ -223,7 +223,7 @@
             <div class="modal-header border-bottom border-light">
                 <div>
                     <h5 class="modal-title fw-bold" id="masterCatalogTitle"><i class="bi bi-journal-bookmark text-primary me-2"></i>Master Material Catalog</h5>
-                    <p class="small text-muted mb-0">Add &amp; manage standard construction materials that show in the dropdown list.</p>
+                    <p class="small text-muted mb-0">Add, edit &amp; manage standard construction materials that show in the dropdown list.</p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -261,19 +261,28 @@
                                 <th>Default Unit</th>
                                 <th>Default Price (₹)</th>
                                 <th>Supplier</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="catalogTableBody">
                             {% for cat in catalog_items %}
-                            <tr>
-                                <td class="fw-bold text-decore-primary">{{ cat.name }}</td>
-                                <td><span class="badge bg-light text-dark border">{{ cat.default_unit }}</span></td>
-                                <td class="font-monospace fw-semibold">₹{{ cat.default_unit_price|floatformat:2|intcomma }}</td>
-                                <td class="text-muted small">{{ cat.default_supplier|default:"—" }}</td>
+                            <tr id="cat_row_{{ cat.id }}">
+                                <td class="fw-bold text-decore-primary cat-name">{{ cat.name }}</td>
+                                <td><span class="badge bg-light text-dark border cat-unit">{{ cat.default_unit }}</span></td>
+                                <td class="font-monospace fw-semibold cat-price">₹{{ cat.default_unit_price|floatformat:2|intcomma }}</td>
+                                <td class="text-muted small cat-supplier">{{ cat.default_supplier|default:"—" }}</td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-icon" title="Edit Catalog Item" onclick="openEditCatalogModal({{ cat.id }}, '{{ cat.name|escapejs }}', '{{ cat.default_unit|escapejs }}', '{{ cat.default_unit_price }}', '{{ cat.default_supplier|escapejs }}')">
+                                        <i class="bi bi-pencil text-primary"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-icon" title="Delete Catalog Item" onclick="deleteCatalogItem({{ cat.id }}, '{{ cat.name|escapejs }}')">
+                                        <i class="bi bi-trash text-danger"></i>
+                                    </button>
+                                </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center py-3 text-muted small">No master catalog items defined yet.</td>
+                                <td colspan="5" class="text-center py-3 text-muted small">No master catalog items defined yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -283,6 +292,47 @@
             <div class="modal-footer border-top border-light">
                 <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Master Catalog Item Modal -->
+<div class="modal fade" id="editCatalogModal" tabindex="-1" aria-labelledby="editCatalogTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <form id="editCatalogForm" onsubmit="handleEditCatalogSubmit(event)">
+                {% csrf_token %}
+                <input type="hidden" id="editCatId">
+                <div class="modal-header border-bottom border-light">
+                    <h5 class="modal-title fw-bold" id="editCatalogTitle"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Master Catalog Material</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="editCatName">Material Name *</label>
+                        <input type="text" class="form-control" id="editCatName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="editCatUnit">Default Unit *</label>
+                        <input type="text" class="form-control" id="editCatUnit" name="default_unit" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="editCatPrice">Default Unit Price (₹)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" step="0.01" min="0" class="form-control" id="editCatPrice" name="default_unit_price">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label small fw-semibold" for="editCatSupplier">Default Supplier</label>
+                        <input type="text" class="form-control" id="editCatSupplier" name="default_supplier">
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-light">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -350,6 +400,7 @@
                 // Add to Add Material Dropdown
                 const selectEl = document.getElementById("matCatalogSelect");
                 const opt = document.createElement("option");
+                opt.id = `opt_cat_${item.id}`;
                 opt.value = item.id;
                 opt.dataset.name = item.name;
                 opt.dataset.unit = item.default_unit;
@@ -361,11 +412,20 @@
                 // Add to Catalog Table
                 const tbody = document.getElementById("catalogTableBody");
                 const row = document.createElement("tr");
+                row.id = `cat_row_${item.id}`;
                 row.innerHTML = `
-                    <td class="fw-bold text-decore-primary">${item.name}</td>
-                    <td><span class="badge bg-light text-dark border">${item.default_unit}</span></td>
-                    <td class="font-monospace fw-semibold">₹${item.default_unit_price.toFixed(2)}</td>
-                    <td class="text-muted small">${item.default_supplier || '—'}</td>
+                    <td class="fw-bold text-decore-primary cat-name">${item.name}</td>
+                    <td><span class="badge bg-light text-dark border cat-unit">${item.default_unit}</span></td>
+                    <td class="font-monospace fw-semibold cat-price">₹${item.default_unit_price.toFixed(2)}</td>
+                    <td class="text-muted small cat-supplier">${item.default_supplier || '—'}</td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-sm btn-icon" title="Edit Catalog Item" onclick="openEditCatalogModal(${item.id}, '${item.name.replace(/'/g, "\\'")}', '${item.default_unit.replace(/'/g, "\\'")}', '${item.default_unit_price}', '${(item.default_supplier||'').replace(/'/g, "\\'")}')">
+                            <i class="bi bi-pencil text-primary"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-icon" title="Delete Catalog Item" onclick="deleteCatalogItem(${item.id}, '${item.name.replace(/'/g, "\\'")}')">
+                            <i class="bi bi-trash text-danger"></i>
+                        </button>
+                    </td>
                 `;
                 tbody.insertBefore(row, tbody.firstChild);
             } else {
@@ -375,6 +435,102 @@
         .catch(err => {
             decoreHideLoading();
             decoreToast("Connection error.", 'danger');
+        });
+    }
+
+    function openEditCatalogModal(id, name, unit, price, supplier) {
+        document.getElementById("editCatId").value = id;
+        document.getElementById("editCatName").value = name;
+        document.getElementById("editCatUnit").value = unit;
+        document.getElementById("editCatPrice").value = parseFloat(price || 0).toFixed(2);
+        document.getElementById("editCatSupplier").value = supplier || '';
+        
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("masterCatalogModal")).hide();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("editCatalogModal")).show();
+    }
+
+    function handleEditCatalogSubmit(event) {
+        event.preventDefault();
+        const id = document.getElementById("editCatId").value;
+        const form = event.target;
+        const formData = new FormData(form);
+        const csrfToken = '{{ csrf_token }}';
+
+        decoreShowLoading();
+        fetch(`/materials/catalog/${id}/edit/`, {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": csrfToken,
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById("editCatalogModal")).hide();
+                decoreToast(data.message, 'success');
+                const item = data.catalog_item;
+
+                // Update Table Row
+                const row = document.getElementById(`cat_row_${id}`);
+                if (row) {
+                    row.querySelector('.cat-name').textContent = item.name;
+                    row.querySelector('.cat-unit').textContent = item.default_unit;
+                    row.querySelector('.cat-price').textContent = `₹${item.default_unit_price.toFixed(2)}`;
+                    row.querySelector('.cat-supplier').textContent = item.default_supplier || '—';
+                }
+
+                // Update Option in Select Dropdown
+                const opt = document.getElementById(`opt_cat_${id}`);
+                if (opt) {
+                    opt.dataset.name = item.name;
+                    opt.dataset.unit = item.default_unit;
+                    opt.dataset.price = item.default_unit_price;
+                    opt.dataset.supplier = item.default_supplier;
+                    opt.textContent = `${item.name} (${item.default_unit}) — ₹${item.default_unit_price.toFixed(2)}`;
+                }
+
+                bootstrap.Modal.getOrCreateInstance(document.getElementById("masterCatalogModal")).show();
+            } else {
+                decoreToast(data.error || 'Failed to update catalog item.', 'danger');
+            }
+        })
+        .catch(err => {
+            decoreHideLoading();
+            decoreToast('Connection error.', 'danger');
+        });
+    }
+
+    function deleteCatalogItem(id, name) {
+        decoreConfirm(`Are you sure you want to remove "${name}" from the Master Catalog?`, function() {
+            decoreShowLoading();
+            const csrfToken = '{{ csrf_token }}';
+            fetch(`/materials/catalog/${id}/delete/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                decoreHideLoading();
+                if (data.success) {
+                    decoreToast(data.message, 'success');
+                    const row = document.getElementById(`cat_row_${id}`);
+                    if (row) row.remove();
+                    const opt = document.getElementById(`opt_cat_${id}`);
+                    if (opt) opt.remove();
+                } else {
+                    decoreToast(data.error || 'Failed to remove catalog item.', 'danger');
+                }
+            })
+            .catch(err => {
+                decoreHideLoading();
+                decoreToast('Connection error.', 'danger');
+            });
         });
     }
 
