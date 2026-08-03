@@ -10,7 +10,7 @@ from salaries.models import SalaryRecord
 from payments.models import Payment
 from materials.models import Material
 from expenses.models import Expense
-from .pdf_generator import generate_pdf_report
+from .pdf_generator import generate_pdf_report, generate_monthly_attendance_pdf
 
 
 class ReportsView(LoginRequiredMixin, TemplateView):
@@ -50,6 +50,7 @@ class ReportsView(LoginRequiredMixin, TemplateView):
             'expenses_total': expenses_val,
             'is_live_data': not is_empty,
         }
+        context['worksites'] = Worksite.objects.order_by("name")
         return context
 
 
@@ -274,4 +275,19 @@ class SummaryReportExportView(LoginRequiredMixin, View):
         
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = 'inline; filename="Operation_Summary.pdf"'
+        return response
+
+
+class MonthlyAttendanceExportView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        from datetime import datetime
+        now = datetime.now()
+        year = int(request.GET.get('year', now.year))
+        month = int(request.GET.get('month', now.month))
+        worksite_id = request.GET.get('worksite')
+
+        pdf = generate_monthly_attendance_pdf(year, month, worksite_id)
+        
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="Attendance_Roster_{month}_{year}.pdf"'
         return response

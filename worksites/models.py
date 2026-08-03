@@ -119,3 +119,62 @@ class WorksiteDocument(models.Model):
     @property
     def is_image(self):
         return self.file_extension in ['jpg', 'jpeg', 'png', 'webp', 'gif']
+
+
+class PaymentMethod(models.TextChoices):
+    BANK_TRANSFER = "bank_transfer", "Bank Transfer / NEFT"
+    UPI = "upi", "UPI / GPay / PhonePe"
+    CHEQUE = "cheque", "Cheque"
+    CASH = "cash", "Cash"
+
+
+class ClientPayment(models.Model):
+    worksite = models.ForeignKey(Worksite, on_delete=models.CASCADE, related_name="client_payments")
+    milestone = models.CharField(max_length=150)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
+    payment_method = models.CharField(max_length=32, choices=PaymentMethod.choices, default=PaymentMethod.BANK_TRANSFER)
+    reference_number = models.CharField(max_length=100, blank=True)
+    payment_date = models.DateField()
+    receipt_file = models.FileField(upload_to="worksites/client_receipts/", null=True, blank=True)
+    notes = models.TextField(blank=True)
+    logged_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-payment_date", "-created_at"]
+
+    def __str__(self):
+        return f"{self.worksite.name} — ₹{self.amount} ({self.milestone})"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.update_worksite_client_paid()
+
+    def delete(self, *args, **kwargs):
+        worksite = self.worksite
+        super().delete(*args, **kwargs)
+        total = sum(p.amount for p in worksite.client_payments.all())
+        worksite.client_paid = total
+        worksite.save()
+
+    def update_worksite_client_paid(self):
+        total = sum(p.amount for p in self.worksite.client_payments.all())
+        self.worksite.client_paid = total
+        self.worksite.save()
+
+
+class DailySiteLog(models.Model):
+    worksite = models.ForeignKey(Worksite, on_delete=models.CASCADE, related_name="daily_logs")
+    date = models.DateField()
+    title = models.CharField(max_length=200)
+    notes = models.TextField()
+    photo = models.ImageField(upload_to="worksites/site_logs/", null=True, blank=True)
+    progress_percent = models.PositiveSmallIntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    logged_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-date", "-created_at"]
+
+    def __str__(self):
+        return f"{self.worksite.name} ({self.date}): {self.title}"

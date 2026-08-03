@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 {% load humanize %}
-{% block title %}Expenses{% endblock %}
+{% block title %}Operational Expenses{% endblock %}
 
 {% block content %}
-<div class="decore-page-header">
+<div class="decore-page-header flex-wrap gap-2 mb-4">
     <div>
-        <h4 class="decore-page-title">Operational Expenses</h4>
+        <h4 class="decore-page-title d-flex align-items-center gap-2">
+            <i class="bi bi-receipt text-primary fs-3"></i>Operational Expenses
+        </h4>
         <div class="decore-breadcrumb">Track site machinery rentals, utilities, fuel, and municipal permit costs</div>
     </div>
-    <button type="button" class="btn btn-decore-primary btn-sm" onclick="openExpenseModal()">
+    <button type="button" class="btn btn-decore-primary btn-sm rounded-pill px-3 shadow-sm ms-auto" onclick="openExpenseModal()">
         <i class="bi bi-plus-lg me-1"></i>Add Expense
     </button>
 </div>
@@ -16,59 +18,59 @@
 <div class="row g-3 mb-4">
     <div class="col-md-4">
         <div class="decore-card decore-stat-card h-100 decore-card-lift">
-            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-receipt"></i></span>
+            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-receipt text-primary"></i></span>
             <div>
-                <div class="decore-stat-label">Total Outgoings</div>
-                <div class="decore-stat-value">₹{{ stats.total_expenses|default:"0.00"|floatformat:2|intcomma }}</div>
+                <div class="decore-stat-label text-muted">Total Outgoings</div>
+                <div class="decore-stat-value text-primary font-monospace fw-bold">₹{{ stats.total_expenses|default:"0.00"|floatformat:2|intcomma }}</div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="decore-card decore-stat-card h-100 decore-card-lift">
-            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-check-circle"></i></span>
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-check-circle text-success"></i></span>
             <div>
-                <div class="decore-stat-label">Approved</div>
-                <div class="decore-stat-value">₹{{ stats.approved|default:"0.00"|floatformat:2|intcomma }}</div>
+                <div class="decore-stat-label text-muted">Approved Expenses</div>
+                <div class="decore-stat-value text-success font-monospace fw-bold">₹{{ stats.approved|default:"0.00"|floatformat:2|intcomma }}</div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
         <div class="decore-card decore-stat-card h-100 decore-card-lift">
-            <span class="decore-stat-icon bg-warning-soft"><i class="bi-exclamation-circle"></i></span>
+            <span class="decore-stat-icon bg-warning-soft"><i class="bi bi-exclamation-circle text-warning"></i></span>
             <div>
-                <div class="decore-stat-label">Pending Approval</div>
-                <div class="decore-stat-value">₹{{ stats.pending|default:"0.00"|floatformat:2|intcomma }}</div>
+                <div class="decore-stat-label text-muted">Pending Approval</div>
+                <div class="decore-stat-value text-warning font-monospace fw-bold">₹{{ stats.pending|default:"0.00"|floatformat:2|intcomma }}</div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="decore-card">
-    <div class="decore-card-header flex-wrap gap-3">
-        <form class="d-flex flex-grow-1" style="max-width:320px;" role="search" onsubmit="return false;">
-            <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
-                <input type="search" class="form-control" placeholder="Search expenses..." id="expSearchInput">
+<div class="decore-card border-0 shadow-sm">
+    <div class="decore-card-header flex-wrap gap-3 p-3 border-bottom border-light">
+        <form class="d-flex flex-grow-1" style="max-width:360px;" role="search" onsubmit="return false;">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="search" class="form-control border-start-0 bg-light" placeholder="Search expenses or sites..." id="expSearchInput">
             </div>
         </form>
-        <select class="form-select form-select-sm" style="width:auto;" id="expCategorySelect">
-            <option selected>All Categories</option>
-            <option>Fuel</option>
-            <option>Machinery Rental</option>
-            <option>Utilities</option>
-            <option>Safety Gear</option>
-            <option>Permits</option>
+        <select class="form-select form-select-sm rounded-pill border-secondary-subtle" style="width:auto;" id="expCategorySelect">
+            <option value="">All Categories</option>
+            <option value="Fuel">Fuel</option>
+            <option value="Machinery Rental">Machinery Rental</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Safety Gear">Safety Gear</option>
+            <option value="Permits">Permits</option>
         </select>
     </div>
 
-    <div class="table-responsive">
-        <table class="table decore-table mb-0">
+    <div class="table-responsive px-3 py-2">
+        <table class="decore-table-premium mb-0 align-middle">
             <thead>
                 <tr>
-                    <th>Description</th>
+                    <th>Description &amp; Category</th>
                     <th>Worksite</th>
-                    <th class="d-none d-md-table-cell">Category</th>
-                    <th class="d-none d-lg-table-cell">Date</th>
+                    <th class="d-none d-md-table-cell">Date</th>
+                    <th>Receipt Proof</th>
                     <th>Status</th>
                     <th class="text-end">Amount</th>
                     <th class="text-end">Actions</th>
@@ -77,16 +79,21 @@
             <tbody>
                 {% for exp in expenses %}
                 <tr class="expense-row" data-desc="{{ exp.description|lower }} {{ exp.category|lower }} {{ exp.worksite.name|lower }}" data-cat="{{ exp.category }}">
-                    <td>
-                        <span class="fw-bold">{{ exp.category }}</span>
+                    <td class="py-3">
+                        <div class="fw-bold text-decore-primary">{{ exp.category }}</div>
                         <div class="small text-muted">{{ exp.description }}</div>
-                        <div class="text-muted small d-lg-none" style="font-size: 0.72rem; margin-top: 2px;">
-                            Date: {{ exp.date }}
-                        </div>
                     </td>
-                    <td><span class="badge bg-light text-dark border">{{ exp.worksite.name }}</span></td>
-                    <td class="d-none d-md-table-cell"><span class="fw-semibold text-muted text-uppercase small">{{ exp.category }}</span></td>
-                    <td class="d-none d-lg-table-cell text-muted small">{{ exp.date }}</td>
+                    <td><span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-building me-1"></i>{{ exp.worksite.name }}</span></td>
+                    <td class="d-none d-md-table-cell text-muted small">{{ exp.date }}</td>
+                    <td>
+                        {% if exp.receipt %}
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 small" onclick="viewReceipt('{{ exp.receipt.url }}', '{{ exp.category|escapejs }}', '₹{{ exp.amount }}')">
+                            <i class="bi bi-paperclip me-1"></i>Receipt Proof
+                        </button>
+                        {% else %}
+                        <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if exp.status == 'Approved' %}
                         <span class="decore-status-badge badge-success"><span class="dot"></span>Approved</span>
@@ -94,21 +101,21 @@
                         <span class="decore-status-badge badge-warning"><span class="dot"></span>Pending</span>
                         {% endif %}
                     </td>
-                    <td class="fw-bold text-end text-decore-primary font-monospace">₹{{ exp.amount }}</td>
+                    <td class="fw-bold text-end text-decore-primary font-monospace fs-6">₹{{ exp.amount|floatformat:2|intcomma }}</td>
                     <td class="text-end">
                         {% if exp.status == 'Pending' %}
-                        <button class="btn btn-sm btn-decore-primary py-1 px-2" onclick="approveExpense({{ exp.id }}, '{{ exp.amount|escapejs }}')">Approve</button>
+                        <button class="btn btn-sm btn-decore-primary rounded-pill px-3 py-1" onclick="approveExpense({{ exp.id }}, '{{ exp.amount|escapejs }}')">Approve</button>
                         {% else %}
-                        <button class="btn btn-sm btn-outline-secondary py-1 px-2" onclick="decoreToast('Invoice downloaded', 'success')"><i class="bi-file-earmark-arrow-down"></i></button>
+                        <i class="bi bi-check-all text-success fs-5"></i>
                         {% endif %}
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
                     <td colspan="7">
-                        <div class="decore-empty-state">
-                            <i class="bi bi-receipt"></i>
-                            <p class="mb-0">No expenses logged yet.</p>
+                        <div class="decore-empty-state py-5 text-center">
+                            <i class="bi bi-receipt text-muted fs-1 mb-2 d-block"></i>
+                            <p class="mb-0 text-muted fw-semibold">No operational expenses recorded yet.</p>
                         </div>
                     </td>
                 </tr>
@@ -118,66 +125,91 @@
     </div>
 </div>
 
-<!-- Add Expense Modal -->
+<!-- Add Expense Modal with Receipt Upload -->
 <div class="modal fade" id="expenseModal" tabindex="-1" aria-labelledby="expenseModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content decore-card border-0 shadow-lg">
             <div class="modal-header border-bottom border-light">
-                <h5 class="modal-title fw-bold" id="expenseModalLabel">Add Expense</h5>
+                <div>
+                    <h5 class="modal-title fw-bold" id="expenseModalLabel"><i class="bi bi-receipt text-primary me-2"></i>Record Site Expense</h5>
+                    <p class="small text-muted mb-0">Log outgoings with optional bill or receipt attachment.</p>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
-                <form id="expenseForm" onsubmit="handleExpenseSubmit(event)">
+                <form id="expenseForm" method="post" action="{% url 'expenses:create' %}" enctype="multipart/form-data" onsubmit="handleExpenseSubmit(event)">
                     {% csrf_token %}
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Expense Category</label>
-                            <select class="form-select" id="expCategory">
-                                <option>Fuel</option>
-                                <option>Machinery Rental</option>
-                                <option>Utilities</option>
-                                <option>Safety Gear</option>
-                                <option>Permits</option>
+                            <label class="form-label small fw-semibold">Expense Category *</label>
+                            <select class="form-select" name="category" required>
+                                <option value="Fuel">Fuel</option>
+                                <option value="Machinery Rental">Machinery Rental</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Safety Gear">Safety Gear</option>
+                                <option value="Permits">Permits</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Assigned Worksite <span class="text-danger">*</span></label>
-                            <select class="form-select" id="expWorksite" required>
-                                <option value="">Select worksite</option>
+                            <label class="form-label small fw-semibold">Worksite *</label>
+                            <select class="form-select" name="worksite" required>
+                                <option value="">Select Worksite</option>
                                 {% for site in worksites %}
                                 <option value="{{ site.id }}">{{ site.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Expense Amount (₹) <span class="text-danger">*</span></label>
+                            <label class="form-label small fw-semibold">Amount (₹) *</label>
                             <div class="input-group">
                                 <span class="input-group-text">₹</span>
-                                <input type="number" step="0.01" min="0.01" class="form-control" id="expAmount" placeholder="0.00" required>
+                                <input type="number" step="0.01" min="0.01" class="form-control" name="amount" placeholder="0.00" required>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Expense Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="expDate" required>
+                            <label class="form-label small fw-semibold">Expense Date *</label>
+                            <input type="date" class="form-control" name="date" id="expDateInput" required>
                         </div>
                         <div class="col-12">
-                            <label class="form-label small fw-semibold">Expense Description <span class="text-danger">*</span></label>
-                            <textarea class="form-control" rows="2" id="expDescription" placeholder="Provide detailed details about the expense (e.g. Diesel for onsite generator)" required></textarea>
+                            <label class="form-label small fw-semibold">Description / Notes *</label>
+                            <textarea class="form-control" name="description" rows="2" placeholder="e.g., Diesel for excavator on site 2" required></textarea>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Expense Status</label>
-                            <select class="form-select" id="expStatus">
-                                <option>Approved</option>
-                                <option>Pending</option>
-                            </select>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold"><i class="bi bi-camera me-1 text-primary"></i>Receipt / Bill Photo Proof</label>
+                            <input type="file" class="form-control" name="receipt" accept="image/*,application/pdf">
+                            <div class="form-text small">Upload photo or PDF of the bill/receipt for accounting audit.</div>
                         </div>
                     </div>
-                    
                     <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-decore-primary"><i class="bi bi-check-lg me-1"></i>Save Expense</button>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Expense</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Receipt Lightbox View Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <div class="modal-header border-bottom border-light">
+                <div>
+                    <h5 class="modal-title fw-bold" id="receiptModalTitle">Receipt Proof</h5>
+                    <div class="small text-muted" id="receiptModalSubtitle"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3 text-center bg-dark rounded-bottom">
+                <img id="receiptModalImg" src="" class="img-fluid rounded shadow-sm d-none" style="max-height: 500px;" alt="Receipt">
+                <iframe id="receiptModalIframe" src="" class="w-100 rounded d-none" style="height: 500px; border:none;"></iframe>
+            </div>
+            <div class="modal-footer border-top border-light">
+                <button type="button" class="btn btn-outline-primary rounded-pill px-3" id="shareReceiptBtn">
+                    <i class="bi bi-share me-1"></i>Share / Save Receipt
+                </button>
+                <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -186,133 +218,124 @@
 
 {% block extra_js %}
 <script>
+    document.getElementById("expDateInput").valueAsDate = new Date();
+
     function openExpenseModal() {
         const modalEl = document.getElementById("expenseModal");
-        const form = document.getElementById("expenseForm");
-        form.reset();
-        
-        document.getElementById("expDate").value = new Date().toISOString().split('T')[0];
-        
-        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-        modal.show();
+        document.getElementById("expenseForm").reset();
+        document.getElementById("expDateInput").valueAsDate = new Date();
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
     }
+
+    function viewReceipt(url, cat, amount) {
+        document.getElementById("receiptModalTitle").textContent = `${cat} Receipt Proof (${amount})`;
+        const imgEl = document.getElementById("receiptModalImg");
+        const iframeEl = document.getElementById("receiptModalIframe");
+        const shareBtn = document.getElementById("shareReceiptBtn");
+
+        if (url.toLowerCase().endsWith('.pdf')) {
+            imgEl.classList.add("d-none");
+            iframeEl.src = url;
+            iframeEl.classList.remove("d-none");
+        } else {
+            iframeEl.classList.add("d-none");
+            imgEl.src = url;
+            imgEl.classList.remove("d-none");
+        }
+
+        shareBtn.onclick = function() {
+            if (navigator.share) {
+                fetch(url)
+                .then(r => r.blob())
+                .then(blob => {
+                    const ext = url.split('.').pop() || 'png';
+                    const file = new File([blob], `Expense_Receipt.${ext}`, { type: blob.type });
+                    navigator.share({
+                        title: `${cat} Receipt`,
+                        files: [file]
+                    }).catch(e => {});
+                });
+            } else {
+                window.open(url, '_blank');
+            }
+        };
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("receiptModal")).show();
+    }
+
+    function filterExpenses() {
+        const query = document.getElementById("expSearchInput").value.toLowerCase();
+        const selectedCat = document.getElementById("expCategorySelect").value.toLowerCase();
+        const rows = document.querySelectorAll(".expense-row");
+
+        rows.forEach(row => {
+            const desc = row.dataset.desc || '';
+            const cat = (row.dataset.cat || '').toLowerCase();
+
+            const matchesSearch = desc.includes(query);
+            const matchesCat = !selectedCat || cat === selectedCat;
+
+            row.style.display = (matchesSearch && matchesCat) ? "" : "none";
+        });
+    }
+
+    document.getElementById("expSearchInput").addEventListener("input", filterExpenses);
+    document.getElementById("expCategorySelect").addEventListener("change", filterExpenses);
 
     function handleExpenseSubmit(event) {
         event.preventDefault();
-        
-        const category = document.getElementById("expCategory").value;
-        const worksite = document.getElementById("expWorksite").value;
-        const amount = parseFloat(document.getElementById("expAmount").value);
-        const date = document.getElementById("expDate").value;
-        const description = document.getElementById("expDescription").value.trim();
-        const status = document.getElementById("expStatus").value;
-        
-        if (!category || !worksite || isNaN(amount) || amount <= 0 || !date || !description) {
-            decoreToast("All fields are required and amount must be positive.", "danger");
-            return;
-        }
-        
-        // Address-style check: description must contain letters
-        if (!/[a-zA-Z]/.test(description)) {
-            decoreToast("Description must contain letters.", "danger");
-            return;
-        }
-        
         decoreShowLoading();
-        
-        const formData = new FormData();
-        formData.append("category", category);
-        formData.append("worksite", worksite);
-        formData.append("amount", amount);
-        formData.append("date", date);
-        formData.append("description", description);
-        formData.append("status", status);
-        
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
-        fetch("{% url 'expenses:create' %}", {
+        const form = event.target;
+        const formData = new FormData(form);
+
+        fetch(form.action, {
             method: "POST",
             body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById("expenseModal")).hide();
+                decoreToast(data.message, 'success');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                decoreToast(data.error || 'Failed to save expense.', 'danger');
+            }
+        })
+        .catch(err => {
+            decoreHideLoading();
+            decoreToast('Connection error.', 'danger');
+        });
+    }
+
+    function approveExpense(id, amount) {
+        decoreShowLoading();
+        const csrfToken = '{{ csrf_token }}';
+        fetch(`/expenses/${id}/approve/`, {
+            method: "POST",
             headers: {
                 "X-CSRFToken": csrfToken,
                 "X-Requested-With": "XMLHttpRequest"
             }
         })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
             decoreHideLoading();
             if (data.success) {
-                const modalEl = document.getElementById("expenseModal");
-                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                modal.hide();
                 decoreToast(data.message, 'success');
-                setTimeout(() => window.location.href = window.location.pathname, 1000);
+                setTimeout(() => location.reload(), 600);
             } else {
-                decoreToast(data.error || "Failed to save expense.", 'danger');
+                decoreToast(data.error || 'Failed to approve expense.', 'danger');
             }
         })
         .catch(err => {
             decoreHideLoading();
-            decoreToast("Connection error.", 'danger');
+            decoreToast('Connection error.', 'danger');
         });
     }
-
-    function approveExpense(id, amount) {
-        decoreConfirm(`Are you sure you want to approve this expense of ₹${amount}?`, function() {
-            decoreShowLoading();
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            
-            fetch(`/expenses/${id}/approve/`, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrfToken,
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                decoreHideLoading();
-                if (data.success) {
-                    decoreToast(data.message, 'success');
-                    setTimeout(() => window.location.href = window.location.pathname, 1000);
-                } else {
-                    decoreToast(data.error || "Failed to approve expense.", 'danger');
-                }
-            })
-            .catch(err => {
-                decoreHideLoading();
-                decoreToast("Connection error.", 'danger');
-            });
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        // Client-side search and category filtering
-        const searchInput = document.getElementById('expSearchInput');
-        const categorySelect = document.getElementById('expCategorySelect');
-        const rows = document.querySelectorAll('.expense-row');
-
-        function filterExpenses() {
-            const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
-            const category = categorySelect ? categorySelect.value : 'All Categories';
-
-            rows.forEach(row => {
-                const desc = row.getAttribute('data-desc') || '';
-                const cat = row.getAttribute('data-cat') || '';
-
-                const matchesSearch = desc.includes(query);
-                const matchesCategory = (category === 'All Categories' || cat === category);
-
-                if (matchesSearch && matchesCategory) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-
-        if (searchInput) searchInput.addEventListener('input', filterExpenses);
-        if (categorySelect) categorySelect.addEventListener('change', filterExpenses);
-    });
 </script>
 {% endblock %}

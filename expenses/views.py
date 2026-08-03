@@ -42,6 +42,7 @@ class ExpenseCreateView(LoginRequiredMixin, View):
         date = request.POST.get("date")
         description = request.POST.get("description")
         status = request.POST.get("status", ExpenseStatus.PENDING)
+        receipt = request.FILES.get("receipt")
 
         if not all([category, worksite_id, amount, date, description]):
             return JsonResponse({"success": False, "error": "All fields are required."}, status=400)
@@ -54,7 +55,8 @@ class ExpenseCreateView(LoginRequiredMixin, View):
                 amount=amount,
                 date=date,
                 description=description,
-                status=status
+                status=status,
+                receipt=receipt
             )
             return JsonResponse({
                 "success": True, 

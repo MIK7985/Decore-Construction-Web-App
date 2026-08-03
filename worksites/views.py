@@ -3,9 +3,11 @@ from django.views.generic import ListView, DetailView, View
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.models import User
-from .models import Worksite, WorksiteDocument, DocumentCategory
+from .models import Worksite, WorksiteDocument, DocumentCategory, ClientPayment, DailySiteLog, PaymentMethod
 from employees.models import Employee
 from django import forms
+from decimal import Decimal
+from django.utils import timezone
 
 class WorksiteForm(forms.ModelForm):
     class Meta:
@@ -86,6 +88,9 @@ class WorksiteDetailView(LoginRequiredMixin, DetailView):
         context['materials'] = self.object.materials.all()
         context['documents'] = self.object.documents.all()
         context['document_categories'] = DocumentCategory.choices
+        context['client_payments'] = self.object.client_payments.all()
+        context['daily_logs'] = self.object.daily_logs.all()
+        context['payment_methods'] = PaymentMethod.choices
         return context
 
 
@@ -128,3 +133,100 @@ class WorksiteDocumentDeleteView(LoginRequiredMixin, View):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'success': True, 'message': f'Document "{title}" deleted successfully!'})
         return redirect('worksites:detail', pk=site_pk)
+
+
+class ClientPaymentCreateView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        site = get_object_or_404(Worksite, pk=pk)
+        milestone = request.POST.get("milestone", "").strip()
+        amount_str = request.POST.get("amount", "0")
+        payment_method = request.POST.get("payment_method", PaymentMethod.BANK_TRANSFER)
+        reference_number = request.POST.get("reference_number", "").strip()
+        payment_date_str = request.POST.get("payment_date")
+        notes = request.POST.get("notes", "").strip()
+        receipt_file = request.FILES.get("receipt_file")
+
+        if not milestone:
+            return JsonResponse({"success": False, "error": "Milestone Stage is required."}, status=400)
+
+        try:
+            amount = Decimal(amount_str)
+            if amount <= 0:
+                return JsonResponse({"success": False, "error": "Amount must be greater than 0."}, status=400)
+        except Exception:
+            return JsonResponse({"success": False, "error": "Invalid payment amount."}, status=400)
+
+        payment_date = payment_date_str if payment_date_str else timezone.now().date()
+
+        payment = ClientPayment.objects.create(
+            worksite=site,
+            milestone=milestone,
+            amount=amount,
+            payment_method=payment_method,
+            reference_number=reference_number,
+            payment_date=payment_date,
+            receipt_file=receipt_file,
+            notes=notes,
+            logged_by=request.user if request.user.is_authenticated else None
+        )
+        return JsonResponse({
+            "success": True,
+            "message": f'Client Payment of ₹{payment.amount} recorded for "{payment.milestone}"!'
+        })
+
+
+class ClientPaymentDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        payment = get_object_or_404(ClientPayment, pk=pk)
+        milestone = payment.milestone
+        amount = payment.amount
+        if payment.receipt_file:
+            payment.receipt_file.delete(save=False)
+        payment.delete()
+        return JsonResponse({"success": True, "message": f'Payment record of ₹{amount} for "{milestone}" deleted.'})
+
+
+class DailySiteLogCreateView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        site = get_object_or_404(Worksite, pk=pk)
+        title = request.POST.get("title", "").strip()
+        notes = request.POST.get("notes", "").strip()
+        date_str = request.POST.get("date")
+        progress_str = request.POST.get("progress_percent")
+        photo = request.FILES.get("photo")
+
+        if not title or not notes:
+            return JsonResponse({"success": False, "error": "Log title and notes are required."}, status=400)
+
+        log_date = date_str if date_str else timezone.now().date()
+        
+        progress = None
+        if progress_str and progress_str.isdigit():
+            progress = int(progress_str)
+            if 0 <= progress <= 100:
+                site.progress = progress
+                site.save()
+
+        site_log = DailySiteLog.objects.create(
+            worksite=site,
+            date=log_date,
+            title=title,
+            notes=notes,
+            photo=photo,
+            progress_percent=progress,
+            logged_by=request.user if request.user.is_authenticated else None
+        )
+        return JsonResponse({
+            "success": True,
+            "message": f'Daily Site Log "{site_log.title}" posted successfully!'
+        })
+
+
+class DailySiteLogDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        log_item = get_object_or_404(DailySiteLog, pk=pk)
+        title = log_item.title
+        if log_item.photo:
+            log_item.photo.delete(save=False)
+        log_item.delete()
+        return JsonResponse({"success": True, "message": f'Daily log "{title}" deleted.'})
