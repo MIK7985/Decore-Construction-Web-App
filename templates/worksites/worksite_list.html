@@ -60,6 +60,27 @@
     </div>
 </div>
 
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-wallet2 text-success"></i></span>
+            <div>
+                <div class="decore-stat-label">Total Amount Received from Clients</div>
+                <div class="decore-stat-value text-success" style="font-size: 1.5rem;">₹{{ stats.total_client_paid|floatformat:2|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="decore-card decore-stat-card h-100">
+            <span class="decore-stat-icon bg-warning-soft"><i class="bi bi-exclamation-circle text-warning"></i></span>
+            <div>
+                <div class="decore-stat-label">Total Balance to Receive</div>
+                <div class="decore-stat-value text-warning" style="font-size: 1.5rem;">₹{{ stats.total_client_balance|floatformat:2|intcomma }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="decore-card">
     <div class="decore-card-header"><div class="input-group" style="max-width:320px;"><span class="input-group-text"><i class="bi bi-search text-muted"></i></span><input type="search" class="form-control" placeholder="Search worksites..." aria-label="Search worksites" id="siteSearchInput"></div></div>
     <div class="table-responsive px-4 pb-2">
@@ -68,6 +89,7 @@
                 <tr>
                     <th class="text-nowrap-custom">Site Name</th>
                     <th class="text-nowrap-custom d-none d-md-table-cell">Location</th>
+                    <th class="text-nowrap-custom d-none d-lg-table-cell">Client Billing</th>
                     <th class="text-nowrap-custom text-end">Details</th>
                 </tr>
             </thead>
@@ -82,13 +104,19 @@
                         </div>
                     </td>
                     <td class="text-nowrap-custom d-none d-md-table-cell text-muted"><i class="bi bi-geo-alt me-1"></i>{{ site.location }}</td>
+                    <td class="text-nowrap-custom d-none d-lg-table-cell">
+                        <div class="small">
+                            <div>Paid: <span class="fw-semibold text-success">₹{{ site.client_paid|floatformat:2|intcomma }}</span></div>
+                            <div>Balance: <span class="fw-semibold text-warning">₹{{ site.client_balance|floatformat:2|intcomma }}</span></div>
+                        </div>
+                    </td>
                     <td class="text-nowrap-custom text-end">
                         <a href="{% url 'worksites:detail' pk=site.id %}" class="btn btn-outline-primary btn-sm rounded-pill px-3" style="font-size: 0.8rem; font-weight: 600;"><i class="bi bi-eye me-1"></i>View Details</a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="3">
+                    <td colspan="4">
                         <div class="decore-empty-state">
                             <i class="bi bi-geo-alt"></i>
                             <p class="mb-0">No worksites registered yet.</p>
@@ -145,6 +173,10 @@
                             <input type="number" class="form-control" id="siteSpend" name="spend" required min="0" step="0.01" placeholder="0.00" value="0.00">
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="siteClientPaid">Amount Paid by Client (₹) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="siteClientPaid" name="client_paid" required min="0" step="0.01" placeholder="0.00" value="0.00">
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label small fw-semibold" for="siteStartDate">Start date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" id="siteStartDate" name="start_date" required>
                         </div>
@@ -183,6 +215,7 @@ const worksitesData = {
         supervisor: "{{ site.supervisor_id|default:'' }}",
         budget: "{{ site.budget }}",
         spend: "{{ site.spend }}",
+        clientPaid: "{{ site.client_paid }}",
         startDate: "{{ site.start_date|date:'Y-m-d' }}",
         status: "{{ site.status }}",
         progress: "{{ site.progress }}"
@@ -197,6 +230,7 @@ function openWorksiteModal(mode, id) {
   document.getElementById('siteStatus').value = 'active';
   document.getElementById('siteProgress').value = 0;
   document.getElementById('siteSpend').value = '0.00';
+  document.getElementById('siteClientPaid').value = '0.00';
   document.getElementById('siteStartDate').value = new Date().toISOString().slice(0,10);
   document.getElementById('worksiteModalLabel').textContent = mode === 'edit' ? 'Edit Worksite' : 'Add Worksite';
   
@@ -211,6 +245,7 @@ function openWorksiteModal(mode, id) {
       document.getElementById('siteSupervisor').value = site.supervisor;
       document.getElementById('siteBudget').value = site.budget;
       document.getElementById('siteSpend').value = site.spend;
+      document.getElementById('siteClientPaid').value = site.clientPaid;
       document.getElementById('siteStartDate').value = site.startDate;
       document.getElementById('siteStatus').value = site.status;
       document.getElementById('siteProgress').value = site.progress;
@@ -225,6 +260,7 @@ function handleWorksiteFormSubmit(event) {
   
   const budget = parseFloat(document.getElementById("siteBudget").value);
   const spend = parseFloat(document.getElementById("siteSpend").value);
+  const clientPaid = parseFloat(document.getElementById("siteClientPaid").value);
   
   if (isNaN(budget) || budget <= 0) {
       decoreToast("Project value (budget) must be greater than 0.", "danger");
@@ -232,6 +268,14 @@ function handleWorksiteFormSubmit(event) {
   }
   if (isNaN(spend) || spend < 0) {
       decoreToast("Project expenses (spend) cannot be negative.", "danger");
+      return;
+  }
+  if (isNaN(clientPaid) || clientPaid < 0) {
+      decoreToast("Amount paid by client cannot be negative.", "danger");
+      return;
+  }
+  if (clientPaid > budget) {
+      decoreToast("Amount paid by client cannot exceed the total project budget.", "danger");
       return;
   }
   

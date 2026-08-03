@@ -19,6 +19,7 @@ class Worksite(models.Model):
     progress = models.PositiveSmallIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     budget = models.DecimalField(max_digits=14, decimal_places=2)
     spend = models.DecimalField(max_digits=14, decimal_places=2, default=0.00)
+    client_paid = models.DecimalField(max_digits=14, decimal_places=2, default=0.00)
     start_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -65,4 +66,9 @@ class Worksite(models.Model):
     @property
     def profit_abs(self):
         return abs(self.profit)
+
+    @property
+    def client_balance(self):
+        return self.budget - self.client_paid
+
 

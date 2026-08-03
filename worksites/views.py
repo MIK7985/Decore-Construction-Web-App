@@ -10,7 +10,7 @@ from django import forms
 class WorksiteForm(forms.ModelForm):
     class Meta:
         model = Worksite
-        fields = ['name', 'client', 'location', 'supervisor', 'status', 'progress', 'budget', 'spend', 'start_date']
+        fields = ['name', 'client', 'location', 'supervisor', 'status', 'progress', 'budget', 'spend', 'start_date', 'client_paid']
 
 class WorksiteListView(LoginRequiredMixin, ListView):
     model = Worksite
@@ -26,6 +26,9 @@ class WorksiteListView(LoginRequiredMixin, ListView):
         total_profit = total_income - total_expenses
         profit_margin = (total_profit / total_income * 100) if total_income > 0 else 0
 
+        total_client_paid = sum(w.client_paid for w in worksites)
+        total_client_balance = sum(w.client_balance for w in worksites)
+
         context['stats'] = {
             'total': worksites.count(),
             'active': worksites.filter(status='active').count(),
@@ -36,6 +39,8 @@ class WorksiteListView(LoginRequiredMixin, ListView):
             'total_profit': total_profit,
             'total_profit_abs': abs(total_profit),
             'profit_margin': profit_margin,
+            'total_client_paid': total_client_paid,
+            'total_client_balance': total_client_balance,
         }
         context['supervisors_list'] = User.objects.all()
         return context
