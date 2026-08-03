@@ -33,24 +33,17 @@ class IndexView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
         today = timezone.localdate()
 
         worksites = list(Worksite.objects.prefetch_related("materials", "attendance_records__employee").all())
-        active_worksites_qs = Worksite.objects.filter(status=WorksiteStatus.ACTIVE)
-        total_employees = Employee.objects.filter(is_archived=False)
+        active_worksites_cnt = sum(1 for w in worksites if w.status == WorksiteStatus.ACTIVE)
+        total_employees_cnt = Employee.objects.filter(is_archived=False).count()
 
-        # 1. Quick Statistics (6 Key Cards)
-        active_worksites_cnt = active_worksites_qs.count()
-        total_employees_cnt = total_employees.count()
-
-        # Present Today
-        today_attendance = Attendance.objects.filter(date=today)
-        present_today_cnt = today_attendance.filter(
-            status__in=[AttendanceStatus.PRESENT, AttendanceStatus.LATE, AttendanceStatus.OVERTIME, 'present', 'late', 'overtime']
-        ).count()
-        
-        absent_today_cnt = today_attendance.filter(
-            status__in=[AttendanceStatus.ABSENT, 'absent']
-        ).count()
-
-        today_summary_marked = today_attendance.exists()
+        # Present Today — single query, count in Python
+        today_attendance_qs = Attendance.objects.filter(date=today)
+        today_statuses = list(today_attendance_qs.values_list('status', flat=True))
+        present_statuses = {AttendanceStatus.PRESENT, AttendanceStatus.LATE, AttendanceStatus.OVERTIME, 'present', 'late', 'overtime'}
+        absent_statuses = {AttendanceStatus.ABSENT, 'absent'}
+        present_today_cnt = sum(1 for s in today_statuses if s in present_statuses)
+        absent_today_cnt = sum(1 for s in today_statuses if s in absent_statuses)
+        today_summary_marked = bool(today_statuses)
 
         total_revenue = sum((w.budget for w in worksites), Decimal("0.00"))
         exp_sum = Expense.objects.aggregate(total=Sum('amount'))['total'] or Decimal("0.00")
@@ -80,8 +73,10 @@ class IndexView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
             "marked": today_summary_marked
         }
 
-        # 3. Active Worksites (Top 3 latest)
-        context["latest_active_worksites"] = active_worksites_qs.order_by("-id")[:3]
+        # 3. Active Worksites (Top 3 latest — reuse prefetched list)
+        context["latest_active_worksites"] = [
+            w for w in worksites if w.status == WorksiteStatus.ACTIVE
+        ][:3]
 
         # 4. Recent Activity (Latest 5 items across system)
         activities = []
@@ -160,10 +155,11 @@ class IndexView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
             })
 
         # Alert B: Low Material Stock
-        low_mats = Material.objects.filter(quantity__lte=5)
-        if low_mats.exists():
-            count_low = low_mats.count()
-            first_mat = low_mats.first()
+        low_mats = Material.objects.filter(quantity__lte=5).only('name', 'quantity', 'unit')
+        low_mats_list = list(low_mats)
+        if low_mats_list:
+            count_low = len(low_mats_list)
+            first_mat = low_mats_list[0]
             alerts.append({
                 "type": "danger",
                 "icon": "bi-box-seam-fill text-danger",

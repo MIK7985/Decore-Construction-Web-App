@@ -76,10 +76,21 @@ class AttendanceSheetView(LoginRequiredMixin, View):
         if not date_str:
             date_str = timezone.localdate().isoformat()
         
-        employees = Employee.objects.filter(is_archived=False).select_related("worksite").order_by("name")
-        worksites = Worksite.objects.order_by("name")
+        employees = (
+            Employee.objects
+            .filter(is_archived=False)
+            .select_related("worksite")
+            .only("id", "name", "role", "worksite_id", "worksite__name")
+            .order_by("name")
+        )
+        worksites = Worksite.objects.only("id", "name").order_by("name")
         
-        attendance_records = Attendance.objects.filter(date=date_str)
+        attendance_records = (
+            Attendance.objects
+            .filter(date=date_str)
+            .select_related("employee")
+            .only("id", "employee_id", "worksite_id", "status", "notes")
+        )
         saved_dict = {r.employee_id: r for r in attendance_records}
         
         sheet_records = []

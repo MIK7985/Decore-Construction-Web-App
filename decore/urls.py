@@ -5,11 +5,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.generic import RedirectView, TemplateView
+from django.views.generic import RedirectView
+from .views import service_worker
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('service-worker.js', TemplateView.as_view(template_name='service-worker.js', content_type='application/javascript'), name='service-worker'),
+    path('service-worker.js', service_worker, name='service-worker'),
 
     path('', RedirectView.as_view(pattern_name='dashboard:index', permanent=False)),
 

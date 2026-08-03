@@ -30,6 +30,10 @@ class SalaryRecord(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["employee", "week_end_date"], name="unique_employee_weekly_salary_period")
         ]
+        indexes = [
+            models.Index(fields=["week_end_date"], name="salary_week_end_idx"),
+            models.Index(fields=["week_end_date", "status"], name="salary_week_status_idx"),
+        ]
 
     def recalculate(self):
         self.net_salary = (self.daily_wage * self.present_days) + self.bonus - self.deductions

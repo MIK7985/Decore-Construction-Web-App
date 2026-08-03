@@ -14,14 +14,15 @@ class Employee(models.Model):
     status = models.CharField(
         max_length=20,
         choices=EmployeeStatus.choices,
-        default=EmployeeStatus.ACTIVE
+        default=EmployeeStatus.ACTIVE,
+        db_index=True
     )
     wage = models.DecimalField(max_digits=10, decimal_places=2)
     address = models.TextField(blank=True, null=True)
     joined = models.DateField(auto_now_add=True)
     photo = models.FileField(upload_to="employee_photos/", blank=True, null=True)
     id_photo = models.FileField(upload_to="employee_ids/", blank=True, null=True)
-    is_archived = models.BooleanField(default=False)
+    is_archived = models.BooleanField(default=False, db_index=True)
 
     def __str__(self):
         return self.name

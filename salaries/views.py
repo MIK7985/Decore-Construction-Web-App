@@ -5,7 +5,8 @@ from types import SimpleNamespace
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.db.models import Case, DecimalField, Sum, Value, When
+from django.db import models
+from django.db.models import Case, DecimalField, Prefetch, Sum, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -13,7 +14,7 @@ from django.utils import timezone
 from django.views.generic import TemplateView, View
 
 from accounts.mixins import EngineerRequiredMixin
-from attendance.models import AttendanceStatus
+from attendance.models import Attendance, AttendanceStatus
 from employees.models import Employee
 from payments.models import Payment
 from .models import SalaryRecord, SalaryStatus
@@ -117,15 +118,31 @@ def payroll_preview(start_date, end_date):
         record.employee_id: record 
         for record in SalaryRecord.objects.filter(week_end_date=end_date).select_related("employee").prefetch_related("payments")
     }
-    for employee in Employee.objects.filter(is_archived=False).order_by("name"):
-        attendance = employee.attendance_records.filter(date__gte=start_date, date__lte=end_date)
-        paid_days = attendance.aggregate(days=Sum(Case(
-            When(status=AttendanceStatus.PRESENT, then=Value(Decimal("1.0"))),
-            When(status=AttendanceStatus.LATE, then=Value(Decimal("0.5"))),
-            When(status=AttendanceStatus.OVERTIME, then=Value(Decimal("1.5"))),
-            default=Value(Decimal("0.0")),
-            output_field=DecimalField(max_digits=5, decimal_places=1),
-        )))["days"] or Decimal("0.0")
+    # Batch-fetch all employees with their attendance for the week in one query
+    employees = (
+        Employee.objects
+        .filter(is_archived=False)
+        .prefetch_related(
+            models.Prefetch(
+                'attendance_records',
+                queryset=Attendance.objects.filter(
+                    date__gte=start_date, date__lte=end_date
+                ).only('employee_id', 'status'),
+                to_attr='week_attendance'
+            )
+        )
+        .order_by("name")
+    )
+    for employee in employees:
+        # Use prefetched week_attendance instead of triggering separate query per employee
+        attendance_statuses = [a.status for a in employee.week_attendance]
+        paid_days = sum(
+            Decimal("1.0") if s == AttendanceStatus.PRESENT else
+            Decimal("0.5") if s == AttendanceStatus.LATE else
+            Decimal("1.5") if s == AttendanceStatus.OVERTIME else
+            Decimal("0.0")
+            for s in attendance_statuses
+        )
         
         record = existing.get(employee.id)
         if paid_days == 0 and not record:

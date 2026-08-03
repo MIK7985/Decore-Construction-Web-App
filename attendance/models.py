@@ -23,6 +23,10 @@ class Attendance(models.Model):
     class Meta:
         ordering = ["-date", "employee__name"]
         constraints = [models.UniqueConstraint(fields=["employee", "date"], name="unique_employee_attendance_date")]
+        indexes = [
+            models.Index(fields=["date"], name="attendance_date_idx"),
+            models.Index(fields=["date", "status"], name="attendance_date_status_idx"),
+        ]
 
     def __str__(self):
         return f"{self.employee} — {self.date}"

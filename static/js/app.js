@@ -410,15 +410,16 @@
      Worksite Progress Bar Animations
      --------------------------------------------------------- */
   function initProgressBarAnimations() {
-    setTimeout(function() {
-      var progressBars = document.querySelectorAll('.progress-bar');
+    requestAnimationFrame(function() {
+      var progressBars = document.querySelectorAll('.progress-bar[data-progress]');
       progressBars.forEach(function (bar) {
-        var target = bar.getAttribute('data-progress');
-        if (target !== null) {
-          bar.style.width = target + '%';
-        }
+        bar.style.willChange = 'width';
+        bar.style.width = '0%';
+        requestAnimationFrame(function() {
+          bar.style.width = (bar.getAttribute('data-progress') || 0) + '%';
+        });
       });
-    }, 150);
+    });
   }
 
   /* ---------------------------------------------------------
@@ -429,10 +430,18 @@
     if (anchor && anchor.href && !anchor.target && !anchor.getAttribute("download") && !anchor.href.startsWith("javascript:") && !anchor.href.includes("#") && anchor.href.includes(location.hostname)) {
       var bar = document.getElementById("topNavProgressBar");
       if (bar) {
+        bar.style.transition = 'width 0.15s ease, opacity 0.1s ease';
         bar.style.opacity = "1";
-        bar.style.width = "45%";
-        setTimeout(function() { bar.style.width = "85%"; }, 100);
+        bar.style.width = "50%";
+        setTimeout(function() { bar.style.width = "90%"; }, 80);
       }
     }
   });
-})();
+
+  // Reset progress bar on bfcache restore (browser back button)
+  window.addEventListener("pageshow", function(e) {
+    if (e.persisted) {
+      var bar = document.getElementById("topNavProgressBar");
+      if (bar) { bar.style.opacity = "0"; bar.style.width = "0"; }
+    }
+  });

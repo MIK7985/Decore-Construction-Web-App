@@ -74,12 +74,21 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+            ],
+            # Use cached loader in production for template compilation caching
+            'loaders': [
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                ])
+            ] if not DEBUG else [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
             ],
         },
     },
@@ -93,17 +102,29 @@ WSGI_APPLICATION = 'decore.wsgi.application'
 
 try:
     import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-            conn_max_age=600
+    _db_config = dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600
+    )
+    # Apply SQLite WAL optimisations when using SQLite via dj_database_url
+    if _db_config.get('ENGINE', '').endswith('sqlite3'):
+        _db_config.setdefault('OPTIONS', {})
+        _db_config['OPTIONS']['timeout'] = 20
+        _db_config['OPTIONS']['init_command'] = (
+            'PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; '
+            'PRAGMA cache_size=10000; PRAGMA temp_store=MEMORY;'
         )
-    }
+    DATABASES = {'default': _db_config}
 except ImportError:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
+            # SQLite WAL mode: allows concurrent reads + writes without locking
+            'OPTIONS': {
+                'timeout': 20,
+                'init_command': 'PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA cache_size=10000; PRAGMA temp_store=MEMORY;',
+            },
         }
     }
 
@@ -132,7 +153,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -155,6 +176,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'dashboard:index'
 LOGOUT_REDIRECT_URL = 'accounts:login'
+
+# (TIME_ZONE already set above)
+
+# In-memory cache for fast template fragment and view caching
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'decore-cache',
+    }
+}
+
+# Session optimization — use signed cookie sessions (no DB roundtrip per request)
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # 14 days
+SESSION_SAVE_EVERY_REQUEST = False
+
+# WhiteNoise: serve compressed + forever-cacheable static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Cloud Storage Setup (Conditionally enabled in production)
 AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
