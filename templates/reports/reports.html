@@ -7,8 +7,8 @@
         <h4 class="decore-page-title">Operational Reports</h4>
         <div class="decore-breadcrumb">Generate, analyze, and export construction performance statistics</div>
     </div>
-    <a href="#" onclick="triggerPwaDownload(event, '{% url 'reports:export_summary' %}', 'Exporting Summary Report...');" class="btn btn-decore-primary btn-sm">
-        <i class="bi bi-download me-1"></i>Export Summary
+    <a href="#" onclick="downloadOrSharePdf(event, '{% url 'reports:export_summary' %}', 'Operation_Summary.pdf', 'Generating Operational Summary PDF...');" class="btn btn-decore-primary btn-sm">
+        <i class="bi bi-file-earmark-pdf me-1"></i>Export Summary (PDF)
     </a>
 </div>
 
@@ -18,7 +18,7 @@
             <i class="bi bi-people fs-1 text-decore-primary mb-3 d-block"></i>
             <h6 class="fw-bold mb-1">Employee Report</h6>
             <p class="text-muted small mb-3">Attendance logs &amp; workforce headcount summaries</p>
-            <a href="#" onclick="triggerPwaDownload(event, '{% url 'reports:export_employees' %}', 'Generating Employee Report...');" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-1"></i>Generate</a>
+            <a href="#" onclick="downloadOrSharePdf(event, '{% url 'reports:export_employees' %}', 'Employee_Report.pdf', 'Generating Employee PDF Report...');" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-file-earmark-pdf me-1"></i>Generate PDF</a>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
@@ -26,7 +26,7 @@
             <i class="bi bi-geo-alt fs-1 text-decore-primary mb-3 d-block"></i>
             <h6 class="fw-bold mb-1">Worksite Report</h6>
             <p class="text-muted small mb-3">Site progression percentages and crew allocation</p>
-            <a href="#" onclick="triggerPwaDownload(event, '{% url 'reports:export_worksites' %}', 'Generating Worksite Report...');" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-1"></i>Generate</a>
+            <a href="#" onclick="downloadOrSharePdf(event, '{% url 'reports:export_worksites' %}', 'Worksite_Report.pdf', 'Generating Worksite PDF Report...');" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-file-earmark-pdf me-1"></i>Generate PDF</a>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
@@ -34,7 +34,7 @@
             <i class="bi bi-cash-stack fs-1 text-decore-primary mb-3 d-block"></i>
             <h6 class="fw-bold mb-1">Financial Ledger</h6>
             <p class="text-muted small mb-3">Aggregated salary outputs, payments, and expenses</p>
-            <a href="#" onclick="triggerPwaDownload(event, '{% url 'reports:export_financials' %}', 'Generating Financial Ledger...');" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-1"></i>Generate</a>
+            <a href="#" onclick="downloadOrSharePdf(event, '{% url 'reports:export_financials' %}', 'Financial_Ledger.pdf', 'Generating Financial Ledger PDF...');" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-file-earmark-pdf me-1"></i>Generate PDF</a>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
@@ -42,7 +42,7 @@
             <i class="bi bi-boxes fs-1 text-decore-primary mb-3 d-block"></i>
             <h6 class="fw-bold mb-1">Materials Inventory</h6>
             <p class="text-muted small mb-3">Procured stock volume and consumption per worksite</p>
-            <a href="#" onclick="triggerPwaDownload(event, '{% url 'reports:export_materials' %}', 'Generating Materials Inventory...');" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-download me-1"></i>Generate</a>
+            <a href="#" onclick="downloadOrSharePdf(event, '{% url 'reports:export_materials' %}', 'Materials_Report.pdf', 'Generating Materials PDF Report...');" class="btn btn-outline-secondary btn-sm w-100"><i class="bi bi-file-earmark-pdf me-1"></i>Generate PDF</a>
         </div>
     </div>
 </div>
@@ -135,21 +135,59 @@
         if(themeSwitch) themeSwitch.addEventListener("change", handleThemeChange);
     });
 
-    function triggerPwaDownload(event, url, toastMessage) {
+    async function downloadOrSharePdf(event, url, filename, toastMessage) {
         if (event) event.preventDefault();
         
         if (typeof decoreToast === 'function') {
-            decoreToast(toastMessage || 'Generating document...', 'primary');
+            decoreToast(toastMessage || 'Generating PDF Report...', 'primary');
         }
         
-        let iframe = document.getElementById('pwaDownloadIframe');
-        if (!iframe) {
-            iframe = document.createElement('iframe');
-            iframe.id = 'pwaDownloadIframe';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            if (!response.ok) {
+                throw new Error('Server returned HTTP ' + response.status);
+            }
+            
+            const blob = await response.blob();
+            const file = new File([blob], filename, { type: 'application/pdf' });
+
+            // On iOS / Mobile PWA, trigger native Share Sheet (Save to Files, AirDrop, WhatsApp, Print)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: filename.replace('.pdf', ''),
+                    text: 'Decore Construction Operational PDF Report'
+                });
+                if (typeof decoreToast === 'function') {
+                    decoreToast('PDF Shared / Saved successfully!', 'success');
+                }
+            } else {
+                // Desktop / standard browser fallback
+                const blobUrl = URL.createObjectURL(blob);
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (isIOS) {
+                    window.open(blobUrl, '_blank');
+                } else {
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+                }
+                if (typeof decoreToast === 'function') {
+                    decoreToast('PDF generated successfully!', 'success');
+                }
+            }
+        } catch (err) {
+            console.warn('PDF Share/Download notice:', err);
+            window.open(url, '_blank');
         }
-        iframe.src = url;
     }
 </script>
 {% endblock %}
