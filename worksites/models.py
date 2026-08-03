@@ -50,8 +50,12 @@ class Worksite(models.Model):
         return total_labor
 
     @property
+    def expense_cost(self):
+        return sum(e.amount for e in self.expenses.all())
+
+    @property
     def total_spend(self):
-        return self.material_cost + self.labor_cost
+        return self.material_cost + self.labor_cost + self.expense_cost
 
     @property
     def profit(self):
