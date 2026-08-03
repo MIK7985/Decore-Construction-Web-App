@@ -15,6 +15,7 @@
     initTooltips();
     hideInitialLoader();
     initProgressBarAnimations();
+    initHoverPrefetch();
   });
 
   /* ---------------------------------------------------------
@@ -407,6 +408,54 @@
   }
 
   /* ---------------------------------------------------------
+     Hover Prefetch — start fetching the next page as soon as
+     the user hovers a nav link for 65ms. By click time, the
+     browser already has the page in-cache → near-instant load.
+     --------------------------------------------------------- */
+  function initHoverPrefetch() {
+    var prefetched = new Set();
+    var hoverTimer = null;
+
+    function prefetchUrl(url) {
+      if (prefetched.has(url)) return;
+      prefetched.add(url);
+      var link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = url;
+      link.as = 'document';
+      document.head.appendChild(link);
+    }
+
+    document.addEventListener('mouseover', function(e) {
+      var anchor = e.target.closest('a');
+      if (!anchor || !anchor.href || anchor.target ||
+          anchor.getAttribute('download') ||
+          anchor.href.startsWith('javascript:') ||
+          anchor.href.includes('#') ||
+          !anchor.href.includes(location.hostname)) return;
+
+      hoverTimer = setTimeout(function() {
+        prefetchUrl(anchor.href);
+      }, 65);
+    }, { passive: true });
+
+    document.addEventListener('mouseout', function() {
+      clearTimeout(hoverTimer);
+    }, { passive: true });
+
+    // Touch: prefetch on touchstart (before touchend/click fires)
+    document.addEventListener('touchstart', function(e) {
+      var anchor = e.target.closest('a');
+      if (!anchor || !anchor.href || anchor.target ||
+          anchor.getAttribute('download') ||
+          anchor.href.startsWith('javascript:') ||
+          anchor.href.includes('#') ||
+          !anchor.href.includes(location.hostname)) return;
+      prefetchUrl(anchor.href);
+    }, { passive: true });
+  }
+
+  /* ---------------------------------------------------------
      Worksite Progress Bar Animations
      --------------------------------------------------------- */
   function initProgressBarAnimations() {
@@ -423,25 +472,75 @@
   }
 
   /* ---------------------------------------------------------
-     Instant 0ms Link Navigation Feedback
+     Instant 0ms Link Navigation Feedback + View Transitions
      --------------------------------------------------------- */
-  document.addEventListener("click", function (e) {
-    var anchor = e.target.closest("a");
-    if (anchor && anchor.href && !anchor.target && !anchor.getAttribute("download") && !anchor.href.startsWith("javascript:") && !anchor.href.includes("#") && anchor.href.includes(location.hostname)) {
-      var bar = document.getElementById("topNavProgressBar");
-      if (bar) {
-        bar.style.transition = 'width 0.15s ease, opacity 0.1s ease';
-        bar.style.opacity = "1";
-        bar.style.width = "50%";
-        setTimeout(function() { bar.style.width = "90%"; }, 80);
-      }
+  var _navBar = null;
+  function getNavBar() { return _navBar || (_navBar = document.getElementById('topNavProgressBar')); }
+
+  function showNavBar() {
+    var bar = getNavBar();
+    if (!bar) return;
+    bar.style.transition = 'none';
+    bar.style.opacity = '1';
+    bar.style.width = '0%';
+    requestAnimationFrame(function() {
+      bar.style.transition = 'width 0.18s cubic-bezier(0.4,0,0.2,1), opacity 0.12s ease';
+      bar.style.width = '55%';
+      setTimeout(function() { bar.style.width = '88%'; }, 90);
+    });
+  }
+
+  function finishNavBar() {
+    var bar = getNavBar();
+    if (!bar) return;
+    bar.style.width = '100%';
+    setTimeout(function() { bar.style.opacity = '0'; bar.style.width = '0'; }, 250);
+  }
+
+  document.addEventListener('click', function(e) {
+    var anchor = e.target.closest('a');
+    if (anchor && anchor.href && !anchor.target &&
+        !anchor.getAttribute('download') &&
+        !anchor.href.startsWith('javascript:') &&
+        !anchor.href.includes('#') &&
+        anchor.href.includes(location.hostname)) {
+      showNavBar();
+    }
+  });
+
+  // View Transitions API — smooth cross-page animation (Chrome 111+)
+  if (document.startViewTransition) {
+    document.addEventListener('click', function(e) {
+      var anchor = e.target.closest('a');
+      if (!anchor || !anchor.href || anchor.target ||
+          anchor.getAttribute('download') ||
+          anchor.href.startsWith('javascript:') ||
+          anchor.href.includes('#') ||
+          !anchor.href.includes(location.hostname)) return;
+
+      e.preventDefault();
+      document.startViewTransition(function() {
+        return new Promise(function(resolve) {
+          window.location.href = anchor.href;
+          // Resolve after a short tick so the transition can animate out
+          window.addEventListener('pagehide', resolve, { once: true });
+          setTimeout(resolve, 400);
+        });
+      });
+    });
+  }
+
+  // Finish progress bar on new page paint
+  window.addEventListener('pageshow', function(e) {
+    finishNavBar();
+    if (e.persisted) {
+      // bfcache restore — reset immediately
+      var bar = getNavBar();
+      if (bar) { bar.style.transition = 'none'; bar.style.opacity = '0'; bar.style.width = '0'; }
     }
   });
 
   // Reset progress bar on bfcache restore (browser back button)
-  window.addEventListener("pageshow", function(e) {
-    if (e.persisted) {
-      var bar = document.getElementById("topNavProgressBar");
-      if (bar) { bar.style.opacity = "0"; bar.style.width = "0"; }
-    }
+  window.addEventListener('popstate', function() {
+    finishNavBar();
   });
