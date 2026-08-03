@@ -420,4 +420,19 @@
       });
     }, 150);
   }
+
+  /* ---------------------------------------------------------
+     Instant 0ms Link Navigation Feedback
+     --------------------------------------------------------- */
+  document.addEventListener("click", function (e) {
+    var anchor = e.target.closest("a");
+    if (anchor && anchor.href && !anchor.target && !anchor.getAttribute("download") && !anchor.href.startsWith("javascript:") && !anchor.href.includes("#") && anchor.href.includes(location.hostname)) {
+      var bar = document.getElementById("topNavProgressBar");
+      if (bar) {
+        bar.style.opacity = "1";
+        bar.style.width = "45%";
+        setTimeout(function() { bar.style.width = "85%"; }, 100);
+      }
+    }
+  });
 })();

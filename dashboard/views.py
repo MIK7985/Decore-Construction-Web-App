@@ -29,7 +29,7 @@ class IndexView(LoginRequiredMixin, TemplateView):
         now = timezone.now()
         today = timezone.localdate()
 
-        worksites = list(Worksite.objects.all())
+        worksites = list(Worksite.objects.prefetch_related("materials", "attendance_records__employee").all())
         active_worksites_qs = Worksite.objects.filter(status=WorksiteStatus.ACTIVE)
         total_employees = Employee.objects.filter(is_archived=False)
 

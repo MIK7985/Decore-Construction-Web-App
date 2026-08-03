@@ -69,7 +69,6 @@ body {
   background-attachment: fixed;
   color: var(--decore-text);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  transition: var(--decore-transition);
   min-height: 100vh;
   overflow-x: hidden;
 }
