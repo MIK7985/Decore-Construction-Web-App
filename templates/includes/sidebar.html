@@ -21,10 +21,17 @@
         </a>
         {% endif %}
 
-        <a class="nav-link {% if request.resolver_match.app_name == 'attendance' %}active{% endif %}"
+        {% if request.user.profile.role == 'supervisor' %}
+        <a class="nav-link {% if request.resolver_match.url_name == 'sheet' %}active{% endif %}"
            href="{% url 'attendance:sheet' %}">
-            <i class="bi bi-calendar-check"></i><span>Attendance Sheet</span>
+            <i class="bi bi-calendar-check"></i><span>Mark Attendance</span>
         </a>
+        {% else %}
+        <a class="nav-link {% if request.resolver_match.app_name == 'attendance' %}active{% endif %}"
+           href="{% url 'attendance:list' %}">
+            <i class="bi bi-calendar-check"></i><span>Attendance Log</span>
+        </a>
+        {% endif %}
 
         {% if request.user.is_superuser or not request.user.profile or request.user.profile.role != 'supervisor' %}
         <a class="nav-link {% if request.resolver_match.app_name == 'salaries' %}active{% endif %}"
