@@ -471,7 +471,9 @@
                     <thead>
                         <tr>
                             <th class="text-nowrap-custom">Material Type</th>
-                            <th class="text-nowrap-custom text-end">Quantity / Stock</th>
+                            <th class="text-nowrap-custom text-end">Total Procured</th>
+                            <th class="text-nowrap-custom text-end">Used Stock</th>
+                            <th class="text-nowrap-custom text-end">Balance Stock</th>
                             <th class="text-nowrap-custom text-end">Unit Cost</th>
                             <th class="text-nowrap-custom text-end">Total Valuation</th>
                             <th class="text-nowrap-custom">Status</th>
@@ -483,6 +485,8 @@
                         <tr>
                             <td class="text-nowrap-custom fw-bold text-decore-primary">{{ mat.name }}</td>
                             <td class="text-nowrap-custom text-end font-monospace fw-semibold">{{ mat.quantity }} {{ mat.unit }}</td>
+                            <td class="text-nowrap-custom text-end font-monospace text-warning fw-semibold">{{ mat.used_quantity }} {{ mat.unit }}</td>
+                            <td class="text-nowrap-custom text-end font-monospace text-success fw-bold">{{ mat.balance_quantity }} {{ mat.unit }}</td>
                             <td class="text-nowrap-custom text-end font-monospace text-muted">₹{{ mat.unit_price|floatformat:2|intcomma }}</td>
                             <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost|floatformat:2|intcomma }}</td>
                             <td class="text-nowrap-custom">
@@ -496,7 +500,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted small">No materials logged for this site.</td>
+                            <td colspan="8" class="text-center py-5 text-muted small">No materials logged for this site.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

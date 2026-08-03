@@ -11,7 +11,19 @@ from accounts.mixins import EngineerRequiredMixin
 class MaterialForm(forms.ModelForm):
     class Meta:
         model = Material
-        fields = ["name", "worksite", "quantity", "unit", "unit_price", "supplier", "status"]
+        fields = ["name", "worksite", "quantity", "used_quantity", "unit", "unit_price", "supplier", "status"]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        quantity = cleaned_data.get("quantity")
+        used_quantity = cleaned_data.get("used_quantity")
+
+        if quantity is not None and used_quantity is not None:
+            if used_quantity > quantity:
+                raise forms.ValidationError("Used stock cannot exceed total procured stock.")
+            if used_quantity < 0:
+                raise forms.ValidationError("Used stock cannot be negative.")
+        return cleaned_data
 
 class MaterialListView(LoginRequiredMixin, EngineerRequiredMixin, ListView):
     model = Material

@@ -90,7 +90,9 @@
                 <tr>
                     <th class="text-nowrap-custom">Material &amp; Supplier</th>
                     <th class="text-nowrap-custom">Assigned Worksite</th>
-                    <th class="text-nowrap-custom text-end">Stock / Qty</th>
+                    <th class="text-nowrap-custom text-end">Total Procured</th>
+                    <th class="text-nowrap-custom text-end">Used Stock</th>
+                    <th class="text-nowrap-custom text-end">Balance Stock</th>
                     <th class="text-nowrap-custom text-end">Unit Rate</th>
                     <th class="text-nowrap-custom text-end">Total Valuation</th>
                     <th class="text-nowrap-custom text-center">Procurement Status</th>
@@ -113,6 +115,8 @@
                     </td>
                     <td class="text-nowrap-custom"><span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-building me-1 text-secondary"></i><span class="mat-worksite-val">{{ mat.worksite.name }}</span></span></td>
                     <td class="text-nowrap-custom text-end font-monospace fw-bold text-dark fs-6"><span class="mat-qty-val">{{ mat.quantity }}</span> <span class="text-muted text-uppercase small mat-unit-val" style="font-size:0.7rem;">{{ mat.unit }}</span></td>
+                    <td class="text-nowrap-custom text-end font-monospace text-warning fw-bold fs-6"><span class="mat-used-val">{{ mat.used_quantity }}</span> <span class="text-muted text-uppercase small" style="font-size:0.7rem;">{{ mat.unit }}</span></td>
+                    <td class="text-nowrap-custom text-end font-monospace text-success fw-bold fs-6"><span class="mat-balance-val">{{ mat.balance_quantity }}</span> <span class="text-muted text-uppercase small" style="font-size:0.7rem;">{{ mat.unit }}</span></td>
                     <td class="text-nowrap-custom text-end font-monospace text-muted">₹<span class="mat-price-val">{{ mat.unit_price|floatformat:2|intcomma }}</span></td>
                     <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace fs-6">₹<span class="mat-total-val">{{ mat.total_cost|floatformat:2|intcomma }}</span></td>
                     <td class="text-nowrap-custom text-center">
@@ -134,7 +138,7 @@
                         </div>
                     </td>
                     <td class="text-nowrap-custom text-end">
-                        <button type="button" class="btn btn-sm btn-icon" title="Edit Item" onclick="openEditMaterialModal({{ mat.id }}, '{{ mat.name|escapejs }}', {{ mat.worksite.id }}, '{{ mat.quantity }}', '{{ mat.unit|escapejs }}', '{{ mat.unit_price }}', '{{ mat.supplier|escapejs }}', '{{ mat.status }}')">
+                        <button type="button" class="btn btn-sm btn-icon" title="Edit Item" onclick="openEditMaterialModal({{ mat.id }}, '{{ mat.name|escapejs }}', {{ mat.worksite.id }}, '{{ mat.quantity }}', '{{ mat.used_quantity }}', '{{ mat.unit|escapejs }}', '{{ mat.unit_price }}', '{{ mat.supplier|escapejs }}', '{{ mat.status }}')">
                             <i class="bi bi-pencil text-primary"></i>
                         </button>
                         <button type="button" class="btn btn-sm btn-icon" title="Delete Item" onclick="deleteMaterialItem({{ mat.id }}, '{{ mat.name|escapejs }}')">
@@ -193,14 +197,22 @@
                         </div>
                     </div>
 
-                    <div class="bg-light-soft rounded p-2 mb-2 d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-muted small" style="font-size:0.7rem;">Stock Quantity</div>
-                            <div class="fw-bold font-monospace text-dark fs-6"><span class="mat-qty-val">{{ mat.quantity }}</span> <span class="text-uppercase small text-muted mat-unit-val" style="font-size:0.65rem;">{{ mat.unit }}</span></div>
+                    <div class="bg-light-soft rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small" style="font-size:0.68rem;">Total Procured:</span>
+                            <span class="fw-bold font-monospace text-dark" style="font-size:0.8rem;"><span class="mat-qty-val">{{ mat.quantity }}</span> {{ mat.unit }}</span>
                         </div>
-                        <div class="text-end">
-                            <div class="text-muted small" style="font-size:0.7rem;">Total Valuation</div>
-                            <div class="fw-bold font-monospace text-decore-primary fs-6">₹<span class="mat-total-val">{{ mat.total_cost|floatformat:2|intcomma }}</span></div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small" style="font-size:0.68rem;">Used Stock:</span>
+                            <span class="fw-bold font-monospace text-warning" style="font-size:0.8rem;"><span class="mat-used-val">{{ mat.used_quantity }}</span> {{ mat.unit }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted small" style="font-size:0.68rem;">Balance Stock:</span>
+                            <span class="fw-bold font-monospace text-success" style="font-size:0.8rem;"><span class="mat-balance-val">{{ mat.balance_quantity }}</span> {{ mat.unit }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center border-top border-light pt-1 mt-1">
+                            <span class="text-muted small" style="font-size:0.68rem;">Total Valuation:</span>
+                            <span class="fw-bold font-monospace text-decore-primary fs-6">₹<span class="mat-total-val">{{ mat.total_cost|floatformat:2|intcomma }}</span></span>
                         </div>
                     </div>
 
@@ -208,7 +220,7 @@
                         <div class="mat-supplier-val"><i class="bi bi-shop me-1"></i>{{ mat.supplier }}</div>
                         <div class="d-flex align-items-center gap-2">
                             <div class="font-monospace">₹<span class="mat-price-val">{{ mat.unit_price|floatformat:2|intcomma }}</span> / {{ mat.unit }}</div>
-                            <button type="button" class="btn btn-sm btn-link p-0 text-primary ms-1" onclick="openEditMaterialModal({{ mat.id }}, '{{ mat.name|escapejs }}', {{ mat.worksite.id }}, '{{ mat.quantity }}', '{{ mat.unit|escapejs }}', '{{ mat.unit_price }}', '{{ mat.supplier|escapejs }}', '{{ mat.status }}')"><i class="bi bi-pencil"></i></button>
+                            <button type="button" class="btn btn-sm btn-link p-0 text-primary ms-1" onclick="openEditMaterialModal({{ mat.id }}, '{{ mat.name|escapejs }}', {{ mat.worksite.id }}, '{{ mat.quantity }}', '{{ mat.used_quantity }}', '{{ mat.unit|escapejs }}', '{{ mat.unit_price }}', '{{ mat.supplier|escapejs }}', '{{ mat.status }}')"><i class="bi bi-pencil"></i></button>
                             <button type="button" class="btn btn-sm btn-link p-0 text-danger ms-1" onclick="deleteMaterialItem({{ mat.id }}, '{{ mat.name|escapejs }}')"><i class="bi bi-trash"></i></button>
                         </div>
                     </div>
@@ -349,15 +361,19 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-semibold">Quantity *</label>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Total Procured *</label>
                             <input type="number" step="0.01" min="0.01" class="form-control" id="editMatQty" name="quantity" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Used Stock</label>
+                            <input type="number" step="0.01" min="0" class="form-control" id="editMatUsedQty" name="used_quantity" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label small fw-semibold">Measurement Unit *</label>
                             <input type="text" class="form-control" id="editMatUnit" name="unit" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small fw-semibold">Unit Price (₹) *</label>
                             <div class="input-group">
                                 <span class="input-group-text">₹</span>
@@ -552,11 +568,12 @@
         });
     }
 
-    function openEditMaterialModal(id, name, worksiteId, qty, unit, price, supplier, status) {
+    function openEditMaterialModal(id, name, worksiteId, qty, usedQty, unit, price, supplier, status) {
         document.getElementById("editMatId").value = id;
         document.getElementById("editMatName").value = name;
         document.getElementById("editMatWorksite").value = worksiteId;
         document.getElementById("editMatQty").value = qty;
+        document.getElementById("editMatUsedQty").value = usedQty;
         document.getElementById("editMatUnit").value = unit;
         document.getElementById("editMatPrice").value = parseFloat(price || 0).toFixed(2);
         document.getElementById("editMatSupplier").value = supplier;
