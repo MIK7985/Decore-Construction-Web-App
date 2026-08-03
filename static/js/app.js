@@ -575,3 +575,5 @@
   window.addEventListener('popstate', function() {
     finishNavBar();
   });
+
+})();

@@ -128,13 +128,13 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <!-- Decore app JS -->
-    <script src="{% static 'js/app.js' %}?v=6"></script>
+    <script src="{% static 'js/app.js' %}?v=7"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js?v=6')
+                navigator.serviceWorker.register('/service-worker.js?v=7')
                     .then(reg => {
                         console.log('ServiceWorker registered:', reg.scope);
                         reg.update();
