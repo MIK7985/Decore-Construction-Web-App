@@ -1515,5 +1515,55 @@ html[data-bs-theme="dark"] .text-decore-primary,
   color: #A5B4FC !important;
 }
 
+/* =========================================================
+   Decore Auth Card (Login Page High-Contrast Overrides)
+   ========================================================= */
+.decore-auth-card h1,
+.decore-auth-card h2,
+.decore-auth-card h3,
+.decore-auth-card h4,
+.decore-auth-card h5,
+.decore-auth-card h6 {
+  color: #FFFFFF !important;
+}
+
+.decore-auth-card .form-label {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.decore-auth-card .form-control {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+}
+
+.decore-auth-card .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.decore-auth-card .form-control:focus {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: #818CF8 !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+.decore-auth-card .input-group-text {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+  border-right: none !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.decore-auth-card #togglePassword {
+  background: rgba(15, 23, 42, 0.8) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+  border-left: none !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  border-top-right-radius: 0.85rem !important;
+  border-bottom-right-radius: 0.85rem !important;
+}
+
+
 
 
