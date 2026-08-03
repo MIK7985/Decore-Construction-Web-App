@@ -133,8 +133,8 @@
                             {% if sal.unpaid_balance <= 0 %}
                             <span class="text-success small fw-semibold bg-success-soft px-3 py-1 rounded-pill"><i class="bi bi-check2-circle me-1"></i>Paid</span>
                             {% else %}
-                            <button type="button" class="btn btn-sm btn-decore-primary rounded-pill px-3" onclick="openPayModal('{{ sal.employee.id }}','{{ sal.employee.name|escapejs }}','{{ sal.present_days }}','{{ sal.daily_wage }}','{{ sal.bonus }}','{{ sal.deductions }}','{{ sal.net_salary }}','{{ sal.paid_amount }}','{{ sal.unpaid_balance }}','{{ selected_period }}')">
-                                {% if sal.paid_amount > 0 %}Pay Balance (₹{{ sal.unpaid_balance|floatformat:2|intcomma }}){% else %}Pay Salary{% endif %}
+                            <button type="button" class="btn btn-sm btn-decore-primary rounded-pill px-3 py-1 text-nowrap" style="font-size:0.78rem;" onclick="openPayModal('{{ sal.employee.id }}','{{ sal.employee.name|escapejs }}','{{ sal.present_days }}','{{ sal.daily_wage }}','{{ sal.bonus }}','{{ sal.deductions }}','{{ sal.net_salary }}','{{ sal.paid_amount }}','{{ sal.unpaid_balance }}','{{ selected_period }}')">
+                                {% if sal.paid_amount > 0 %}Pay ₹{{ sal.unpaid_balance|floatformat:0|intcomma }}{% else %}Pay ₹{{ sal.net_salary|floatformat:0|intcomma }}{% endif %}
                             </button>
                             {% endif %}
                         </td>
@@ -212,8 +212,8 @@
                     {% if sal.unpaid_balance <= 0 %}
                     <span class="text-success small fw-semibold bg-success-soft px-3 py-1 rounded-pill"><i class="bi bi-check2-circle me-1"></i>Paid</span>
                     {% else %}
-                    <button type="button" class="btn btn-sm btn-decore-primary rounded-pill px-3" onclick="openPayModal('{{ sal.employee.id }}','{{ sal.employee.name|escapejs }}','{{ sal.present_days }}','{{ sal.daily_wage }}','{{ sal.bonus }}','{{ sal.deductions }}','{{ sal.net_salary }}','{{ sal.paid_amount }}','{{ sal.unpaid_balance }}','{{ selected_period }}')">
-                        {% if sal.paid_amount > 0 %}Pay Balance (₹{{ sal.unpaid_balance|floatformat:2|intcomma }}){% else %}Pay Salary{% endif %}
+                    <button type="button" class="btn btn-sm btn-decore-primary rounded-pill px-3 py-1 text-nowrap" style="font-size:0.78rem;" onclick="openPayModal('{{ sal.employee.id }}','{{ sal.employee.name|escapejs }}','{{ sal.present_days }}','{{ sal.daily_wage }}','{{ sal.bonus }}','{{ sal.deductions }}','{{ sal.net_salary }}','{{ sal.paid_amount }}','{{ sal.unpaid_balance }}','{{ selected_period }}')">
+                        {% if sal.paid_amount > 0 %}Pay ₹{{ sal.unpaid_balance|floatformat:0|intcomma }}{% else %}Pay ₹{{ sal.net_salary|floatformat:0|intcomma }}{% endif %}
                     </button>
                     {% endif %}
                 </div>
