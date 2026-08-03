@@ -2,30 +2,31 @@
 {% load static %}
 {% load humanize %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Executive Dashboard{% endblock %}
 
 {% block content %}
-<div class="decore-page-header flex-wrap gap-2 mb-4">
-    <div>
-        <h4 class="decore-page-title d-flex align-items-center gap-2">
-            <i class="bi bi-speedometer2 text-primary fs-3"></i>Executive Operations Dashboard
-        </h4>
-        <div class="decore-breadcrumb">Real-time overview of active worksites, workforce payroll, material stock, and client cashflow</div>
-    </div>
-    <div class="d-flex align-items-center gap-2 ms-auto">
-        <a href="{% url 'reports:index' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm">
-            <i class="bi bi-file-earmark-pdf me-1"></i>Reports Suite
-        </a>
-        <a href="{% url 'attendance:sheet' %}" class="btn btn-decore-primary btn-sm rounded-pill px-3 shadow-sm">
-            <i class="bi bi-calendar-check me-1"></i>Mark Attendance
-        </a>
+<!-- Executive Hero Greeting Header -->
+<div class="decore-card border-0 shadow-sm p-4 mb-4" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: #ffffff; border-radius: 1.25rem;">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="badge bg-white text-primary fw-bold px-3 py-1 rounded-pill" style="font-size:0.75rem;"><i class="bi bi-circle-fill text-success me-1"></i>System Live</span>
+                <span class="text-white-50 small font-monospace"><i class="bi bi-clock me-1"></i>{% now "l, F d, Y" %}</span>
+            </div>
+            <h3 class="fw-extrabold mb-1 text-white">Welcome back, Administrator 👋</h3>
+            <p class="text-white-50 mb-0 small">Real-time executive oversight across project worksites, workforce payroll, material inventory, and client billing.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="{% url 'attendance:sheet' %}" class="btn btn-light rounded-pill px-3 fw-bold text-primary shadow-sm"><i class="bi bi-calendar-check me-1"></i>Mark Today's Attendance</a>
+            <a href="{% url 'reports:index' %}" class="btn btn-outline-light rounded-pill px-3 fw-semibold"><i class="bi bi-file-earmark-pdf me-1"></i>Reports Suite</a>
+        </div>
     </div>
 </div>
 
 <!-- Quick Action Shortcuts Bar -->
 <div class="decore-card p-3 mb-4 shadow-sm border-0">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div class="fw-bold text-decore-primary small"><i class="bi bi-lightning-charge-fill me-1 text-warning"></i>Quick Operations</div>
+        <div class="fw-bold text-decore-primary small"><i class="bi bi-lightning-charge-fill me-1 text-warning"></i>Quick Operational Shortcuts</div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <a href="{% url 'attendance:sheet' %}" class="btn btn-sm btn-light border rounded-pill px-3 fw-semibold"><i class="bi bi-calendar-check text-success me-1"></i>Mark Attendance</a>
             <a href="{% url 'materials:list' %}" class="btn btn-sm btn-light border rounded-pill px-3 fw-semibold"><i class="bi bi-boxes text-primary me-1"></i>Add Material</a>
@@ -36,56 +37,56 @@
     </div>
 </div>
 
-<!-- Statistic Cards -->
+<!-- Statistic Cards Grid (KPIs) -->
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
-        <div class="decore-card decore-stat-card h-100 decore-card-lift shadow-sm">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift shadow-sm border-top border-4 border-primary">
             <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-people text-primary"></i></span>
             <div>
-                <div class="decore-stat-label text-muted">Total Active Workforce</div>
+                <div class="decore-stat-label text-muted">Active Workforce</div>
                 <div class="decore-stat-value font-monospace fw-bold text-primary">{{ stats.total_employees }}</div>
                 <div class="decore-stat-trend text-success"><i class="bi bi-check-circle me-1"></i>Registered Workforce</div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="decore-card decore-stat-card h-100 decore-card-lift shadow-sm">
-            <span class="decore-stat-icon bg-info-soft"><i class="bi bi-geo-alt text-info"></i></span>
+        <div class="decore-card decore-stat-card h-100 decore-card-lift shadow-sm border-top border-4 border-info">
+            <span class="decore-stat-icon bg-info-soft"><i class="bi bi-building text-info"></i></span>
             <div>
                 <div class="decore-stat-label text-muted">Active Worksites</div>
                 <div class="decore-stat-value font-monospace fw-bold text-info">{{ stats.active_worksites }}</div>
-                <div class="decore-stat-trend text-info"><i class="bi bi-building me-1"></i>On-Site Operations</div>
+                <div class="decore-stat-trend text-info"><i class="bi bi-geo-alt me-1"></i>Out of {{ stats.total_worksites }} Total Sites</div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="decore-card decore-stat-card h-100 decore-card-lift shadow-sm">
-            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-cash-stack text-success"></i></span>
+        <div class="decore-card decore-stat-card h-100 decore-card-lift shadow-sm border-top border-4 border-success">
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-wallet2 text-success"></i></span>
             <div>
-                <div class="decore-stat-label text-muted">Payments Disbursed</div>
-                <div class="decore-stat-value font-monospace fw-bold text-success">₹{{ stats.payments_month|default:"0.00"|floatformat:2|intcomma }}</div>
-                <div class="decore-stat-trend text-success"><i class="bi bi-arrow-up-short"></i>Payroll Disbursements</div>
+                <div class="decore-stat-label text-muted">Total Client Receivables</div>
+                <div class="decore-stat-value font-monospace fw-bold text-success">₹{{ stats.total_paid|floatformat:2|intcomma }}</div>
+                <div class="decore-stat-trend text-warning font-monospace"><i class="bi bi-clock-history me-1"></i>Bal: ₹{{ stats.total_balance|floatformat:0|intcomma }}</div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="decore-card decore-stat-card h-100 decore-card-lift shadow-sm">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift shadow-sm border-top border-4 border-danger">
             <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-receipt text-danger"></i></span>
             <div>
-                <div class="decore-stat-label text-muted">Pending Expenses</div>
-                <div class="decore-stat-value font-monospace fw-bold text-danger">₹{{ stats.pending_expenses|default:"0.00"|floatformat:2|intcomma }}</div>
-                <div class="decore-stat-trend text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Pending Review</div>
+                <div class="decore-stat-label text-muted">Monthly Operations Spend</div>
+                <div class="decore-stat-value font-monospace fw-bold text-danger">₹{{ stats.total_spend|floatformat:2|intcomma }}</div>
+                <div class="decore-stat-trend text-danger"><i class="bi bi-exclamation-circle me-1"></i>Pending Exp: ₹{{ stats.pending_expenses|floatformat:0|intcomma }}</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Charts Row -->
+<!-- Charts Analytics Row -->
 <div class="row g-3 mb-4">
     <div class="col-lg-8">
         <div class="decore-card h-100 border-0 shadow-sm">
-            <div class="decore-card-header p-3 border-bottom border-light">
-                <h6 class="mb-0 fw-bold">Monthly Operational Expenses Trend</h6>
+            <div class="decore-card-header p-3 border-bottom border-light d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-graph-up text-primary me-2"></i>Monthly Operational Outgoings Trend</h6>
                 <span class="decore-status-badge badge-success"><span class="dot"></span>Live Database</span>
             </div>
             <div class="decore-card-body p-3">
@@ -98,7 +99,7 @@
     <div class="col-lg-4">
         <div class="decore-card h-100 border-0 shadow-sm">
             <div class="decore-card-header p-3 border-bottom border-light">
-                <h6 class="mb-0 fw-bold">Worksite Status Breakdown</h6>
+                <h6 class="mb-0 fw-bold"><i class="bi bi-pie-chart text-primary me-2"></i>Worksite Status Breakdown</h6>
             </div>
             <div class="decore-card-body p-3">
                 <div class="decore-chart-wrap" style="height:280px;">
@@ -109,50 +110,122 @@
     </div>
 </div>
 
-<!-- Recent Operational Activity Feed -->
+<!-- Active Worksites Live Progress Cards -->
 <div class="decore-card mb-4 border-0 shadow-sm">
-    <div class="decore-card-header p-3 border-bottom border-light d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold"><i class="bi bi-activity text-primary me-2"></i>Recent Operational Activity Feed</h6>
-        <span class="small text-muted font-monospace">Real-time system audit</span>
+    <div class="decore-card-header p-3 border-bottom border-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-geo-alt text-primary fs-5"></i>
+            <h6 class="mb-0 fw-bold">Active Construction Sites &amp; Completion Milestone</h6>
+        </div>
+        <a href="{% url 'worksites:list' %}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+            View All Worksites <i class="bi bi-arrow-right ms-1"></i>
+        </a>
     </div>
-    <div class="table-responsive px-3 py-2">
-        <table class="decore-table-premium mb-0 align-middle">
-            <thead>
-                <tr>
-                    <th>Activity &amp; Description</th>
-                    <th>Worksite</th>
-                    <th>User</th>
-                    <th>Status</th>
-                    <th class="text-end">Time</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for act in activities %}
-                <tr>
-                    <td class="py-3">
-                        <span class="d-flex align-items-center gap-2">
-                            <i class="bi {{ act.icon }} text-primary fs-6"></i>
-                            <span class="fw-semibold text-decore-primary">{{ act.title }}</span>
-                        </span>
-                    </td>
-                    <td><span class="badge bg-light text-dark border">{{ act.worksite }}</span></td>
-                    <td class="small text-muted">{{ act.user }}</td>
-                    <td>
-                        {% if act.status == 'Completed' or act.status == 'Success' or act.status == 'Approved' %}
-                        <span class="decore-status-badge badge-success"><span class="dot"></span>{{ act.status }}</span>
-                        {% else %}
-                        <span class="decore-status-badge badge-warning"><span class="dot"></span>{{ act.status }}</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-end text-muted small font-monospace">{{ act.time }}</td>
-                </tr>
+    <div class="p-3">
+        <div class="row g-3">
+            {% for site in active_worksites_list %}
+            <div class="col-md-6 col-xl-3">
+                <div class="decore-card p-3 border shadow-sm h-100 decore-card-lift">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge bg-success-soft text-success"><span class="dot"></span>Active</span>
+                        <span class="fw-bold text-primary font-monospace small">{{ site.progress }}%</span>
+                    </div>
+                    <h6 class="fw-bold text-decore-primary mb-1 text-truncate" title="{{ site.name }}">{{ site.name }}</h6>
+                    <div class="text-muted small mb-3" style="font-size:0.75rem;">
+                        <i class="bi bi-person me-1"></i>Client: <b>{{ site.client }}</b>
+                    </div>
+                    <div class="progress mb-3" style="height:8px; border-radius:10px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ site.progress }}%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center text-muted small font-monospace pt-2 border-top border-light" style="font-size:0.72rem;">
+                        <span>Paid: <b class="text-success">₹{{ site.client_paid|floatformat:0|intcomma }}</b></span>
+                        <span>Bal: <b class="text-warning">₹{{ site.client_balance|floatformat:0|intcomma }}</b></span>
+                    </div>
+                    <a href="{% url 'worksites:detail' pk=site.id %}" class="btn btn-sm btn-outline-secondary w-100 rounded-pill mt-3">
+                        <i class="bi bi-eye me-1"></i>View Profile
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 py-4 text-center text-muted small">No active construction worksites logged.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row: Recent Daily Site Diary & Operational Audit Log -->
+<div class="row g-3 mb-4">
+    <!-- Left Column: Daily Site Diary Timeline -->
+    <div class="col-lg-6">
+        <div class="decore-card h-100 border-0 shadow-sm">
+            <div class="decore-card-header p-3 border-bottom border-light d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-journal-text text-primary me-2"></i>Latest Daily Site Diary Updates</h6>
+                <span class="small text-muted font-monospace">Supervisor Posts</span>
+            </div>
+            <div class="p-3">
+                {% for log in recent_site_logs %}
+                <div class="decore-card p-3 mb-2 border shadow-sm rounded-3">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                        <h6 class="fw-bold text-decore-primary mb-0 small">{{ log.title }}</h6>
+                        <span class="badge bg-light text-dark border small">{{ log.worksite.name }}</span>
+                    </div>
+                    <div class="text-muted small mb-2" style="font-size:0.72rem;">
+                        <i class="bi bi-calendar me-1"></i>{{ log.date|date:"b d, Y" }} &bull; By <b>{{ log.logged_by.username|default:"Supervisor" }}</b>
+                    </div>
+                    <p class="text-muted small mb-0 text-truncate">{{ log.notes }}</p>
+                </div>
                 {% empty %}
-                <tr>
-                    <td colspan="5" class="text-center py-4 text-muted small">No recent activity logged.</td>
-                </tr>
+                <div class="text-center py-4 text-muted small">No site diary posts logged yet.</div>
                 {% endfor %}
-            </tbody>
-        </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Operational Audit Activity Feed -->
+    <div class="col-lg-6">
+        <div class="decore-card h-100 border-0 shadow-sm">
+            <div class="decore-card-header p-3 border-bottom border-light d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-activity text-primary me-2"></i>Operational Audit Activity Log</h6>
+                <span class="small text-muted font-monospace">System Audit</span>
+            </div>
+            <div class="table-responsive px-3 py-2">
+                <table class="decore-table-premium mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Activity</th>
+                            <th>Worksite</th>
+                            <th>Status</th>
+                            <th class="text-end">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for act in activities %}
+                        <tr>
+                            <td class="py-2">
+                                <span class="d-flex align-items-center gap-2">
+                                    <i class="bi {{ act.icon }} fs-6"></i>
+                                    <span class="fw-semibold text-decore-primary small">{{ act.title }}</span>
+                                </span>
+                            </td>
+                            <td><span class="badge bg-light text-dark border small">{{ act.worksite }}</span></td>
+                            <td>
+                                {% if act.status == 'Completed' or act.status == 'Success' or act.status == 'Approved' %}
+                                <span class="decore-status-badge badge-success"><span class="dot"></span>{{ act.status }}</span>
+                                {% else %}
+                                <span class="decore-status-badge badge-warning"><span class="dot"></span>{{ act.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end text-muted small font-monospace">{{ act.time }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted small">No recent activity logged.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -163,18 +236,26 @@
         var isDark = document.documentElement.getAttribute("data-bs-theme") === "dark";
         var textColor = isDark ? "#94A3B8" : "#64748B";
 
-        // Expense Chart
+        // Expense Line Chart with smooth curve & gradient background fill
         var ctxExp = document.getElementById("expensesChart");
         if (ctxExp) {
+            var chartCtx = ctxExp.getContext("2d");
+            var gradient = chartCtx.createLinearGradient(0, 0, 0, 280);
+            gradient.addColorStop(0, "rgba(59, 130, 246, 0.25)");
+            gradient.addColorStop(1, "rgba(59, 130, 246, 0.0)");
+
             new Chart(ctxExp, {
                 type: "line",
                 data: {
-                    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
+                    labels: {{ chart_labels|safe }},
                     datasets: [{
                         label: "Monthly Outgoings (₹)",
-                        data: [12000, 15000, 18000, 14000, 22000, 19000, 25000, {{ stats.pending_expenses|default:15000 }}],
+                        data: {{ chart_data|safe }},
                         borderColor: "#3B82F6",
-                        backgroundColor: "rgba(59, 130, 246, 0.08)",
+                        borderWidth: 3,
+                        pointBackgroundColor: "#1E3A8A",
+                        pointRadius: 4,
+                        backgroundColor: gradient,
                         fill: true,
                         tension: 0.4
                     }]
@@ -182,7 +263,16 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return 'Outgoings: ₹' + ctx.raw.toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         x: { grid: { display: false } },
                         y: {
@@ -202,7 +292,7 @@
                 data: {
                     labels: ["Active", "On Hold", "Completed"],
                     datasets: [{
-                        data: [{{ stats.active_worksites|default:2 }}, 1, 1],
+                        data: {{ worksite_status_counts|safe }},
                         backgroundColor: ["#10B981", "#F59E0B", "#3B82F6"],
                         borderWidth: 0
                     }]
