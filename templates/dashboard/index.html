@@ -17,16 +17,16 @@
     </div>
 </div>
 
-<!-- Section 2: Quick Statistics (3 Cards Per Row Grid) -->
-<div class="row g-3 mb-4">
+<!-- Section 2: Quick Statistics (Mobile 2-Col, Desktop 3-Col Grid) -->
+<div class="row g-2 g-md-3 mb-4">
     <!-- 1. Active Worksites -->
     <div class="col-6 col-md-4 col-lg-4">
         <div class="decore-card decore-stat-card p-3 h-100 decore-card-lift shadow-sm border-0">
             <span class="decore-stat-icon bg-info-soft"><i class="bi bi-building text-info fs-4"></i></span>
             <div class="w-100 min-w-0">
-                <div class="decore-stat-value font-monospace fw-bold text-info" style="font-size: 1.35rem;">{{ stats.active_worksites }}</div>
+                <div class="decore-stat-value font-monospace fw-bold text-info">{{ stats.active_worksites }}</div>
                 <div class="decore-stat-label text-muted">Active Worksites</div>
-                <div class="decore-stat-trend text-info mt-1" style="font-size:0.75rem;"><i class="bi bi-geo-alt me-1"></i>Live Projects</div>
+                <div class="decore-stat-trend text-info mt-1"><i class="bi bi-geo-alt me-1"></i>Live Projects</div>
             </div>
         </div>
     </div>
@@ -36,9 +36,9 @@
         <div class="decore-card decore-stat-card p-3 h-100 decore-card-lift shadow-sm border-0">
             <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-people text-primary fs-4"></i></span>
             <div class="w-100 min-w-0">
-                <div class="decore-stat-value font-monospace fw-bold text-primary" style="font-size: 1.35rem;">{{ stats.total_employees }}</div>
+                <div class="decore-stat-value font-monospace fw-bold text-primary">{{ stats.total_employees }}</div>
                 <div class="decore-stat-label text-muted">Total Employees</div>
-                <div class="decore-stat-trend text-primary mt-1" style="font-size:0.75rem;"><i class="bi bi-person-check me-1"></i>Registered</div>
+                <div class="decore-stat-trend text-primary mt-1"><i class="bi bi-person-check me-1"></i>Registered</div>
             </div>
         </div>
     </div>
@@ -48,9 +48,9 @@
         <div class="decore-card decore-stat-card p-3 h-100 decore-card-lift shadow-sm border-0">
             <span class="decore-stat-icon bg-success-soft"><i class="bi bi-calendar-check text-success fs-4"></i></span>
             <div class="w-100 min-w-0">
-                <div class="decore-stat-value font-monospace fw-bold text-success" style="font-size: 1.35rem;">{{ stats.present_today }}</div>
+                <div class="decore-stat-value font-monospace fw-bold text-success">{{ stats.present_today }}</div>
                 <div class="decore-stat-label text-muted">Present Today</div>
-                <div class="decore-stat-trend text-success mt-1" style="font-size:0.75rem;"><i class="bi bi-check-lg me-1"></i>On Site</div>
+                <div class="decore-stat-trend text-success mt-1"><i class="bi bi-check-lg me-1"></i>On Site</div>
             </div>
         </div>
     </div>
@@ -60,9 +60,9 @@
         <div class="decore-card decore-stat-card p-3 h-100 decore-card-lift shadow-sm border-0">
             <span class="decore-stat-icon bg-success-soft"><i class="bi bi-wallet2 text-success fs-4"></i></span>
             <div class="w-100 min-w-0">
-                <div class="decore-stat-value font-monospace fw-bold text-success" style="font-size: 1.35rem;">₹{{ stats.total_revenue|floatformat:0|intcomma }}</div>
+                <div class="decore-stat-value font-monospace fw-bold text-success">₹{{ stats.total_revenue|floatformat:0|intcomma }}</div>
                 <div class="decore-stat-label text-muted">Total Revenue</div>
-                <div class="decore-stat-trend text-success mt-1" style="font-size:0.75rem;"><i class="bi bi-arrow-up-right me-1"></i>Contract Value</div>
+                <div class="decore-stat-trend text-success mt-1"><i class="bi bi-arrow-up-right me-1"></i>Contract Value</div>
             </div>
         </div>
     </div>
@@ -72,9 +72,9 @@
         <div class="decore-card decore-stat-card p-3 h-100 decore-card-lift shadow-sm border-0">
             <span class="decore-stat-icon bg-danger-soft"><i class="bi bi-receipt text-danger fs-4"></i></span>
             <div class="w-100 min-w-0">
-                <div class="decore-stat-value font-monospace fw-bold text-danger" style="font-size: 1.35rem;">₹{{ stats.total_expenses|floatformat:0|intcomma }}</div>
+                <div class="decore-stat-value font-monospace fw-bold text-danger">₹{{ stats.total_expenses|floatformat:0|intcomma }}</div>
                 <div class="decore-stat-label text-muted">Total Expenses</div>
-                <div class="decore-stat-trend text-danger mt-1" style="font-size:0.75rem;"><i class="bi bi-arrow-down-right me-1"></i>Operations Spend</div>
+                <div class="decore-stat-trend text-danger mt-1"><i class="bi bi-arrow-down-right me-1"></i>Operations Spend</div>
             </div>
         </div>
     </div>
@@ -86,11 +86,11 @@
                 <i class="bi {% if stats.is_profit_positive %}bi-graph-up-arrow text-success{% else %}bi-graph-down-arrow text-danger{% endif %} fs-4"></i>
             </span>
             <div class="w-100 min-w-0">
-                <div class="decore-stat-value font-monospace fw-bold {% if stats.is_profit_positive %}text-success{% else %}text-danger{% endif %}" style="font-size: 1.35rem;">
+                <div class="decore-stat-value font-monospace fw-bold {% if stats.is_profit_positive %}text-success{% else %}text-danger{% endif %}">
                     {% if not stats.is_profit_positive %}-{% endif %}₹{{ stats.net_profit_abs|floatformat:0|intcomma }}
                 </div>
                 <div class="decore-stat-label text-muted">Net Profit</div>
-                <div class="decore-stat-trend {% if stats.is_profit_positive %}text-success{% else %}text-danger{% endif %} mt-1" style="font-size:0.75rem;">
+                <div class="decore-stat-trend {% if stats.is_profit_positive %}text-success{% else %}text-danger{% endif %} mt-1">
                     <i class="bi {% if stats.is_profit_positive %}bi-circle-fill{% else %}bi-exclamation-circle-fill{% endif %} me-1"></i>Net Margin
                 </div>
             </div>
