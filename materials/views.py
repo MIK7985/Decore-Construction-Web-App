@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.views.generic import ListView, View
-from .models import Material, MaterialStatus
+from .models import Material, MaterialStatus, MaterialCatalog
 from worksites.models import Worksite
 from decimal import Decimal
 
@@ -37,6 +37,7 @@ class MaterialListView(LoginRequiredMixin, ListView):
             "pending_cost": pending_cost,
         }
         context["worksites"] = Worksite.objects.order_by("name")
+        context["catalog_items"] = MaterialCatalog.objects.order_by("name")
         context["selected_worksite_id"] = self.request.GET.get("worksite", "")
         return context
 
@@ -51,6 +52,17 @@ class MaterialCreateView(LoginRequiredMixin, View):
             unit_price = form.cleaned_data["unit_price"]
             supplier = form.cleaned_data["supplier"].strip()
             status = form.cleaned_data["status"]
+
+            # Save to Master Catalog if checkbox selected
+            if request.POST.get("save_to_catalog") == "1" and name_clean:
+                MaterialCatalog.objects.get_or_create(
+                    name=name_clean,
+                    defaults={
+                        "default_unit": unit_clean,
+                        "default_unit_price": unit_price,
+                        "default_supplier": supplier
+                    }
+                )
 
             # Look for an existing material entry at this worksite with matching name & unit (case-insensitive)
             existing = Material.objects.filter(

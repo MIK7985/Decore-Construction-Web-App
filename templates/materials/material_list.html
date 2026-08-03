@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Materials{% endblock %}
+{% load humanize %}
+{% block title %}Materials Inventory{% endblock %}
 
 {% block content %}
 <div class="decore-page-header">
@@ -7,7 +8,7 @@
         <h4 class="decore-page-title">Material Inventory</h4>
         <div class="decore-breadcrumb">Track onsite material stock levels, procurement values, and suppliers</div>
     </div>
-    <button type="button" class="btn btn-decore-primary btn-sm" onclick="openMaterialModal()">
+    <button type="button" class="btn btn-decore-primary btn-sm rounded-pill px-3" onclick="openMaterialModal()">
         <i class="bi bi-plus-lg me-1"></i>Add Material
     </button>
 </div>
@@ -18,7 +19,7 @@
             <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-boxes text-primary"></i></span>
             <div>
                 <div class="decore-stat-label">Total Material Cost</div>
-                <div class="decore-stat-value text-primary">₹{{ stats.total_materials_cost|default:"0" }}</div>
+                <div class="decore-stat-value text-primary">₹{{ stats.total_materials_cost|floatformat:2|intcomma }}</div>
             </div>
         </div>
     </div>
@@ -27,7 +28,7 @@
             <span class="decore-stat-icon bg-success-soft"><i class="bi bi-truck text-success"></i></span>
             <div>
                 <div class="decore-stat-label">Delivered Stock</div>
-                <div class="decore-stat-value text-success">₹{{ stats.delivered_cost|default:"0" }}</div>
+                <div class="decore-stat-value text-success">₹{{ stats.delivered_cost|floatformat:2|intcomma }}</div>
             </div>
         </div>
     </div>
@@ -36,7 +37,7 @@
             <span class="decore-stat-icon bg-warning-soft"><i class="bi bi-clock-history text-warning"></i></span>
             <div>
                 <div class="decore-stat-label">Ordered / Transit</div>
-                <div class="decore-stat-value text-warning">₹{{ stats.pending_cost|default:"0" }}</div>
+                <div class="decore-stat-value text-warning">₹{{ stats.pending_cost|floatformat:2|intcomma }}</div>
             </div>
         </div>
     </div>
@@ -77,13 +78,13 @@
                     <td class="text-nowrap-custom">
                         <span class="fw-bold text-decore-primary">{{ mat.name }}</span>
                         <div class="text-muted small d-md-none" style="font-size: 0.72rem; margin-top: 2px;">
-                            Supplier: {{ mat.supplier }} &bull; Unit: ₹{{ mat.unit_price }}
+                            Supplier: {{ mat.supplier }} &bull; Unit: ₹{{ mat.unit_price|floatformat:2|intcomma }}
                         </div>
                     </td>
                     <td class="text-nowrap-custom"><span class="badge bg-light text-dark border">{{ mat.worksite.name }}</span></td>
                     <td class="text-nowrap-custom text-end font-monospace fw-semibold">{{ mat.quantity }} <span class="text-muted text-uppercase small" style="font-size:0.7rem;">{{ mat.unit }}</span></td>
-                    <td class="text-nowrap-custom text-end font-monospace d-none d-md-table-cell">₹{{ mat.unit_price }}</td>
-                    <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost }}</td>
+                    <td class="text-nowrap-custom text-end font-monospace d-none d-md-table-cell">₹{{ mat.unit_price|floatformat:2|intcomma }}</td>
+                    <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost|floatformat:2|intcomma }}</td>
                     <td class="text-nowrap-custom">
                         {% if mat.status == 'Delivered' %}
                         <span class="decore-status-badge badge-success"><span class="dot"></span>Delivered</span>
@@ -98,9 +99,9 @@
                 {% empty %}
                 <tr>
                     <td colspan="7">
-                        <div class="decore-empty-state">
-                            <i class="bi bi-boxes"></i>
-                            <p class="mb-0">No materials registered in inventory yet.</p>
+                        <div class="decore-empty-state py-5 text-center">
+                            <i class="bi bi-boxes text-muted fs-2 mb-2 d-block"></i>
+                            <p class="mb-0 text-muted">No materials registered in inventory yet.</p>
                         </div>
                     </td>
                 </tr>
@@ -110,14 +111,14 @@
     </div>
 </div>
 
-<!-- Add Material Modal -->
+<!-- Add Material Modal with Master Catalog Auto-Populate -->
 <div class="modal fade" id="materialModal" tabindex="-1" aria-labelledby="materialModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content decore-card border-0 shadow-lg">
             <div class="modal-header border-bottom border-light">
                 <div>
-                    <h5 class="modal-title fw-bold" id="materialModalLabel">Add Material</h5>
-                    <p class="small text-muted mb-0">Record new stock inventory deliveries or transit orders.</p>
+                    <h5 class="modal-title fw-bold" id="materialModalLabel"><i class="bi bi-box-seam text-primary me-2"></i>Add Material Inventory</h5>
+                    <p class="small text-muted mb-0">Select from Master Catalog or add custom items to site stock.</p>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -125,9 +126,26 @@
                 <form id="materialForm" method="post" action="{% url 'materials:create' %}" onsubmit="handleMaterialSubmit(event)">
                     {% csrf_token %}
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <!-- Master Catalog Selector -->
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold" for="matCatalogSelect"><i class="bi bi-journal-bookmark me-1 text-primary"></i>Select Material from Master Catalog</label>
+                            <select class="form-select fw-semibold border-primary shadow-sm" id="matCatalogSelect" onchange="handleCatalogSelect(this)">
+                                <option value="">-- Choose Material --</option>
+                                {% for cat in catalog_items %}
+                                <option value="{{ cat.id }}" data-name="{{ cat.name }}" data-unit="{{ cat.default_unit }}" data-price="{{ cat.default_unit_price }}" data-supplier="{{ cat.default_supplier }}">
+                                    {{ cat.name }} ({{ cat.default_unit }}) — ₹{{ cat.default_unit_price|floatformat:2 }}
+                                </option>
+                                {% endfor %}
+                                <option value="custom">+ Other / Custom Material...</option>
+                            </select>
+                            <div id="autoFillNotice" class="small text-success mt-1 d-none font-monospace" style="font-size: 0.72rem;">
+                                <i class="bi bi-check-circle me-1"></i>Auto-populated Unit &amp; Price from Master Catalog. Price can be overridden below.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6" id="matNameGroup">
                             <label class="form-label small fw-semibold" for="matName">Material Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="matName" name="name" placeholder="e.g. Portland Cement" required>
+                            <input type="text" class="form-control" id="matName" name="name" placeholder="e.g. Cement, TMT Steel Bars" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold" for="matWorksite">Assigned Worksite <span class="text-danger">*</span></label>
@@ -140,7 +158,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold" for="matQty">Quantity <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0.01" class="form-control" id="matQty" name="quantity" placeholder="0.00" required>
+                            <input type="number" step="0.01" min="0.01" class="form-control" id="matQty" name="quantity" placeholder="e.g. 5" required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold" for="matUnit">Measurement Unit <span class="text-danger">*</span></label>
@@ -152,6 +170,7 @@
                                 <span class="input-group-text">₹</span>
                                 <input type="number" step="0.01" min="0.01" class="form-control" id="matPrice" name="unit_price" placeholder="0.00" required>
                             </div>
+                            <div class="form-text small" style="font-size: 0.68rem;">Editable if rate differs.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold" for="matSupplier">Supplier Name <span class="text-danger">*</span></label>
@@ -165,11 +184,21 @@
                                 <option value="Pending">Pending</option>
                             </select>
                         </div>
+
+                        <!-- Checkbox to save new custom material to master catalog -->
+                        <div class="col-12 d-none" id="saveCatalogCheckGroup">
+                            <div class="form-check bg-light-soft p-2 ps-4 rounded border">
+                                <input class="form-check-input" type="checkbox" id="saveToCatalog" name="save_to_catalog" value="1" checked>
+                                <label class="form-check-label small fw-semibold text-decore-primary" for="saveToCatalog">
+                                    <i class="bi bi-bookmark-plus me-1"></i>Save this new material to Master Catalog for future 1-click reuse
+                                </label>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-decore-primary"><i class="bi bi-check-lg me-1"></i>Save Material</button>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Material</button>
                     </div>
                 </form>
             </div>
@@ -184,7 +213,36 @@
         const modalEl = document.getElementById("materialModal");
         const form = document.getElementById("materialForm");
         form.reset();
+        document.getElementById("autoFillNotice").classList.add("d-none");
+        document.getElementById("saveCatalogCheckGroup").classList.add("d-none");
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+
+    function handleCatalogSelect(selectEl) {
+        const selectedOpt = selectEl.selectedOptions[0];
+        const val = selectEl.value;
+        const noticeEl = document.getElementById("autoFillNotice");
+        const checkGroup = document.getElementById("saveCatalogCheckGroup");
+
+        if (val && val !== 'custom') {
+            document.getElementById("matName").value = selectedOpt.dataset.name || '';
+            document.getElementById("matUnit").value = selectedOpt.dataset.unit || '';
+            document.getElementById("matPrice").value = parseFloat(selectedOpt.dataset.price || 0).toFixed(2);
+            if (selectedOpt.dataset.supplier) {
+                document.getElementById("matSupplier").value = selectedOpt.dataset.supplier;
+            }
+            noticeEl.classList.remove("d-none");
+            checkGroup.classList.add("d-none");
+        } else if (val === 'custom') {
+            document.getElementById("matName").value = '';
+            document.getElementById("matUnit").value = '';
+            document.getElementById("matPrice").value = '';
+            noticeEl.classList.add("d-none");
+            checkGroup.classList.remove("d-none");
+        } else {
+            noticeEl.classList.add("d-none");
+            checkGroup.classList.add("d-none");
+        }
     }
 
     function filterByWorksite(val) {
