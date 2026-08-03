@@ -272,19 +272,18 @@ class SalaryPayView(LoginRequiredMixin, EngineerRequiredMixin, View):
             pdf_url = request.build_absolute_uri(reverse('salaries:receipt_pdf', kwargs={'pk': salary.pk}))
             week_range_str = f"{start_date.strftime('%b %d')} - {end_date.strftime('%b %d, %Y')}"
             
+            # Simple, clean, professional WhatsApp receipt message
             whatsapp_msg = (
-                f"📄 *WEEKLY SALARY PAYMENT RECEIPT*\n\n"
+                f"📄 *SALARY PAYMENT RECEIPT VOUCHER*\n\n"
                 f"Dear *{employee.name}*,\n"
-                f"Your weekly salary for period *{week_range_str}* (Saturday Pay Day) has been paid successfully.\n\n"
-                f"💰 *Payment Details:*\n"
-                f"• Days Worked: {salary.present_days}\n"
-                f"• Daily Wage: ₹{salary.daily_wage}\n"
-                f"• Bonus: ₹{salary.bonus}\n"
-                f"• Deductions: ₹{salary.deductions}\n"
-                f"• Paid Amount: *₹{unpaid_balance}*\n"
+                f"Your weekly salary payment of *₹{unpaid_balance:,.2f}* for period *{week_range_str}* has been processed successfully.\n\n"
+                f"💰 *Payment Summary:*\n"
+                f"• Days Worked: {salary.present_days} Days\n"
+                f"• Net Amount Paid: *₹{unpaid_balance:,.2f}*\n"
                 f"• Payment Method: {method.replace('_', ' ').title()}\n"
-                f"• Transaction Ref: {reference_number or 'N/A'}\n\n"
-                f"📥 *Download Official Branded PDF Voucher Receipt:*\n{pdf_url}\n\n"
+                f"• Reference ID: {reference_number or 'N/A'}\n\n"
+                f"📥 *Download Official PDF Receipt Voucher:*\n"
+                f"{pdf_url}\n\n"
                 f"Thank you,\n"
                 f"*Decore Construction Management*"
             )
@@ -294,7 +293,7 @@ class SalaryPayView(LoginRequiredMixin, EngineerRequiredMixin, View):
             
             messages.success(
                 request, 
-                f"Weekly payment of ₹{unpaid_balance} for {employee.name} recorded successfully.",
+                f"Weekly payment of ₹{unpaid_balance:,.2f} for {employee.name} recorded successfully.",
                 extra_tags=wa_url
             )
 

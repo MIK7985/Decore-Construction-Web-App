@@ -1,83 +1,85 @@
 {% extends "base.html" %}
 {% load humanize %}
-{% block title %}Weekly Salaries{% endblock %}
+{% block title %}Weekly Payroll{% endblock %}
 
 {% block content %}
-<div class="decore-page-header">
+<div class="decore-page-header flex-wrap gap-2 mb-4">
     <div>
-        <h4 class="decore-page-title">Weekly Payroll / Salaries</h4>
-        <div class="decore-breadcrumb">Attendance-based weekly Saturday payroll distribution &amp; wage auditing</div>
+        <h4 class="decore-page-title d-flex align-items-center gap-2">
+            <i class="bi bi-cash-stack text-primary fs-3"></i>Weekly Saturday Payroll
+        </h4>
+        <div class="decore-breadcrumb">7-day Saturday wage calculations, attendance payouts, bonuses, and salary receipts</div>
     </div>
-    <div class="d-flex align-items-center gap-3">
-        <!-- Month & Week Selection Form (GET query to view) -->
-        <form method="get" id="filterForm" action="{% url 'salaries:list' %}" class="d-flex align-items-center gap-3 flex-wrap">
-            <div class="d-flex align-items-center gap-2">
-                <label for="filterMonth" class="small text-muted text-nowrap mb-0 fw-semibold"><i class="bi bi-calendar-month me-1 text-primary"></i>Month:</label>
-                <select id="filterMonth" class="form-select form-select-sm fw-medium shadow-sm rounded-pill" style="min-width: 140px;">
-                    {% for m in recent_months %}
-                    <option value="{{ m.val }}" {% if selected_month == m.val %}selected{% endif %}>{{ m.label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <label for="payrollPeriod" class="small text-muted text-nowrap mb-0 fw-semibold"><i class="bi bi-clock-history me-1 text-primary"></i>Pay Week (Sat):</label>
-                <select id="payrollPeriod" name="period" class="form-select form-select-sm fw-medium shadow-sm rounded-pill" style="min-width: 250px;" onchange="this.form.submit()">
-                    <!-- Populated dynamically via JavaScript -->
-                </select>
-            </div>
+
+    <!-- Saturday Pay Period Selector & Quick Actions -->
+    <div class="d-flex align-items-center gap-2 flex-wrap ms-auto">
+        <form method="get" id="filterForm" class="d-flex align-items-center gap-2 flex-wrap">
+            <select class="form-select form-select-sm rounded-pill fw-semibold border-secondary-subtle" name="month" id="filterMonth" style="width: auto; min-width: 150px;">
+                {% for m in recent_months %}
+                <option value="{{ m.val }}" {% if m.val == selected_month %}selected{% endif %}>{{ m.label }}</option>
+                {% endfor %}
+            </select>
+            <select class="form-select form-select-sm rounded-pill fw-semibold border-secondary-subtle" name="period" id="payrollPeriod" style="width: auto; min-width: 200px;">
+                <!-- Populated dynamically via JS -->
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-3"><i class="bi bi-funnel me-1"></i>Filter</button>
+        </form>
+
+        <form method="post" action="{% url 'salaries:generate' %}" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="period" value="{{ selected_period }}">
+            <button type="submit" class="btn btn-sm btn-decore-primary rounded-pill px-3 shadow-sm">
+                <i class="bi bi-calculator me-1"></i>Recalculate Week
+            </button>
         </form>
     </div>
 </div>
 
-<!-- Payroll Summary Cards -->
+<!-- Payroll KPI Summary Cards Bar -->
 <div class="row g-3 mb-4">
-    <div class="col-xl-4 col-md-6">
-        <div class="decore-card decore-stat-card h-100">
-            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-cash-stack text-primary"></i></span>
+    <div class="col-md-4">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift shadow-sm">
+            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-currency-rupee text-primary"></i></span>
             <div>
-                <div class="decore-stat-label">Total Weekly Payable</div>
-                <div class="decore-stat-value text-primary">₹{{ totals.net_salary|floatformat:2|intcomma }}</div>
-                <div class="small text-muted mt-1" style="font-size: 0.72rem;">Calculated roster wage total</div>
+                <div class="decore-stat-label text-muted">Weekly Net Payroll</div>
+                <div class="decore-stat-value font-monospace fw-bold text-primary">₹{{ totals.net_salary|floatformat:2|intcomma }}</div>
+                <div class="small text-muted mt-1" style="font-size: 0.72rem;">Week ending {{ end_date|date:"M d, Y" }}</div>
             </div>
         </div>
     </div>
-    <div class="col-xl-4 col-md-6">
-        <div class="decore-card decore-stat-card h-100">
+    <div class="col-md-4">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift shadow-sm">
             <span class="decore-stat-icon bg-success-soft"><i class="bi bi-check-circle text-success"></i></span>
             <div>
-                <div class="decore-stat-label">Completed Payments</div>
-                <div class="decore-stat-value text-success">₹{{ totals.paid|floatformat:2|intcomma }}</div>
-                <div class="small text-success mt-1" style="font-size: 0.72rem; font-weight: 600;"><i class="bi bi-shield-check me-1"></i>Disbursed</div>
+                <div class="decore-stat-label text-muted">Total Disbursed</div>
+                <div class="decore-stat-value font-monospace fw-bold text-success">₹{{ totals.paid|floatformat:2|intcomma }}</div>
+                <div class="small text-success mt-1" style="font-size: 0.72rem; font-weight: 700;">Paid to Workers</div>
             </div>
         </div>
     </div>
-    <div class="col-xl-4 col-md-6">
-        <div class="decore-card decore-stat-card h-100">
+    <div class="col-md-4">
+        <div class="decore-card decore-stat-card h-100 decore-card-lift shadow-sm">
             <span class="decore-stat-icon bg-warning-soft"><i class="bi bi-hourglass-split text-warning"></i></span>
             <div>
-                <div class="decore-stat-label">Outstanding Balance</div>
-                <div class="decore-stat-value text-warning">₹{{ totals.pending|floatformat:2|intcomma }}</div>
-                <div class="small text-warning mt-1" style="font-size: 0.72rem; font-weight: 600;"><i class="bi bi-exclamation-circle me-1"></i>Pending Payout</div>
+                <div class="decore-stat-label text-muted">Pending Balance</div>
+                <div class="decore-stat-value font-monospace fw-bold text-warning">₹{{ totals.pending|floatformat:2|intcomma }}</div>
+                <div class="small text-warning mt-1" style="font-size: 0.72rem; font-weight: 700;">Due for Disbursement</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Main Salary Roster Container -->
-<div class="decore-card mb-4">
-    <div class="decore-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div class="d-flex align-items-center gap-2">
-            <h6 class="mb-0">Weekly Salary Roster</h6>
-            <span class="badge bg-primary-soft text-primary border" style="font-size: 0.78rem;">
-                <i class="bi bi-calendar-check me-1"></i>Period: {{ start_date|date:"b d" }} - {{ end_date|date:"b d, Y" }}
-            </span>
-        </div>
-
-        <div class="d-flex align-items-center gap-2">
-            <div class="input-group input-group-sm" style="max-width: 240px;">
-                <span class="input-group-text"><i class="bi bi-search text-muted"></i></span>
-                <input type="search" id="salaryWorkerSearch" class="form-control" placeholder="Search worker..." onkeyup="filterSalaryRoster()">
+<!-- Payroll Table & Worker Roster Card -->
+<div class="decore-card border-0 shadow-sm">
+    <div class="decore-card-header flex-wrap gap-3 p-3 border-bottom border-light">
+        <form class="d-flex flex-grow-1" style="max-width:360px;" role="search" onsubmit="return false;">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="search" class="form-control border-start-0 bg-light" placeholder="Search worker name..." id="salaryWorkerSearch" onkeyup="filterSalaryRoster()">
             </div>
+        </form>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-dark border"><i class="bi bi-calendar3 me-1"></i>Pay Period: {{ start_date|date:"M d" }} - {{ end_date|date:"M d, Y" }}</span>
         </div>
     </div>
 
@@ -134,9 +136,9 @@
                             <div class="d-inline-flex align-items-center gap-1">
                                 <span class="text-success small fw-semibold bg-success-soft px-3 py-1 rounded-pill"><i class="bi bi-check2-circle me-1"></i>Paid</span>
                                 {% if sal.record %}
-                                <a href="{% url 'salaries:receipt_pdf' pk=sal.record.id %}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:28px; height:28px;" title="Download PDF Voucher Receipt">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:28px; height:28px;" title="View PDF Voucher Receipt" onclick="openSalaryPdfModal('{% url 'salaries:receipt_pdf' pk=sal.record.id %}', '{{ sal.employee.name|escapejs }}')">
                                     <i class="bi bi-file-earmark-pdf" style="font-size:0.75rem;"></i>
-                                </a>
+                                </button>
                                 {% endif %}
                             </div>
                             {% else %}
@@ -220,9 +222,9 @@
                     <div class="d-inline-flex align-items-center gap-1">
                         <span class="text-success small fw-semibold bg-success-soft px-3 py-1 rounded-pill"><i class="bi bi-check2-circle me-1"></i>Paid</span>
                         {% if sal.record %}
-                        <a href="{% url 'salaries:receipt_pdf' pk=sal.record.id %}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:28px; height:28px;" title="Download PDF Voucher Receipt">
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:28px; height:28px;" title="View PDF Voucher Receipt" onclick="openSalaryPdfModal('{% url 'salaries:receipt_pdf' pk=sal.record.id %}', '{{ sal.employee.name|escapejs }}')">
                             <i class="bi bi-file-earmark-pdf" style="font-size:0.75rem;"></i>
-                        </a>
+                        </button>
                         {% endif %}
                     </div>
                     {% else %}
@@ -262,41 +264,21 @@
                     <!-- Official Salary Slip Voucher Card -->
                     <div class="rounded-3 bg-light-soft p-3 mb-3 border">
                         <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                            <div>
-                                <div class="small text-muted">Employee</div>
-                                <div class="fw-bold fs-5 text-decore-primary" id="paymentEmployee"></div>
-                            </div>
-                            <span class="badge bg-primary-soft text-primary">Saturday Pay Slip</span>
+                            <span class="fw-bold text-decore-primary" id="paymentEmployee">-</span>
+                            <span class="badge bg-primary-soft text-primary font-monospace" id="paymentDays">0.0 days</span>
                         </div>
-                        
-                        <div class="row g-2" style="font-size: 0.85rem;">
-                            <div class="col-6 text-muted">Working Days:</div>
-                            <div class="col-6 text-end fw-semibold font-monospace" id="paymentDays"></div>
-                            
-                            <div class="col-6 text-muted">Rate / Day:</div>
-                            <div class="col-6 text-end fw-semibold font-monospace" id="paymentRate"></div>
-                            
-                            <div class="col-6 text-muted">Bonus:</div>
-                            <div class="col-6 text-end text-success fw-semibold font-monospace" id="paymentBonus"></div>
-                            
-                            <div class="col-6 text-muted">Deductions:</div>
-                            <div class="col-6 text-end text-danger fw-semibold font-monospace" id="paymentDeductions"></div>
-                            
-                            <div class="col-6 text-muted fw-bold">Total Weekly Salary:</div>
-                            <div class="col-6 text-end fw-bold font-monospace" id="paymentTotal"></div>
-                            
-                            <div class="col-6 text-muted">Previously Disbursed:</div>
-                            <div class="col-6 text-end text-primary fw-semibold font-monospace" id="paymentPaid"></div>
-                        </div>
-                        
-                        <div class="row g-2 border-top mt-2 pt-2 align-items-center">
-                            <div class="col-6 fw-bold text-success">Net Payable Balance:</div>
-                            <div class="col-6 text-end fw-bold text-success fs-4 font-monospace" id="paymentAmount"></div>
+                        <div class="row g-2 text-muted small font-monospace">
+                            <div class="col-6">Daily Wage: <b class="text-dark" id="paymentRate">₹0.00</b></div>
+                            <div class="col-6">Bonus: <b class="text-success" id="paymentBonus">+₹0.00</b></div>
+                            <div class="col-6">Deductions: <b class="text-danger" id="paymentDeductions">-₹0.00</b></div>
+                            <div class="col-6">Total Net: <b class="text-dark" id="paymentTotal">₹0.00</b></div>
+                            <div class="col-6">Already Paid: <b class="text-success" id="paymentPaid">₹0.00</b></div>
+                            <div class="col-6 fw-bold text-primary fs-6">Balance Due: <b id="paymentAmount">₹0.00</b></div>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold" for="paymentMethod"><i class="bi bi-wallet2 me-1 text-primary"></i>Payment Method</label>
+                        <label class="form-label small fw-semibold" for="paymentMethod">Payment Method *</label>
                         <select class="form-select" id="paymentMethod" name="method">
                             <option value="bank_transfer">Bank Transfer (IMPS/NEFT)</option>
                             <option value="cash">Cash</option>
@@ -316,6 +298,30 @@
         </div>
     </div>
 </div>
+
+<!-- Salary Receipt PDF Lightbox Modal -->
+<div class="modal fade" id="salaryPdfModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <div class="modal-header border-bottom border-light">
+                <div>
+                    <h5 class="modal-title fw-bold" id="salaryPdfModalTitle"><i class="bi bi-file-earmark-pdf text-primary me-2"></i>Salary Voucher Receipt</h5>
+                    <div class="small text-muted" id="salaryPdfModalSubtitle"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0 bg-dark rounded-bottom text-center">
+                <iframe id="salaryPdfIframe" src="" class="w-100 rounded" style="height: 520px; border:none;"></iframe>
+            </div>
+            <div class="modal-footer border-top border-light d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary rounded-pill px-3" id="shareSalaryPdfBtn">
+                    <i class="bi bi-share me-1"></i>Share / Open PDF
+                </button>
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Back to Salary Page</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -325,6 +331,33 @@ const weeksData = JSON.parse(document.getElementById('weeks-data').textContent);
 const monthSelect = document.getElementById('filterMonth');
 const weekSelect = document.getElementById('payrollPeriod');
 const selectedWeekVal = "{{ selected_period }}";
+
+function openSalaryPdfModal(url, empName) {
+    document.getElementById("salaryPdfModalTitle").innerHTML = `<i class="bi bi-file-earmark-pdf text-primary me-2"></i>Salary Voucher — ${empName}`;
+    document.getElementById("salaryPdfModalSubtitle").textContent = "Official Decore Construction Disbursement Voucher";
+    
+    const iframeEl = document.getElementById("salaryPdfIframe");
+    iframeEl.src = url;
+
+    const shareBtn = document.getElementById("shareSalaryPdfBtn");
+    shareBtn.onclick = function() {
+        if (navigator.share) {
+            fetch(url)
+            .then(r => r.blob())
+            .then(blob => {
+                const file = new File([blob], `Salary_Voucher_${empName}.pdf`, { type: 'application/pdf' });
+                navigator.share({
+                    title: `Salary Voucher - ${empName}`,
+                    files: [file]
+                }).catch(e => {});
+            });
+        } else {
+            window.open(url, '_blank');
+        }
+    };
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById("salaryPdfModal")).show();
+}
 
 function populateWeeks(monthVal, selectDefault = false) {
     weekSelect.innerHTML = '';
@@ -353,13 +386,11 @@ if (monthSelect && weekSelect) {
 function filterSalaryRoster() {
     const query = document.getElementById("salaryWorkerSearch").value.toLowerCase().trim();
     
-    // Filter Desktop Rows
     document.querySelectorAll(".salary-row").forEach(row => {
         const name = row.getAttribute("data-name") || "";
         row.style.display = name.includes(query) ? "" : "none";
     });
     
-    // Filter Mobile Cards
     document.querySelectorAll(".salary-card-mobile").forEach(card => {
         const name = card.getAttribute("data-name") || "";
         card.style.display = name.includes(query) ? "" : "none";
