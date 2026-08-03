@@ -96,6 +96,45 @@ class MaterialCreateView(LoginRequiredMixin, View):
             return JsonResponse({"success": False, "error": errors})
 
 
+class MaterialStatusUpdateView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        mat = get_object_or_404(Material, pk=pk)
+        new_status = request.POST.get("status", "").strip()
+
+        if new_status in [choice.value for choice in MaterialStatus]:
+            mat.status = new_status
+            mat.save()
+            return JsonResponse({
+                "success": True,
+                "message": f'Updated status of "{mat.name}" to {mat.status}!',
+                "status": mat.status
+            })
+        return JsonResponse({"success": False, "error": "Invalid status option."}, status=400)
+
+
+class MaterialUpdateView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        mat = get_object_or_404(Material, pk=pk)
+        form = MaterialForm(request.POST, instance=mat)
+        if form.is_valid():
+            mat = form.save()
+            return JsonResponse({
+                "success": True,
+                "message": f'Material "{mat.name}" updated successfully!'
+            })
+        else:
+            errors = ", ".join([f"{k}: {v[0]}" for k, v in form.errors.items()])
+            return JsonResponse({"success": False, "error": errors})
+
+
+class MaterialDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        mat = get_object_or_404(Material, pk=pk)
+        name = mat.name
+        mat.delete()
+        return JsonResponse({"success": True, "message": f'Material "{name}" deleted from inventory.'})
+
+
 class MaterialCatalogCreateView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         name = request.POST.get("name", "").strip()

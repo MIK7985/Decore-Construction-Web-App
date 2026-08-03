@@ -93,40 +93,58 @@
                     <th class="text-nowrap-custom text-end">Stock / Qty</th>
                     <th class="text-nowrap-custom text-end">Unit Rate</th>
                     <th class="text-nowrap-custom text-end">Total Valuation</th>
-                    <th class="text-nowrap-custom text-center">Status</th>
+                    <th class="text-nowrap-custom text-center">Procurement Status</th>
+                    <th class="text-nowrap-custom text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for mat in materials %}
-                <tr class="material-row" data-material-name="{{ mat.name|lower }}" data-supplier-name="{{ mat.supplier|lower }}" data-status="{{ mat.status }}">
+                <tr class="material-row" id="mat_row_{{ mat.id }}" data-material-name="{{ mat.name|lower }}" data-supplier-name="{{ mat.supplier|lower }}" data-status="{{ mat.status }}">
                     <td class="text-nowrap-custom py-3">
                         <div class="d-flex align-items-center gap-2">
                             <div class="avatar-circle bg-primary-soft text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:36px; height:36px; font-size:0.85rem;">
                                 {{ mat.name|slice:":2"|upper }}
                             </div>
                             <div>
-                                <div class="fw-bold text-decore-primary">{{ mat.name }}</div>
-                                <div class="text-muted small" style="font-size:0.75rem;"><i class="bi bi-shop me-1 text-muted"></i>{{ mat.supplier }}</div>
+                                <div class="fw-bold text-decore-primary mat-name-val">{{ mat.name }}</div>
+                                <div class="text-muted small mat-supplier-val" style="font-size:0.75rem;"><i class="bi bi-shop me-1 text-muted"></i>{{ mat.supplier }}</div>
                             </div>
                         </div>
                     </td>
-                    <td class="text-nowrap-custom"><span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-building me-1 text-secondary"></i>{{ mat.worksite.name }}</span></td>
-                    <td class="text-nowrap-custom text-end font-monospace fw-bold text-dark fs-6">{{ mat.quantity }} <span class="text-muted text-uppercase small" style="font-size:0.7rem;">{{ mat.unit }}</span></td>
-                    <td class="text-nowrap-custom text-end font-monospace text-muted">₹{{ mat.unit_price|floatformat:2|intcomma }}</td>
-                    <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace fs-6">₹{{ mat.total_cost|floatformat:2|intcomma }}</td>
+                    <td class="text-nowrap-custom"><span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-building me-1 text-secondary"></i><span class="mat-worksite-val">{{ mat.worksite.name }}</span></span></td>
+                    <td class="text-nowrap-custom text-end font-monospace fw-bold text-dark fs-6"><span class="mat-qty-val">{{ mat.quantity }}</span> <span class="text-muted text-uppercase small mat-unit-val" style="font-size:0.7rem;">{{ mat.unit }}</span></td>
+                    <td class="text-nowrap-custom text-end font-monospace text-muted">₹<span class="mat-price-val">{{ mat.unit_price|floatformat:2|intcomma }}</span></td>
+                    <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace fs-6">₹<span class="mat-total-val">{{ mat.total_cost|floatformat:2|intcomma }}</span></td>
                     <td class="text-nowrap-custom text-center">
-                        {% if mat.status == 'Delivered' %}
-                        <span class="decore-status-badge badge-success"><span class="dot"></span>Delivered</span>
-                        {% elif mat.status == 'Ordered' %}
-                        <span class="decore-status-badge badge-warning"><span class="dot"></span>Ordered</span>
-                        {% else %}
-                        <span class="decore-status-badge badge-secondary"><span class="dot"></span>Pending</span>
-                        {% endif %}
+                        <div class="dropdown">
+                            <button class="btn btn-sm border-0 p-0 dropdown-toggle shadow-none" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if mat.status == 'Delivered' %}
+                                <span class="decore-status-badge badge-success status-badge-target"><span class="dot"></span>Delivered</span>
+                                {% elif mat.status == 'Ordered' %}
+                                <span class="decore-status-badge badge-warning status-badge-target"><span class="dot"></span>Ordered</span>
+                                {% else %}
+                                <span class="decore-status-badge badge-secondary status-badge-target"><span class="dot"></span>Pending</span>
+                                {% endif %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="font-size: 0.82rem;">
+                                <li><a class="dropdown-item fw-semibold text-success" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Delivered'); return false;"><i class="bi bi-check-circle me-2"></i>Mark as Delivered</a></li>
+                                <li><a class="dropdown-item fw-semibold text-warning" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Ordered'); return false;"><i class="bi bi-clock-history me-2"></i>Mark as Ordered</a></li>
+                                <li><a class="dropdown-item fw-semibold text-secondary" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Pending'); return false;"><i class="bi bi-hourglass-split me-2"></i>Mark as Pending</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td class="text-nowrap-custom text-end">
+                        <button type="button" class="btn btn-sm btn-icon" title="Edit Item" onclick="openEditMaterialModal({{ mat.id }}, '{{ mat.name|escapejs }}', {{ mat.worksite.id }}, '{{ mat.quantity }}', '{{ mat.unit|escapejs }}', '{{ mat.unit_price }}', '{{ mat.supplier|escapejs }}', '{{ mat.status }}')">
+                            <i class="bi bi-pencil text-primary"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-icon" title="Delete Item" onclick="deleteMaterialItem({{ mat.id }}, '{{ mat.name|escapejs }}')">
+                            <i class="bi bi-trash text-danger"></i>
+                        </button>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6">
+                    <td colspan="7">
                         <div class="decore-empty-state py-5 text-center">
                             <i class="bi bi-boxes text-muted fs-1 mb-2 d-block"></i>
                             <p class="mb-0 text-muted fw-semibold">No materials registered in inventory yet.</p>
@@ -145,7 +163,7 @@
     <div class="d-block d-md-none p-3">
         <div class="row g-3">
             {% for mat in materials %}
-            <div class="col-12 material-row" data-material-name="{{ mat.name|lower }}" data-supplier-name="{{ mat.supplier|lower }}" data-status="{{ mat.status }}">
+            <div class="col-12 material-row" id="mat_card_{{ mat.id }}" data-material-name="{{ mat.name|lower }}" data-supplier-name="{{ mat.supplier|lower }}" data-status="{{ mat.status }}">
                 <div class="card decore-card border shadow-sm p-3 h-100 position-relative">
                     <div class="d-flex align-items-start justify-content-between mb-2">
                         <div class="d-flex align-items-center gap-2">
@@ -153,35 +171,46 @@
                                 {{ mat.name|slice:":2"|upper }}
                             </div>
                             <div>
-                                <h6 class="fw-bold text-decore-primary mb-0">{{ mat.name }}</h6>
-                                <span class="badge bg-light text-dark border me-1" style="font-size:0.68rem;"><i class="bi bi-building me-1"></i>{{ mat.worksite.name }}</span>
+                                <h6 class="fw-bold text-decore-primary mb-0 mat-name-val">{{ mat.name }}</h6>
+                                <span class="badge bg-light text-dark border me-1" style="font-size:0.68rem;"><i class="bi bi-building me-1"></i><span class="mat-worksite-val">{{ mat.worksite.name }}</span></span>
                             </div>
                         </div>
-                        <div>
-                            {% if mat.status == 'Delivered' %}
-                            <span class="decore-status-badge badge-success" style="font-size:0.68rem;"><span class="dot"></span>Delivered</span>
-                            {% elif mat.status == 'Ordered' %}
-                            <span class="decore-status-badge badge-warning" style="font-size:0.68rem;"><span class="dot"></span>Ordered</span>
-                            {% else %}
-                            <span class="decore-status-badge badge-secondary" style="font-size:0.68rem;"><span class="dot"></span>Pending</span>
-                            {% endif %}
+                        <div class="dropdown">
+                            <button class="btn btn-sm border-0 p-0 dropdown-toggle shadow-none" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if mat.status == 'Delivered' %}
+                                <span class="decore-status-badge badge-success status-badge-target" style="font-size:0.68rem;"><span class="dot"></span>Delivered</span>
+                                {% elif mat.status == 'Ordered' %}
+                                <span class="decore-status-badge badge-warning status-badge-target" style="font-size:0.68rem;"><span class="dot"></span>Ordered</span>
+                                {% else %}
+                                <span class="decore-status-badge badge-secondary status-badge-target" style="font-size:0.68rem;"><span class="dot"></span>Pending</span>
+                                {% endif %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="font-size: 0.82rem;">
+                                <li><a class="dropdown-item fw-semibold text-success" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Delivered'); return false;"><i class="bi bi-check-circle me-2"></i>Mark Delivered</a></li>
+                                <li><a class="dropdown-item fw-semibold text-warning" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Ordered'); return false;"><i class="bi bi-clock-history me-2"></i>Mark Ordered</a></li>
+                                <li><a class="dropdown-item fw-semibold text-secondary" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Pending'); return false;"><i class="bi bi-hourglass-split me-2"></i>Mark Pending</a></li>
+                            </ul>
                         </div>
                     </div>
 
                     <div class="bg-light-soft rounded p-2 mb-2 d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="text-muted small" style="font-size:0.7rem;">Available Quantity</div>
-                            <div class="fw-bold font-monospace text-dark fs-6">{{ mat.quantity }} <span class="text-uppercase small text-muted" style="font-size:0.65rem;">{{ mat.unit }}</span></div>
+                            <div class="text-muted small" style="font-size:0.7rem;">Stock Quantity</div>
+                            <div class="fw-bold font-monospace text-dark fs-6"><span class="mat-qty-val">{{ mat.quantity }}</span> <span class="text-uppercase small text-muted mat-unit-val" style="font-size:0.65rem;">{{ mat.unit }}</span></div>
                         </div>
                         <div class="text-end">
                             <div class="text-muted small" style="font-size:0.7rem;">Total Valuation</div>
-                            <div class="fw-bold font-monospace text-decore-primary fs-6">₹{{ mat.total_cost|floatformat:2|intcomma }}</div>
+                            <div class="fw-bold font-monospace text-decore-primary fs-6">₹<span class="mat-total-val">{{ mat.total_cost|floatformat:2|intcomma }}</span></div>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center text-muted small" style="font-size:0.72rem;">
-                        <div><i class="bi bi-shop me-1"></i>{{ mat.supplier }}</div>
-                        <div class="font-monospace">₹{{ mat.unit_price|floatformat:2|intcomma }} / {{ mat.unit }}</div>
+                        <div class="mat-supplier-val"><i class="bi bi-shop me-1"></i>{{ mat.supplier }}</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="font-monospace">₹<span class="mat-price-val">{{ mat.unit_price|floatformat:2|intcomma }}</span> / {{ mat.unit }}</div>
+                            <button type="button" class="btn btn-sm btn-link p-0 text-primary ms-1" onclick="openEditMaterialModal({{ mat.id }}, '{{ mat.name|escapejs }}', {{ mat.worksite.id }}, '{{ mat.quantity }}', '{{ mat.unit|escapejs }}', '{{ mat.unit_price }}', '{{ mat.supplier|escapejs }}', '{{ mat.status }}')"><i class="bi bi-pencil"></i></button>
+                            <button type="button" class="btn btn-sm btn-link p-0 text-danger ms-1" onclick="deleteMaterialItem({{ mat.id }}, '{{ mat.name|escapejs }}')"><i class="bi bi-trash"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -291,6 +320,69 @@
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Site Material Item Modal -->
+<div class="modal fade" id="editMaterialModal" tabindex="-1" aria-labelledby="editMaterialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <form id="editMaterialForm" onsubmit="handleEditMaterialSubmit(event)">
+                {% csrf_token %}
+                <input type="hidden" id="editMatId">
+                <div class="modal-header border-bottom border-light">
+                    <h5 class="modal-title fw-bold" id="editMaterialModalLabel"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Site Material Stock</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Material Name *</label>
+                            <input type="text" class="form-control" id="editMatName" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Assigned Worksite *</label>
+                            <select class="form-select" id="editMatWorksite" name="worksite" required>
+                                {% for site in worksites %}
+                                <option value="{{ site.id }}">{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Quantity *</label>
+                            <input type="number" step="0.01" min="0.01" class="form-control" id="editMatQty" name="quantity" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Measurement Unit *</label>
+                            <input type="text" class="form-control" id="editMatUnit" name="unit" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Unit Price (₹) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" step="0.01" min="0.01" class="form-control" id="editMatPrice" name="unit_price" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Supplier Name *</label>
+                            <input type="text" class="form-control" id="editMatSupplier" name="supplier" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Procurement Status</label>
+                            <select class="form-select" id="editMatStatus" name="status" required>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Ordered">Ordered</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-light">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -428,6 +520,110 @@
         document.getElementById("autoFillNotice").classList.add("d-none");
         document.getElementById("saveCatalogCheckGroup").classList.add("d-none");
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+
+    function updateMaterialStatus(id, newStatus) {
+        decoreShowLoading();
+        const csrfToken = '{{ csrf_token }}';
+        const formData = new FormData();
+        formData.append('status', newStatus);
+
+        fetch(`/materials/${id}/status/`, {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": csrfToken,
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                decoreToast(data.message, 'success');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                decoreToast(data.error || 'Failed to update status.', 'danger');
+            }
+        })
+        .catch(err => {
+            decoreHideLoading();
+            decoreToast('Connection error.', 'danger');
+        });
+    }
+
+    function openEditMaterialModal(id, name, worksiteId, qty, unit, price, supplier, status) {
+        document.getElementById("editMatId").value = id;
+        document.getElementById("editMatName").value = name;
+        document.getElementById("editMatWorksite").value = worksiteId;
+        document.getElementById("editMatQty").value = qty;
+        document.getElementById("editMatUnit").value = unit;
+        document.getElementById("editMatPrice").value = parseFloat(price || 0).toFixed(2);
+        document.getElementById("editMatSupplier").value = supplier;
+        document.getElementById("editMatStatus").value = status;
+        
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("editMaterialModal")).show();
+    }
+
+    function handleEditMaterialSubmit(event) {
+        event.preventDefault();
+        const id = document.getElementById("editMatId").value;
+        const form = event.target;
+        const formData = new FormData(form);
+        const csrfToken = '{{ csrf_token }}';
+
+        decoreShowLoading();
+        fetch(`/materials/${id}/edit/`, {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": csrfToken,
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById("editMaterialModal")).hide();
+                decoreToast(data.message, 'success');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                decoreToast(data.error || 'Failed to update material item.', 'danger');
+            }
+        })
+        .catch(err => {
+            decoreHideLoading();
+            decoreToast('Connection error.', 'danger');
+        });
+    }
+
+    function deleteMaterialItem(id, name) {
+        decoreConfirm(`Are you sure you want to delete "${name}" from inventory?`, function() {
+            decoreShowLoading();
+            const csrfToken = '{{ csrf_token }}';
+            fetch(`/materials/${id}/delete/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                decoreHideLoading();
+                if (data.success) {
+                    decoreToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 600);
+                } else {
+                    decoreToast(data.error || 'Failed to delete material item.', 'danger');
+                }
+            })
+            .catch(err => {
+                decoreHideLoading();
+                decoreToast('Connection error.', 'danger');
+            });
+        });
     }
 
     function handleCatalogSelect(selectEl) {
@@ -621,7 +817,7 @@
             b.classList.remove('btn-decore-primary', 'active');
             b.classList.add('text-muted');
         });
-        btn.classList.removeClass ? btn.classList.removeClass('text-muted') : null;
+        btn.classList.remove('text-muted');
         btn.classList.add('btn-decore-primary', 'active');
         applyFilters();
     }
