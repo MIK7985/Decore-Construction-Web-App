@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>{% block title %}Decore{% endblock %} | Decore</title>
+    <title>{% block title %}Decore{% endblock %} | Decore Construction Management</title>
     <meta name="description" content="Decore — Construction Management Dashboard">
 
     <!-- Bootstrap 5 -->
@@ -20,7 +20,7 @@
     
     <!-- PWA Manifest & Icons -->
     <link rel="manifest" href="{% static 'manifest.json' %}">
-    <meta name="theme-color" content="#3B82F6">
+    <meta name="theme-color" content="#1e3a8a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Decore">
@@ -68,6 +68,23 @@
         </div>
     </div>
 
+    <!-- Mobile Floating Quick Action Button (FAB) -->
+    <div class="d-block d-md-none position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+        <div class="dropdown">
+            <button class="btn btn-decore-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 52px; height: 52px;">
+                <i class="bi bi-plus-lg fs-4"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2 border-0 rounded-4" style="min-width: 220px; font-size: 0.85rem;">
+                <li class="px-2 py-1 text-muted small fw-bold text-uppercase" style="font-size:0.68rem;">Quick Mobile Actions</li>
+                <li><a class="dropdown-item rounded-3 py-2 fw-semibold" href="{% url 'attendance:sheet' %}"><i class="bi bi-calendar-check text-success me-2 fs-6"></i>Mark Attendance</a></li>
+                <li><a class="dropdown-item rounded-3 py-2 fw-semibold" href="{% url 'materials:list' %}"><i class="bi bi-boxes text-primary me-2 fs-6"></i>Add Material Stock</a></li>
+                <li><a class="dropdown-item rounded-3 py-2 fw-semibold" href="{% url 'expenses:list' %}"><i class="bi bi-receipt text-danger me-2 fs-6"></i>Record Site Expense</a></li>
+                <li><a class="dropdown-item rounded-3 py-2 fw-semibold" href="{% url 'salaries:list' %}"><i class="bi bi-cash-stack text-info me-2 fs-6"></i>Weekly Pay Slips</a></li>
+                <li><a class="dropdown-item rounded-3 py-2 fw-semibold" href="{% url 'reports:index' %}"><i class="bi bi-file-earmark-pdf text-warning me-2 fs-6"></i>Export Reports</a></li>
+            </ul>
+        </div>
+    </div>
+
     <!-- Confirmation modal (shared) -->
     <div class="modal fade" id="decoreConfirmModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -98,7 +115,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js?v=3')
+                navigator.serviceWorker.register('/service-worker.js?v=4')
                     .then(reg => console.log('ServiceWorker registered:', reg.scope))
                     .catch(err => console.log('ServiceWorker registration failed:', err));
             });
