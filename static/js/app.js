@@ -518,17 +518,31 @@
           anchor.href.includes('#') ||
           !anchor.href.includes(location.hostname)) return;
 
+      // Never intercept clicks inside the sidebar nav — let sidebar handle its own state
+      if (anchor.closest('.decore-sidebar-nav')) {
+        // Just close the mobile sidebar and let the browser navigate normally
+        var wrapper = document.querySelector('.decore-wrapper');
+        if (wrapper) wrapper.classList.remove('sidebar-mobile-open');
+        return; // let default navigation happen
+      }
+
+      // For all other internal links, use View Transition
       e.preventDefault();
+      var dest = anchor.href;
       document.startViewTransition(function() {
-        return new Promise(function(resolve) {
-          window.location.href = anchor.href;
-          // Resolve after a short tick so the transition can animate out
-          window.addEventListener('pagehide', resolve, { once: true });
-          setTimeout(resolve, 400);
-        });
+        window.location.href = dest;
       });
     });
+  } else {
+    // Fallback for browsers without View Transitions: close mobile sidebar on nav
+    document.addEventListener('click', function(e) {
+      var anchor = e.target.closest('a');
+      if (!anchor || !anchor.closest('.decore-sidebar-nav')) return;
+      var wrapper = document.querySelector('.decore-wrapper');
+      if (wrapper) wrapper.classList.remove('sidebar-mobile-open');
+    });
   }
+
 
   // Finish progress bar on new page paint
   window.addEventListener('pageshow', function(e) {

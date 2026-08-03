@@ -1583,10 +1583,10 @@ html[data-bs-theme="dark"] .text-decore-primary,
    Performance & GPU Compositing Optimisations
    ========================================================= */
 
-/* Promote animated elements to their own GPU layer for smooth 60fps */
+/* Promote sidebar to GPU layer — but NO transform:translateZ() on fixed elements
+   as it breaks iOS Safari fixed positioning and stacking context */
 .decore-sidebar {
-  will-change: transform;
-  transform: translateZ(0);
+  will-change: left;
 }
 
 .decore-card-lift {
