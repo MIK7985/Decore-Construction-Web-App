@@ -3,14 +3,19 @@
 {% block title %}Materials Inventory{% endblock %}
 
 {% block content %}
-<div class="decore-page-header">
+<div class="decore-page-header flex-wrap gap-2">
     <div>
         <h4 class="decore-page-title">Material Inventory</h4>
         <div class="decore-breadcrumb">Track onsite material stock levels, procurement values, and suppliers</div>
     </div>
-    <button type="button" class="btn btn-decore-primary btn-sm rounded-pill px-3" onclick="openMaterialModal()">
-        <i class="bi bi-plus-lg me-1"></i>Add Material
-    </button>
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#masterCatalogModal">
+            <i class="bi bi-journal-plus me-1"></i>Manage Master Catalog
+        </button>
+        <button type="button" class="btn btn-decore-primary btn-sm rounded-pill px-3" onclick="openMaterialModal()">
+            <i class="bi bi-plus-lg me-1"></i>Add Material
+        </button>
+    </div>
 </div>
 
 <div class="row g-3 mb-4">
@@ -128,7 +133,12 @@
                     <div class="row g-3">
                         <!-- Master Catalog Selector -->
                         <div class="col-12">
-                            <label class="form-label small fw-semibold" for="matCatalogSelect"><i class="bi bi-journal-bookmark me-1 text-primary"></i>Select Material from Master Catalog</label>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-semibold mb-0" for="matCatalogSelect"><i class="bi bi-journal-bookmark me-1 text-primary"></i>Select Material from Master Catalog</label>
+                                <button type="button" class="btn btn-link text-decore-primary text-decoration-none p-0 small fw-bold" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#masterCatalogModal">
+                                    <i class="bi bi-plus-circle me-1"></i>+ Add New Item to Catalog
+                                </button>
+                            </div>
                             <select class="form-select fw-semibold border-primary shadow-sm" id="matCatalogSelect" onchange="handleCatalogSelect(this)">
                                 <option value="">-- Choose Material --</option>
                                 {% for cat in catalog_items %}
@@ -205,6 +215,77 @@
         </div>
     </div>
 </div>
+
+<!-- Master Catalog Management Modal -->
+<div class="modal fade" id="masterCatalogModal" tabindex="-1" aria-labelledby="masterCatalogTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <div class="modal-header border-bottom border-light">
+                <div>
+                    <h5 class="modal-title fw-bold" id="masterCatalogTitle"><i class="bi bi-journal-bookmark text-primary me-2"></i>Master Material Catalog</h5>
+                    <p class="small text-muted mb-0">Add &amp; manage standard construction materials that show in the dropdown list.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Add New Catalog Item Form -->
+                <form id="newCatalogForm" onsubmit="handleNewCatalogSubmit(event)" class="bg-light-soft p-3 rounded border mb-4">
+                    {% csrf_token %}
+                    <div class="fw-bold text-decore-primary mb-2" style="font-size: 0.85rem;"><i class="bi bi-plus-circle me-1"></i>Add New Material to Master Dropdown List</div>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted mb-1">Material Name *</label>
+                            <input type="text" class="form-control form-control-sm" name="name" placeholder="e.g. ACC Cement, 16mm TMT Bar" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted mb-1">Default Unit *</label>
+                            <input type="text" class="form-control form-control-sm" name="default_unit" placeholder="e.g. Bags, Tons" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted mb-1">Default Unit Price (₹)</label>
+                            <input type="number" step="0.01" min="0" class="form-control form-control-sm" name="default_unit_price" placeholder="420.00">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-decore-primary btn-sm w-100 rounded-pill"><i class="bi bi-plus-lg me-1"></i>Add</button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Current Master Catalog List -->
+                <div class="fw-bold text-muted small mb-2">Current Master Catalog Items ({{ catalog_items|length }})</div>
+                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                    <table class="table decore-table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Material Name</th>
+                                <th>Default Unit</th>
+                                <th>Default Price (₹)</th>
+                                <th>Supplier</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catalogTableBody">
+                            {% for cat in catalog_items %}
+                            <tr>
+                                <td class="fw-bold text-decore-primary">{{ cat.name }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ cat.default_unit }}</span></td>
+                                <td class="font-monospace fw-semibold">₹{{ cat.default_unit_price|floatformat:2|intcomma }}</td>
+                                <td class="text-muted small">{{ cat.default_supplier|default:"—" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-3 text-muted small">No master catalog items defined yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-light">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -243,6 +324,58 @@
             noticeEl.classList.add("d-none");
             checkGroup.classList.add("d-none");
         }
+    }
+
+    function handleNewCatalogSubmit(event) {
+        event.preventDefault();
+        decoreShowLoading();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        fetch("{% url 'materials:catalog_create' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                form.reset();
+                decoreToast(data.message, 'success');
+                const item = data.catalog_item;
+                
+                // Add to Add Material Dropdown
+                const selectEl = document.getElementById("matCatalogSelect");
+                const opt = document.createElement("option");
+                opt.value = item.id;
+                opt.dataset.name = item.name;
+                opt.dataset.unit = item.default_unit;
+                opt.dataset.price = item.default_unit_price;
+                opt.dataset.supplier = item.default_supplier;
+                opt.textContent = `${item.name} (${item.default_unit}) — ₹${item.default_unit_price.toFixed(2)}`;
+                selectEl.insertBefore(opt, selectEl.lastElementChild);
+                
+                // Add to Catalog Table
+                const tbody = document.getElementById("catalogTableBody");
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td class="fw-bold text-decore-primary">${item.name}</td>
+                    <td><span class="badge bg-light text-dark border">${item.default_unit}</span></td>
+                    <td class="font-monospace fw-semibold">₹${item.default_unit_price.toFixed(2)}</td>
+                    <td class="text-muted small">${item.default_supplier || '—'}</td>
+                `;
+                tbody.insertBefore(row, tbody.firstChild);
+            } else {
+                decoreToast(data.error || "Failed to add to master catalog.", 'danger');
+            }
+        })
+        .catch(err => {
+            decoreHideLoading();
+            decoreToast("Connection error.", 'danger');
+        });
     }
 
     function filterByWorksite(val) {

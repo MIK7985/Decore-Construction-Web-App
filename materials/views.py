@@ -93,3 +93,47 @@ class MaterialCreateView(LoginRequiredMixin, View):
         else:
             errors = ", ".join([f"{k}: {v[0]}" for k, v in form.errors.items()])
             return JsonResponse({"success": False, "error": errors})
+
+
+class MaterialCatalogCreateView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        name = request.POST.get("name", "").strip()
+        default_unit = request.POST.get("default_unit", "").strip()
+        default_unit_price = request.POST.get("default_unit_price", "0")
+        default_supplier = request.POST.get("default_supplier", "").strip()
+
+        if not name or not default_unit:
+            return JsonResponse({"success": False, "error": "Material Name and Default Unit are required."}, status=400)
+
+        try:
+            price = Decimal(str(default_unit_price))
+        except Exception:
+            price = Decimal("0.00")
+
+        cat, created = MaterialCatalog.objects.get_or_create(
+            name=name,
+            defaults={
+                "default_unit": default_unit,
+                "default_unit_price": price,
+                "default_supplier": default_supplier
+            }
+        )
+
+        if not created:
+            cat.default_unit = default_unit
+            cat.default_unit_price = price
+            if default_supplier:
+                cat.default_supplier = default_supplier
+            cat.save()
+
+        return JsonResponse({
+            "success": True,
+            "message": f'Master Material "{cat.name}" saved to Catalog!',
+            "catalog_item": {
+                "id": cat.id,
+                "name": cat.name,
+                "default_unit": cat.default_unit,
+                "default_unit_price": float(cat.default_unit_price),
+                "default_supplier": cat.default_supplier
+            }
+        })
