@@ -30,9 +30,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Decore theme (critical, preloaded for fastest paint) -->
-    <link rel="preload" href="{% static 'css/style.css' %}?v=9" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="{% static 'css/style.css' %}?v=9"></noscript>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=9">
+    <link rel="preload" href="{% static 'css/style.css' %}?v=10" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{% static 'css/style.css' %}?v=10"></noscript>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=10">
     
     <!-- PWA Manifest & Icons -->
     <link rel="manifest" href="{% static 'manifest.json' %}">
@@ -49,10 +49,30 @@
     <!-- Instant Navigation Progress Bar -->
     <div id="topNavProgressBar" style="position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, #6366F1, #38BDF8); z-index: 99999; transition: width 0.2s ease, opacity 0.3s ease; opacity: 0; pointer-events: none;"></div>
 
-    <!-- Loading overlay -->
+    <!-- Page-Level Skeleton Loader Overlay -->
     <div id="decoreLoadingOverlay" class="decore-loading-overlay">
-        <div class="spinner-border text-decore-primary" style="width:3rem;height:3rem;" role="status">
-            <span class="visually-hidden">Loading...</span>
+        <div class="d-flex w-100 h-100">
+            <!-- Mock Sidebar Skeleton (Desktop only) -->
+            <div class="d-none d-lg-flex flex-column gap-3 p-3 position-fixed" style="width: 260px; top: 1rem; left: 1rem; bottom: 1rem; background: linear-gradient(180deg, #1E1B4B 0%, #0F172A 100%); border-radius: 1.25rem;">
+                <div class="decore-skeleton w-75 mb-4" style="height: 32px; opacity: 0.12;"></div>
+                <div class="decore-skeleton w-100" style="height: 44px; opacity: 0.12; border-radius: 10px;"></div>
+                <div class="decore-skeleton w-100" style="height: 44px; opacity: 0.12; border-radius: 10px;"></div>
+                <div class="decore-skeleton w-100" style="height: 44px; opacity: 0.12; border-radius: 10px;"></div>
+                <div class="decore-skeleton w-100" style="height: 44px; opacity: 0.12; border-radius: 10px;"></div>
+            </div>
+            <!-- Mock Content Skeleton Area -->
+            <div style="flex-grow: 1; margin-left: calc(260px + 1rem); padding: 1.5rem 1.5rem 1.5rem 0.5rem;" class="mobile-skeleton-adjust w-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="decore-skeleton" style="width: 240px; height: 32px; opacity: 0.8;"></div>
+                    <div class="decore-skeleton rounded-pill" style="width: 100px; height: 32px; opacity: 0.8;"></div>
+                </div>
+                <div class="row g-2 g-md-3 mb-4">
+                    <div class="col-4"><div class="decore-skeleton w-100" style="height: 100px; border-radius: var(--decore-radius); opacity: 0.8;"></div></div>
+                    <div class="col-4"><div class="decore-skeleton w-100" style="height: 100px; border-radius: var(--decore-radius); opacity: 0.8;"></div></div>
+                    <div class="col-4"><div class="decore-skeleton w-100" style="height: 100px; border-radius: var(--decore-radius); opacity: 0.8;"></div></div>
+                </div>
+                <div class="decore-skeleton w-100" style="height: 300px; border-radius: var(--decore-radius); opacity: 0.8;"></div>
+            </div>
         </div>
     </div>
 
@@ -128,13 +148,13 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <!-- Decore app JS -->
-    <script src="{% static 'js/app.js' %}?v=9"></script>
+    <script src="{% static 'js/app.js' %}?v=10"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js?v=9')
+                navigator.serviceWorker.register('/service-worker.js?v=10')
                     .then(reg => {
                         console.log('ServiceWorker registered:', reg.scope);
                         reg.update();
