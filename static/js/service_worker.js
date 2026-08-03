@@ -8,7 +8,7 @@
    ========================================================= */
 "use strict";
 
-const SW_VERSION = 'decore-v5';
+const SW_VERSION = 'decore-v6';
 const SHELL_CACHE  = `${SW_VERSION}-shell`;
 const PAGE_CACHE   = `${SW_VERSION}-pages`;
 const IMAGE_CACHE  = `${SW_VERSION}-images`;

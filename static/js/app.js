@@ -16,13 +16,23 @@
   }
 
   ready(function () {
-    restorePersistedStates();
-    initSidebarToggle();
-    initDarkModeToggle();
-    initTooltips();
-    hideInitialLoader();
-    initProgressBarAnimations();
-    initHoverPrefetch();
+    var initializers = [
+      { name: "restorePersistedStates", fn: restorePersistedStates },
+      { name: "initSidebarToggle", fn: initSidebarToggle },
+      { name: "initDarkModeToggle", fn: initDarkModeToggle },
+      { name: "initTooltips", fn: initTooltips },
+      { name: "hideInitialLoader", fn: hideInitialLoader },
+      { name: "initProgressBarAnimations", fn: initProgressBarAnimations },
+      { name: "initHoverPrefetch", fn: initHoverPrefetch }
+    ];
+
+    initializers.forEach(function (item) {
+      try {
+        item.fn();
+      } catch (err) {
+        console.error("Decore: Error running initializer " + item.name + ":", err);
+      }
+    });
   });
 
   /* ---------------------------------------------------------
