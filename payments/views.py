@@ -2,10 +2,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Sum
 from django.views.generic import ListView
 
+from accounts.mixins import EngineerRequiredMixin
 from .models import Payment
 
 
-class PaymentListView(LoginRequiredMixin, ListView):
+class PaymentListView(LoginRequiredMixin, EngineerRequiredMixin, ListView):
     model = Payment
     template_name = "payments/payment_list.html"
     context_object_name = "payments"

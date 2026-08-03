@@ -8,13 +8,14 @@ from employees.models import Employee
 from django import forms
 from decimal import Decimal
 from django.utils import timezone
+from accounts.mixins import EngineerRequiredMixin
 
 class WorksiteForm(forms.ModelForm):
     class Meta:
         model = Worksite
         fields = ['name', 'client', 'location', 'supervisor', 'status', 'progress', 'budget', 'spend', 'start_date', 'client_paid']
 
-class WorksiteListView(LoginRequiredMixin, ListView):
+class WorksiteListView(LoginRequiredMixin, EngineerRequiredMixin, ListView):
     model = Worksite
     template_name = "worksites/worksite_list.html"
     context_object_name = "worksites"
@@ -47,7 +48,7 @@ class WorksiteListView(LoginRequiredMixin, ListView):
         context['supervisors_list'] = User.objects.all()
         return context
 
-class WorksiteCreateView(LoginRequiredMixin, View):
+class WorksiteCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         form = WorksiteForm(request.POST)
         if form.is_valid():
@@ -57,7 +58,7 @@ class WorksiteCreateView(LoginRequiredMixin, View):
             errors = ", ".join([f"{k}: {v[0]}" for k, v in form.errors.items()])
             return JsonResponse({'success': False, 'error': errors})
 
-class WorksiteUpdateView(LoginRequiredMixin, View):
+class WorksiteUpdateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         site = get_object_or_404(Worksite, pk=pk)
         form = WorksiteForm(request.POST, instance=site)
@@ -68,7 +69,7 @@ class WorksiteUpdateView(LoginRequiredMixin, View):
             errors = ", ".join([f"{k}: {v[0]}" for k, v in form.errors.items()])
             return JsonResponse({'success': False, 'error': errors})
 
-class WorksiteDeleteView(LoginRequiredMixin, View):
+class WorksiteDeleteView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         site = get_object_or_404(Worksite, pk=pk)
         name = site.name
@@ -77,7 +78,7 @@ class WorksiteDeleteView(LoginRequiredMixin, View):
             return JsonResponse({'success': True, 'message': f'Worksite "{name}" deleted successfully!'})
         return redirect('worksites:list')
 
-class WorksiteDetailView(LoginRequiredMixin, DetailView):
+class WorksiteDetailView(LoginRequiredMixin, EngineerRequiredMixin, DetailView):
     model = Worksite
     template_name = "worksites/worksite_detail.html"
     context_object_name = "worksite"
@@ -94,7 +95,7 @@ class WorksiteDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class WorksiteDocumentUploadView(LoginRequiredMixin, View):
+class WorksiteDocumentUploadView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         site = get_object_or_404(Worksite, pk=pk)
         title = request.POST.get("title", "").strip()
@@ -123,7 +124,7 @@ class WorksiteDocumentUploadView(LoginRequiredMixin, View):
         })
 
 
-class WorksiteDocumentDeleteView(LoginRequiredMixin, View):
+class WorksiteDocumentDeleteView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         doc = get_object_or_404(WorksiteDocument, pk=pk)
         title = doc.title
@@ -135,7 +136,7 @@ class WorksiteDocumentDeleteView(LoginRequiredMixin, View):
         return redirect('worksites:detail', pk=site_pk)
 
 
-class ClientPaymentCreateView(LoginRequiredMixin, View):
+class ClientPaymentCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         site = get_object_or_404(Worksite, pk=pk)
         milestone = request.POST.get("milestone", "").strip()
@@ -175,7 +176,7 @@ class ClientPaymentCreateView(LoginRequiredMixin, View):
         })
 
 
-class ClientPaymentDeleteView(LoginRequiredMixin, View):
+class ClientPaymentDeleteView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         payment = get_object_or_404(ClientPayment, pk=pk)
         milestone = payment.milestone
@@ -186,7 +187,7 @@ class ClientPaymentDeleteView(LoginRequiredMixin, View):
         return JsonResponse({"success": True, "message": f'Payment record of ₹{amount} for "{milestone}" deleted.'})
 
 
-class DailySiteLogCreateView(LoginRequiredMixin, View):
+class DailySiteLogCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         site = get_object_or_404(Worksite, pk=pk)
         title = request.POST.get("title", "").strip()
@@ -222,7 +223,7 @@ class DailySiteLogCreateView(LoginRequiredMixin, View):
         })
 
 
-class DailySiteLogDeleteView(LoginRequiredMixin, View):
+class DailySiteLogDeleteView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         log_item = get_object_or_404(DailySiteLog, pk=pk)
         title = log_item.title

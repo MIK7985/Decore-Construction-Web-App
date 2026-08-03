@@ -6,13 +6,14 @@ from django.views.generic import ListView, View
 from .models import Material, MaterialStatus, MaterialCatalog
 from worksites.models import Worksite
 from decimal import Decimal
+from accounts.mixins import EngineerRequiredMixin
 
 class MaterialForm(forms.ModelForm):
     class Meta:
         model = Material
         fields = ["name", "worksite", "quantity", "unit", "unit_price", "supplier", "status"]
 
-class MaterialListView(LoginRequiredMixin, ListView):
+class MaterialListView(LoginRequiredMixin, EngineerRequiredMixin, ListView):
     model = Material
     template_name = "materials/material_list.html"
     context_object_name = "materials"
@@ -42,7 +43,7 @@ class MaterialListView(LoginRequiredMixin, ListView):
         context["selected_worksite_id"] = self.request.GET.get("worksite", "")
         return context
 
-class MaterialCreateView(LoginRequiredMixin, View):
+class MaterialCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         form = MaterialForm(request.POST)
         if form.is_valid():
@@ -96,7 +97,7 @@ class MaterialCreateView(LoginRequiredMixin, View):
             return JsonResponse({"success": False, "error": errors})
 
 
-class MaterialStatusUpdateView(LoginRequiredMixin, View):
+class MaterialStatusUpdateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         mat = get_object_or_404(Material, pk=pk)
         new_status = request.POST.get("status", "").strip()
@@ -112,7 +113,7 @@ class MaterialStatusUpdateView(LoginRequiredMixin, View):
         return JsonResponse({"success": False, "error": "Invalid status option."}, status=400)
 
 
-class MaterialUpdateView(LoginRequiredMixin, View):
+class MaterialUpdateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         mat = get_object_or_404(Material, pk=pk)
         form = MaterialForm(request.POST, instance=mat)
@@ -127,7 +128,7 @@ class MaterialUpdateView(LoginRequiredMixin, View):
             return JsonResponse({"success": False, "error": errors})
 
 
-class MaterialDeleteView(LoginRequiredMixin, View):
+class MaterialDeleteView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         mat = get_object_or_404(Material, pk=pk)
         name = mat.name
@@ -135,7 +136,7 @@ class MaterialDeleteView(LoginRequiredMixin, View):
         return JsonResponse({"success": True, "message": f'Material "{name}" deleted from inventory.'})
 
 
-class MaterialCatalogCreateView(LoginRequiredMixin, View):
+class MaterialCatalogCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         name = request.POST.get("name", "").strip()
         default_unit = request.POST.get("default_unit", "").strip()
@@ -179,7 +180,7 @@ class MaterialCatalogCreateView(LoginRequiredMixin, View):
         })
 
 
-class MaterialCatalogUpdateView(LoginRequiredMixin, View):
+class MaterialCatalogUpdateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         cat = get_object_or_404(MaterialCatalog, pk=pk)
         name = request.POST.get("name", "").strip()
@@ -214,7 +215,7 @@ class MaterialCatalogUpdateView(LoginRequiredMixin, View):
         })
 
 
-class MaterialCatalogDeleteView(LoginRequiredMixin, View):
+class MaterialCatalogDeleteView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         cat = get_object_or_404(MaterialCatalog, pk=pk)
         name = cat.name

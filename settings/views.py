@@ -6,8 +6,9 @@ from django.shortcuts import redirect
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from accounts.mixins import EngineerRequiredMixin
 
-class SettingsView(LoginRequiredMixin, TemplateView):
+class SettingsView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
     template_name = "settings/settings.html"
 
     def get_context_data(self, **kwargs):

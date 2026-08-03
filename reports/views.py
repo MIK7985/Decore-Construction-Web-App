@@ -4,6 +4,7 @@ from django.db.models import Sum, F, ExpressionWrapper
 from django.db import models
 from django.http import HttpResponse
 
+from accounts.mixins import EngineerRequiredMixin
 from employees.models import Employee
 from worksites.models import Worksite
 from salaries.models import SalaryRecord
@@ -13,7 +14,7 @@ from expenses.models import Expense
 from .pdf_generator import generate_pdf_report, generate_monthly_attendance_pdf
 
 
-class ReportsView(LoginRequiredMixin, TemplateView):
+class ReportsView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
     template_name = "reports/reports.html"
 
     def get_context_data(self, **kwargs):
@@ -54,7 +55,7 @@ class ReportsView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class EmployeeReportExportView(LoginRequiredMixin, View):
+class EmployeeReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         employees = Employee.objects.all().select_related('worksite')
         active_count = employees.filter(is_archived=False).count()
@@ -93,7 +94,7 @@ class EmployeeReportExportView(LoginRequiredMixin, View):
         return response
 
 
-class WorksiteReportExportView(LoginRequiredMixin, View):
+class WorksiteReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         worksites = Worksite.objects.all()
         total_budget = sum(w.budget for w in worksites)
@@ -136,7 +137,7 @@ class WorksiteReportExportView(LoginRequiredMixin, View):
         return response
 
 
-class FinancialReportExportView(LoginRequiredMixin, View):
+class FinancialReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         salaries = SalaryRecord.objects.all().select_related('employee')
         payments = Payment.objects.all().select_related('employee')
@@ -196,7 +197,7 @@ class FinancialReportExportView(LoginRequiredMixin, View):
         return response
 
 
-class MaterialsReportExportView(LoginRequiredMixin, View):
+class MaterialsReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         materials = Material.objects.all().select_related('worksite')
         total_cost = sum(m.total_cost for m in materials)
@@ -236,7 +237,7 @@ class MaterialsReportExportView(LoginRequiredMixin, View):
         return response
 
 
-class SummaryReportExportView(LoginRequiredMixin, View):
+class SummaryReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         emp_count = Employee.objects.filter(is_archived=False).count()
         site_count = Worksite.objects.count()
@@ -278,7 +279,7 @@ class SummaryReportExportView(LoginRequiredMixin, View):
         return response
 
 
-class MonthlyAttendanceExportView(LoginRequiredMixin, View):
+class MonthlyAttendanceExportView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         from datetime import datetime
         now = datetime.now()

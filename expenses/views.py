@@ -4,11 +4,12 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, View
 
+from accounts.mixins import EngineerRequiredMixin
 from worksites.models import Worksite
 from .models import Expense, ExpenseStatus
 
 
-class ExpenseListView(LoginRequiredMixin, ListView):
+class ExpenseListView(LoginRequiredMixin, EngineerRequiredMixin, ListView):
     model = Expense
     template_name = "expenses/expense_list.html"
     context_object_name = "expenses"
@@ -34,7 +35,7 @@ class ExpenseListView(LoginRequiredMixin, ListView):
         return context
 
 
-class ExpenseCreateView(LoginRequiredMixin, View):
+class ExpenseCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         category = request.POST.get("category")
         worksite_id = request.POST.get("worksite")
@@ -66,7 +67,7 @@ class ExpenseCreateView(LoginRequiredMixin, View):
             return JsonResponse({"success": False, "error": str(e)}, status=400)
 
 
-class ExpenseApproveView(LoginRequiredMixin, View):
+class ExpenseApproveView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         try:
             expense = get_object_or_404(Expense, pk=pk)

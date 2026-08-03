@@ -24,7 +24,7 @@ class EmployeeForm(forms.ModelForm):
             raise forms.ValidationError("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.")
         return clean_p
 
-class EmployeeListView(LoginRequiredMixin, ListView):
+class EmployeeListView(LoginRequiredMixin, EngineerRequiredMixin, ListView):
     model = Employee
     template_name = "employees/employee_list.html"
     context_object_name = "employees"
@@ -65,7 +65,7 @@ class EmployeeUpdateView(LoginRequiredMixin, EngineerRequiredMixin, View):
             errors = ", ".join([f"{k}: {v[0]}" for k, v in form.errors.items()])
             return JsonResponse({'success': False, 'error': errors})
 
-class EmployeeDetailView(LoginRequiredMixin, DetailView):
+class EmployeeDetailView(LoginRequiredMixin, EngineerRequiredMixin, DetailView):
     model = Employee
     template_name = "employees/employee_detail.html"
     context_object_name = "employee"
