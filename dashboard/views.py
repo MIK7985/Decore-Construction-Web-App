@@ -21,7 +21,10 @@ def make_dt(d, default_now=None):
     return dt
 
 
-class IndexView(LoginRequiredMixin, TemplateView):
+from accounts.mixins import EngineerRequiredMixin
+
+
+class IndexView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
     template_name = "dashboard/index.html"
 
     def get_context_data(self, **kwargs):

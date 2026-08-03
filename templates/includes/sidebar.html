@@ -6,6 +6,7 @@
     </div>
 
     <nav class="decore-sidebar-nav">
+        {% if request.user.is_superuser or not request.user.profile or request.user.profile.role != 'supervisor' %}
         <a class="nav-link {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}"
            href="{% url 'dashboard:index' %}">
             <i class="bi bi-speedometer2"></i><span>Dashboard</span>
@@ -18,10 +19,14 @@
            href="{% url 'worksites:list' %}">
             <i class="bi bi-geo-alt"></i><span>Worksites</span>
         </a>
+        {% endif %}
+
         <a class="nav-link {% if request.resolver_match.app_name == 'attendance' %}active{% endif %}"
-           href="{% url 'attendance:list' %}">
-            <i class="bi bi-calendar-check"></i><span>Attendance</span>
+           href="{% url 'attendance:sheet' %}">
+            <i class="bi bi-calendar-check"></i><span>Attendance Sheet</span>
         </a>
+
+        {% if request.user.is_superuser or not request.user.profile or request.user.profile.role != 'supervisor' %}
         <a class="nav-link {% if request.resolver_match.app_name == 'salaries' %}active{% endif %}"
            href="{% url 'salaries:list' %}">
             <i class="bi bi-cash-stack"></i><span>Salaries</span>
@@ -46,6 +51,7 @@
            href="{% url 'settings:index' %}">
             <i class="bi bi-gear"></i><span>Settings</span>
         </a>
+        {% endif %}
     </nav>
 
     <div class="decore-sidebar-footer">

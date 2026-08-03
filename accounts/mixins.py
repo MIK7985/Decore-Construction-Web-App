@@ -1,8 +1,9 @@
-from django.core.exceptions import PermissionDenied
+from django.shortcuts import redirect
+from django.urls import reverse
 
 
 class EngineerRequiredMixin:
-    """Restrict operational changes to engineers and superusers."""
+    """Restrict operational views and management to engineers and superusers. Redirect supervisors to attendance."""
 
     def dispatch(self, request, *args, **kwargs):
         user = request.user
@@ -10,4 +11,6 @@ class EngineerRequiredMixin:
             return super().dispatch(request, *args, **kwargs)
         if user.is_superuser or (hasattr(user, "profile") and user.profile.role == "engineer"):
             return super().dispatch(request, *args, **kwargs)
-        raise PermissionDenied("Only engineers can make this change.")
+        # Supervisors are strictly limited to Attendance
+        return redirect(reverse("attendance:sheet"))
+
