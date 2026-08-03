@@ -30,9 +30,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Decore theme (critical, preloaded for fastest paint) -->
-    <link rel="preload" href="{% static 'css/style.css' %}?v=10" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="{% static 'css/style.css' %}?v=10"></noscript>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=10">
+    <link rel="preload" href="{% static 'css/style.css' %}?v=11" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{% static 'css/style.css' %}?v=11"></noscript>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=11">
     
     <!-- PWA Manifest & Icons -->
     <link rel="manifest" href="{% static 'manifest.json' %}">
@@ -93,7 +93,11 @@
                         <div class="alert alert-{% if 'success' in message.tags %}success{% elif 'error' in message.tags %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show d-flex align-items-center gap-3 flex-wrap" role="alert">
                             <div>{{ message }}</div>
                             {% if message.extra_tags and "https://wa.me/" in message.extra_tags %}
-                            <a href="{{ message.extra_tags }}" target="_blank" class="btn btn-success btn-sm py-1 px-2 d-inline-flex align-items-center gap-1" style="font-size:0.8rem; background-color:#25D366; border-color:#25D366; color:white; font-weight:600;"><i class="bi bi-whatsapp"></i>Send WhatsApp Receipt</a>
+                                {% if "credentials=true" in message.extra_tags %}
+                                <a href="{{ message.extra_tags }}" target="_blank" class="btn btn-success btn-sm py-1 px-2.5 d-inline-flex align-items-center gap-1.5" style="font-size:0.8rem; background-color:#25D366; border-color:#25D366; color:white; font-weight:600; border-radius:20px;"><i class="bi bi-whatsapp"></i>Share Login Credentials</a>
+                                {% else %}
+                                <a href="{{ message.extra_tags }}" target="_blank" class="btn btn-success btn-sm py-1 px-2.5 d-inline-flex align-items-center gap-1.5" style="font-size:0.8rem; background-color:#25D366; border-color:#25D366; color:white; font-weight:600; border-radius:20px;"><i class="bi bi-whatsapp"></i>Send WhatsApp Receipt</a>
+                                {% endif %}
                             {% endif %}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="position:static; margin-left:auto;"></button>
                         </div>
@@ -148,13 +152,13 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <!-- Decore app JS -->
-    <script src="{% static 'js/app.js' %}?v=10"></script>
+    <script src="{% static 'js/app.js' %}?v=11"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js?v=10')
+                navigator.serviceWorker.register('/service-worker.js?v=11')
                     .then(reg => {
                         console.log('ServiceWorker registered:', reg.scope);
                         reg.update();

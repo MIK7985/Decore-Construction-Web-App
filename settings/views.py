@@ -72,7 +72,25 @@ class SettingsView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
                 
             # Create user. The post_save signal automatically configures profile to 'supervisor'.
             new_user = User.objects.create_user(username=username, email=email, password=password)
-            messages.success(request, f"Supervisor '{username}' registered successfully!")
+            
+            # Compose WhatsApp credentials sharing message
+            import urllib.parse
+            text = (
+                f"Hello! Your Decore Operational Supervisor account has been registered successfully.\n\n"
+                f"Here are your login details:\n"
+                f"- Username: {username}\n"
+                f"- Password: {password}\n"
+                f"- Login URL: https://decore-construction-web-app.onrender.com/accounts/login/\n\n"
+                f"Please sign in and change your password in the settings panel."
+            )
+            encoded_text = urllib.parse.quote(text)
+            wa_url = f"https://wa.me/?text={encoded_text}&credentials=true"
+            
+            messages.success(
+                request, 
+                f"Supervisor '{username}' registered successfully! You can share credentials below.",
+                extra_tags=wa_url
+            )
             return redirect('settings:index')
             
         messages.info(request, "Settings updated successfully!")
