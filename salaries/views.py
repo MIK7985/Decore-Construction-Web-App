@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Case, DecimalField, Sum, Value, When
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -84,7 +85,6 @@ def get_weeks_grouped_by_month(count_weeks=52):
         grouped[month_key].append((sat, sun))
         
         # If Saturday date is <= 5, it means the week started in the previous month.
-        # Add it to the previous month as well so it appears there (e.g. as Week 5).
         if sat.day <= 5:
             prev_m = sat.month - 1
             prev_y = sat.year
@@ -98,7 +98,6 @@ def get_weeks_grouped_by_month(count_weeks=52):
             
     final_grouped = {}
     for month_key, weeks in grouped.items():
-        # Sort weeks chronologically (earliest Saturday first)
         weeks.sort(key=lambda w: w[0])
         final_grouped[month_key] = []
         for idx, (sat, sun) in enumerate(weeks):
@@ -270,6 +269,7 @@ class SalaryPayView(LoginRequiredMixin, EngineerRequiredMixin, View):
             if len(clean_phone) == 10:
                 clean_phone = "91" + clean_phone
             
+            pdf_url = request.build_absolute_uri(reverse('salaries:receipt_pdf', kwargs={'pk': salary.pk}))
             week_range_str = f"{start_date.strftime('%b %d')} - {end_date.strftime('%b %d, %Y')}"
             
             whatsapp_msg = (
@@ -284,14 +284,10 @@ class SalaryPayView(LoginRequiredMixin, EngineerRequiredMixin, View):
                 f"• Paid Amount: *₹{unpaid_balance}*\n"
                 f"• Payment Method: {method.replace('_', ' ').title()}\n"
                 f"• Transaction Ref: {reference_number or 'N/A'}\n\n"
+                f"📥 *Download Official Branded PDF Voucher Receipt:*\n{pdf_url}\n\n"
                 f"Thank you,\n"
-                f"*Decore Management*"
+                f"*Decore Construction Management*"
             )
-            
-            print("\n" + "="*50)
-            print(f"SIMULATED WHATSAPP RECEIPT DISPATCH TO {employee.phone}:")
-            print(whatsapp_msg)
-            print("="*50 + "\n")
             
             encoded_text = urllib.parse.quote(whatsapp_msg)
             wa_url = f"https://wa.me/{clean_phone}?text={encoded_text}"
@@ -303,3 +299,32 @@ class SalaryPayView(LoginRequiredMixin, EngineerRequiredMixin, View):
             )
 
         return redirect(f"{reverse('salaries:list')}?period={end_date.strftime('%Y-%m-%d')}")
+
+
+class SalaryReceiptPdfView(LoginRequiredMixin, View):
+    def get(self, request, pk, *args, **kwargs):
+        salary = get_object_or_404(SalaryRecord, pk=pk)
+        from reports.pdf_generator import generate_salary_receipt_pdf
+        
+        data = {
+            'employee_id': salary.employee.id,
+            'employee_name': salary.employee.name,
+            'employee_role': salary.employee.role,
+            'phone': salary.employee.phone,
+            'worksite_name': salary.employee.worksite.name if salary.employee.worksite else "General Worksites",
+            'period_str': f"Week Ending {salary.week_end_date.strftime('%b %d, %Y')}",
+            'paid_date': salary.paid_at.strftime("%d %b %Y, %I:%M %p") if salary.paid_at else timezone.now().strftime("%d %b %Y"),
+            'daily_wage': float(salary.daily_wage),
+            'present_days': float(salary.present_days),
+            'bonus': float(salary.bonus),
+            'deductions': float(salary.deductions),
+            'net_salary': float(salary.net_salary),
+            'paid_amount': float(sum(p.amount for p in salary.payments.all())),
+            'payment_method': "Bank Transfer / UPI",
+            'reference_number': f"REF-{salary.id}"
+        }
+        
+        pdf = generate_salary_receipt_pdf(data)
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="Salary_Voucher_{salary.employee.name}_{salary.week_end_date}.pdf"'
+        return response

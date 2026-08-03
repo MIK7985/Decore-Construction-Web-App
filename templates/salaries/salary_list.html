@@ -131,7 +131,14 @@
                         </td>
                         <td class="text-nowrap-custom text-end">
                             {% if sal.unpaid_balance <= 0 %}
-                            <span class="text-success small fw-semibold bg-success-soft px-3 py-1 rounded-pill"><i class="bi bi-check2-circle me-1"></i>Paid</span>
+                            <div class="d-inline-flex align-items-center gap-1">
+                                <span class="text-success small fw-semibold bg-success-soft px-3 py-1 rounded-pill"><i class="bi bi-check2-circle me-1"></i>Paid</span>
+                                {% if sal.record %}
+                                <a href="{% url 'salaries:receipt_pdf' pk=sal.record.id %}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:28px; height:28px;" title="Download PDF Voucher Receipt">
+                                    <i class="bi bi-file-earmark-pdf" style="font-size:0.75rem;"></i>
+                                </a>
+                                {% endif %}
+                            </div>
                             {% else %}
                             <button type="button" class="btn btn-sm btn-decore-primary rounded-pill px-3 py-1 text-nowrap" style="font-size:0.78rem;" onclick="openPayModal('{{ sal.employee.id }}','{{ sal.employee.name|escapejs }}','{{ sal.present_days }}','{{ sal.daily_wage }}','{{ sal.bonus }}','{{ sal.deductions }}','{{ sal.net_salary }}','{{ sal.paid_amount }}','{{ sal.unpaid_balance }}','{{ selected_period }}')">
                                 {% if sal.paid_amount > 0 %}Pay ₹{{ sal.unpaid_balance|floatformat:0|intcomma }}{% else %}Pay ₹{{ sal.net_salary|floatformat:0|intcomma }}{% endif %}
@@ -210,7 +217,14 @@
 
                 <div>
                     {% if sal.unpaid_balance <= 0 %}
-                    <span class="text-success small fw-semibold bg-success-soft px-3 py-1 rounded-pill"><i class="bi bi-check2-circle me-1"></i>Paid</span>
+                    <div class="d-inline-flex align-items-center gap-1">
+                        <span class="text-success small fw-semibold bg-success-soft px-3 py-1 rounded-pill"><i class="bi bi-check2-circle me-1"></i>Paid</span>
+                        {% if sal.record %}
+                        <a href="{% url 'salaries:receipt_pdf' pk=sal.record.id %}" target="_blank" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:28px; height:28px;" title="Download PDF Voucher Receipt">
+                            <i class="bi bi-file-earmark-pdf" style="font-size:0.75rem;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
                     {% else %}
                     <button type="button" class="btn btn-sm btn-decore-primary rounded-pill px-3 py-1 text-nowrap" style="font-size:0.78rem;" onclick="openPayModal('{{ sal.employee.id }}','{{ sal.employee.name|escapejs }}','{{ sal.present_days }}','{{ sal.daily_wage }}','{{ sal.bonus }}','{{ sal.deductions }}','{{ sal.net_salary }}','{{ sal.paid_amount }}','{{ sal.unpaid_balance }}','{{ selected_period }}')">
                         {% if sal.paid_amount > 0 %}Pay ₹{{ sal.unpaid_balance|floatformat:0|intcomma }}{% else %}Pay ₹{{ sal.net_salary|floatformat:0|intcomma }}{% endif %}

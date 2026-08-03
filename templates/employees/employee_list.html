@@ -159,7 +159,8 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Phone Number <span class="text-danger">*</span></label>
-                            <input type="tel" class="form-control" id="empPhone" name="phone" placeholder="e.g. +91 98765 43210" required>
+                            <input type="tel" class="form-control" id="empPhone" name="phone" placeholder="e.g. 9876543210" required pattern="[6-9][0-9]{9}" maxlength="10" title="Must be a valid 10-digit mobile number starting with 6, 7, 8, or 9">
+                            <div class="form-text small" style="font-size:0.72rem;">Enter 10-digit Indian mobile number (e.g., 9876543210).</div>
                         </div>
 
                         <div class="col-md-6">
@@ -362,6 +363,14 @@
         // Address validation: must contain at least one letter
         if (!/[a-zA-Z]/.test(address)) {
             decoreToast("Address must contain letters, not just numbers or symbols.", "danger");
+            return;
+        }
+
+        // Phone validation: 10-digit Indian mobile number
+        const rawPhone = document.getElementById("empPhone").value.replace(/[\s\-\+]/g, '');
+        const cleanPhone = (rawPhone.startsWith('91') && rawPhone.length === 12) ? rawPhone.substring(2) : rawPhone;
+        if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+            decoreToast("Please enter a valid 10-digit Indian mobile number (e.g. 9876543210 starting with 6, 7, 8, or 9).", "danger");
             return;
         }
         

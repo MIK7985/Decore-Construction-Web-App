@@ -1,3 +1,4 @@
+import re
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView, View
 from django.http import JsonResponse
@@ -12,6 +13,16 @@ class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
         fields = ['name', 'role', 'worksite', 'phone', 'wage', 'address', 'status', 'photo', 'id_photo']
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone', '').strip()
+        clean_p = re.sub(r'[\s\-\+]', '', phone)
+        if clean_p.startswith('91') and len(clean_p) == 12:
+            clean_p = clean_p[2:]
+            
+        if not re.match(r'^[6-9]\d{9}$', clean_p):
+            raise forms.ValidationError("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.")
+        return clean_p
 
 class EmployeeListView(LoginRequiredMixin, ListView):
     model = Employee
@@ -106,4 +117,3 @@ class EmployeeUnarchiveView(LoginRequiredMixin, EngineerRequiredMixin, View):
         employee.status = EmployeeStatus.ACTIVE
         employee.save(update_fields=["is_archived", "status"])
         return JsonResponse({'success': True, 'message': f'Employee "{name}" restored successfully!'})
-
