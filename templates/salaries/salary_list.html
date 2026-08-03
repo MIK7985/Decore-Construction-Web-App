@@ -136,9 +136,9 @@
                             <div class="d-inline-flex align-items-center gap-1">
                                 <span class="text-success small fw-semibold bg-success-soft px-3 py-1 rounded-pill"><i class="bi bi-check2-circle me-1"></i>Paid</span>
                                 {% if sal.record %}
-                                <button type="button" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:28px; height:28px;" title="View PDF Voucher Receipt" onclick="openSalaryPdfModal('{% url 'salaries:receipt_pdf' pk=sal.record.id %}', '{{ sal.employee.name|escapejs }}')">
-                                    <i class="bi bi-file-earmark-pdf" style="font-size:0.75rem;"></i>
-                                </button>
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:28px; height:28px;" title="View PDF Voucher Receipt" onclick="openSalaryPdfModal(event, '{% url 'salaries:receipt_pdf' pk=sal.record.id %}', '{{ sal.employee.name|escapejs }}', '{{ sal.present_days }}', '{{ sal.daily_wage }}', '{{ sal.bonus }}', '{{ sal.deductions }}', '{{ sal.net_salary }}')">
+                            <i class="bi bi-file-earmark-pdf" style="font-size:0.75rem;"></i>
+                        </button>
                                 {% endif %}
                             </div>
                             {% else %}
@@ -222,7 +222,7 @@
                     <div class="d-inline-flex align-items-center gap-1">
                         <span class="text-success small fw-semibold bg-success-soft px-3 py-1 rounded-pill"><i class="bi bi-check2-circle me-1"></i>Paid</span>
                         {% if sal.record %}
-                        <button type="button" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:28px; height:28px;" title="View PDF Voucher Receipt" onclick="openSalaryPdfModal('{% url 'salaries:receipt_pdf' pk=sal.record.id %}', '{{ sal.employee.name|escapejs }}')">
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:28px; height:28px;" title="View PDF Voucher Receipt" onclick="openSalaryPdfModal(event, '{% url 'salaries:receipt_pdf' pk=sal.record.id %}', '{{ sal.employee.name|escapejs }}', '{{ sal.present_days }}', '{{ sal.daily_wage }}', '{{ sal.bonus }}', '{{ sal.deductions }}', '{{ sal.net_salary }}')">
                             <i class="bi bi-file-earmark-pdf" style="font-size:0.75rem;"></i>
                         </button>
                         {% endif %}
@@ -306,18 +306,55 @@
             <div class="modal-header border-bottom border-light">
                 <div>
                     <h5 class="modal-title fw-bold" id="salaryPdfModalTitle"><i class="bi bi-file-earmark-pdf text-primary me-2"></i>Salary Voucher Receipt</h5>
-                    <div class="small text-muted" id="salaryPdfModalSubtitle"></div>
+                    <div class="small text-muted" id="salaryPdfModalSubtitle">Official Decore Construction Disbursement Voucher</div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-0 bg-dark rounded-bottom text-center">
-                <iframe id="salaryPdfIframe" src="" class="w-100 rounded" style="height: 520px; border:none;"></iframe>
-            </div>
-            <div class="modal-footer border-top border-light d-flex justify-content-between">
-                <button type="button" class="btn btn-outline-primary rounded-pill px-3" id="shareSalaryPdfBtn">
-                    <i class="bi bi-share me-1"></i>Share / Open PDF
-                </button>
-                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Back to Salary Page</button>
+            <div class="modal-body p-4">
+                <div class="decore-card p-4 border rounded-3 bg-light-soft mb-3 text-start shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom flex-wrap gap-2">
+                        <div>
+                            <h5 class="fw-extrabold text-decore-primary mb-0">DECORE CONSTRUCTION MANAGEMENT</h5>
+                            <div class="small text-muted">Weekly Worker Salary Disbursement Record</div>
+                        </div>
+                        <span class="badge bg-success-soft text-success px-3 py-2 rounded-pill font-monospace fw-bold"><i class="bi bi-check-circle me-1"></i>PAID &amp; VERIFIED</span>
+                    </div>
+                    <div class="row g-3 font-monospace mb-2">
+                        <div class="col-6 col-md-4">
+                            <span class="text-muted small d-block" style="font-size:0.7rem;">WORKER NAME</span>
+                            <b class="text-decore-primary fs-6" id="modalPdfWorkerName">-</b>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <span class="text-muted small d-block" style="font-size:0.7rem;">DAYS WORKED</span>
+                            <b class="text-dark fs-6" id="modalPdfDays">0.0 Days</b>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <span class="text-muted small d-block" style="font-size:0.7rem;">DAILY WAGE RATE</span>
+                            <b class="text-dark fs-6" id="modalPdfRate">Rs. 0.00</b>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <span class="text-muted small d-block" style="font-size:0.7rem;">OVERTIME / BONUS</span>
+                            <b class="text-success fs-6" id="modalPdfBonus">+Rs. 0.00</b>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <span class="text-muted small d-block" style="font-size:0.7rem;">DEDUCTIONS</span>
+                            <b class="text-danger fs-6" id="modalPdfDeductions">-Rs. 0.00</b>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <span class="text-muted small d-block" style="font-size:0.7rem;">NET WAGE DISBURSED</span>
+                            <b class="text-success fs-5 fw-bold" id="modalPdfNet">Rs. 0.00</b>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <a id="downloadPdfDirectBtn" href="#" target="_blank" class="btn btn-decore-primary rounded-pill px-4 shadow-sm fw-bold">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>Download PDF File
+                    </a>
+                    <button type="button" class="btn btn-outline-primary rounded-pill px-3" id="shareSalaryPdfBtn">
+                        <i class="bi bi-share me-1"></i>Share PDF
+                    </button>
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Back to Salary Roster</button>
+                </div>
             </div>
         </div>
     </div>
@@ -332,12 +369,19 @@ const monthSelect = document.getElementById('filterMonth');
 const weekSelect = document.getElementById('payrollPeriod');
 const selectedWeekVal = "{{ selected_period }}";
 
-function openSalaryPdfModal(url, empName) {
+function openSalaryPdfModal(event, url, empName, days, rate, bonus, deductions, netSalary) {
+    if (event) event.preventDefault();
     document.getElementById("salaryPdfModalTitle").innerHTML = `<i class="bi bi-file-earmark-pdf text-primary me-2"></i>Salary Voucher — ${empName}`;
-    document.getElementById("salaryPdfModalSubtitle").textContent = "Official Decore Construction Disbursement Voucher";
     
-    const iframeEl = document.getElementById("salaryPdfIframe");
-    iframeEl.src = url;
+    document.getElementById("modalPdfWorkerName").textContent = empName;
+    document.getElementById("modalPdfDays").textContent = `${days || 0} Days`;
+    document.getElementById("modalPdfRate").textContent = `Rs. ${parseFloat(rate || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
+    document.getElementById("modalPdfBonus").textContent = `+Rs. ${parseFloat(bonus || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
+    document.getElementById("modalPdfDeductions").textContent = `-Rs. ${parseFloat(deductions || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
+    document.getElementById("modalPdfNet").textContent = `Rs. ${parseFloat(netSalary || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
+
+    const downloadBtn = document.getElementById("downloadPdfDirectBtn");
+    downloadBtn.href = url;
 
     const shareBtn = document.getElementById("shareSalaryPdfBtn");
     shareBtn.onclick = function() {
@@ -349,7 +393,7 @@ function openSalaryPdfModal(url, empName) {
                 navigator.share({
                     title: `Salary Voucher - ${empName}`,
                     files: [file]
-                }).catch(e => {});
+                }).catch(e => { window.open(url, '_blank'); });
             });
         } else {
             window.open(url, '_blank');
