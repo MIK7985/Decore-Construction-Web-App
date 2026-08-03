@@ -30,9 +30,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Decore theme (critical, preloaded for fastest paint) -->
-    <link rel="preload" href="{% static 'css/style.css' %}?v=8" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="{% static 'css/style.css' %}?v=8"></noscript>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=8">
+    <link rel="preload" href="{% static 'css/style.css' %}?v=9" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{% static 'css/style.css' %}?v=9"></noscript>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=9">
     
     <!-- PWA Manifest & Icons -->
     <link rel="manifest" href="{% static 'manifest.json' %}">
@@ -128,13 +128,13 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <!-- Decore app JS -->
-    <script src="{% static 'js/app.js' %}?v=8"></script>
+    <script src="{% static 'js/app.js' %}?v=9"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js?v=8')
+                navigator.serviceWorker.register('/service-worker.js?v=9')
                     .then(reg => {
                         console.log('ServiceWorker registered:', reg.scope);
                         reg.update();

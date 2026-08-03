@@ -220,6 +220,8 @@
                         <div class="row g-3 text-center align-items-center">
                             <div class="col-6 border-end border-light">
                                 <div class="d-flex justify-content-center align-items-center mb-2" style="height: 140px; position: relative;">
+                                    <!-- Doughnut chart circular pulsing skeleton -->
+                                    <div id="budgetChartSkeleton" class="decore-skeleton position-absolute rounded-circle" style="width: 110px; height: 110px; z-index: 10; opacity: 0.18;"></div>
                                     <canvas id="budgetBreakdownChart" style="max-width: 130px; max-height: 130px;"></canvas>
                                 </div>
                                 <div class="small fw-bold text-muted" style="font-size: 0.75rem;">BUDGET UTILIZATION</div>
@@ -228,6 +230,8 @@
 
                             <div class="col-6">
                                 <div class="d-flex justify-content-center align-items-center mb-2" style="height: 140px; position: relative;">
+                                    <!-- Doughnut chart circular pulsing skeleton -->
+                                    <div id="billingChartSkeleton" class="decore-skeleton position-absolute rounded-circle" style="width: 110px; height: 110px; z-index: 10; opacity: 0.18;"></div>
                                     <canvas id="billingStatusChart" style="max-width: 130px; max-height: 130px;"></canvas>
                                 </div>
                                 <div class="small fw-bold text-muted" style="font-size: 0.75rem;">CLIENT RECEIVABLES</div>
@@ -904,6 +908,16 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                    onComplete: function() {
+                        var skel = document.getElementById("budgetChartSkeleton");
+                        if (skel) {
+                            skel.style.transition = 'opacity 0.22s ease';
+                            skel.style.opacity = '0';
+                            setTimeout(function() { skel.remove(); }, 220);
+                        }
+                    }
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -933,6 +947,16 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                    onComplete: function() {
+                        var skel = document.getElementById("billingChartSkeleton");
+                        if (skel) {
+                            skel.style.transition = 'opacity 0.22s ease';
+                            skel.style.opacity = '0';
+                            setTimeout(function() { skel.remove(); }, 220);
+                        }
+                    }
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {

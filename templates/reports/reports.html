@@ -67,7 +67,22 @@
         {% endif %}
     </div>
     <div class="decore-card-body p-3">
-        <div class="decore-chart-wrap" style="height:320px;">
+        <div class="decore-chart-wrap position-relative" style="height:320px;">
+            <!-- Pulsing bar chart skeleton placeholder -->
+            <div id="chartSkeleton" class="position-absolute inset-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center gap-3 p-4" style="z-index: 10; background: rgba(99, 102, 241, 0.02); border-radius: 8px;">
+                <div class="w-100 h-75 d-flex align-items-end gap-3 px-3">
+                    <div class="decore-skeleton w-25" style="height: 40%; border-radius: 6px;"></div>
+                    <div class="decore-skeleton w-25" style="height: 80%; border-radius: 6px;"></div>
+                    <div class="decore-skeleton w-25" style="height: 60%; border-radius: 6px;"></div>
+                    <div class="decore-skeleton w-25" style="height: 90%; border-radius: 6px;"></div>
+                </div>
+                <div class="w-100 h-25 d-flex justify-content-between px-3 mt-2">
+                    <div class="decore-skeleton" style="width: 15%; height: 10px; border-radius: 4px;"></div>
+                    <div class="decore-skeleton" style="width: 15%; height: 10px; border-radius: 4px;"></div>
+                    <div class="decore-skeleton" style="width: 15%; height: 10px; border-radius: 4px;"></div>
+                    <div class="decore-skeleton" style="width: 15%; height: 10px; border-radius: 4px;"></div>
+                </div>
+            </div>
             <canvas id="reportsOverviewChart"></canvas>
         </div>
     </div>
@@ -227,6 +242,16 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        onComplete: function() {
+                            var skel = document.getElementById("chartSkeleton");
+                            if (skel) {
+                                skel.style.transition = 'opacity 0.22s ease';
+                                skel.style.opacity = '0';
+                                setTimeout(function() { skel.remove(); }, 220);
+                            }
+                        }
+                    },
                     plugins: { 
                         legend: { display: false }
                     },
