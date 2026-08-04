@@ -19,6 +19,17 @@ from worksites.models import Worksite
 from payments.models import Payment
 from reports.pdf_generator import generate_subcontract_receipt_pdf
 from .models import Subcontract, SubcontractCategory, SubcontractPayment, SubcontractStatus
+import re
+
+def validate_indian_phone(phone):
+    if not phone:
+        return ""
+    clean_p = re.sub(r'[\s\-\+]', '', phone)
+    if clean_p.startswith('91') and len(clean_p) == 12:
+        clean_p = clean_p[2:]
+    if not re.match(r'^[6-9]\d{9}$', clean_p):
+        return None
+    return clean_p
 
 
 def get_subcontract_payment_token(payment_pk):
@@ -81,6 +92,11 @@ class SubcontractCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
         worksite_id = request.POST.get("worksite_id")
         contractor_name = request.POST.get("contractor_name", "").strip()
         phone = request.POST.get("phone", "").strip()
+        if phone:
+            clean_phone = validate_indian_phone(phone)
+            if not clean_phone:
+                return JsonResponse({"success": False, "error": "Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9."}, status=400)
+            phone = clean_phone
         trade = request.POST.get("trade", "").strip()
         title = request.POST.get("title", "").strip()
         amount_str = request.POST.get("contract_amount", "0").strip()
@@ -147,7 +163,13 @@ class SubcontractUpdateView(LoginRequiredMixin, EngineerRequiredMixin, View):
 
         if contractor_name:
             subcontract.contractor_name = contractor_name
-        subcontract.phone = phone
+        if phone:
+            clean_phone = validate_indian_phone(phone)
+            if not clean_phone:
+                return JsonResponse({"success": False, "error": "Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9."}, status=400)
+            subcontract.phone = clean_phone
+        else:
+            subcontract.phone = ""
         if trade in [c.value for c in SubcontractCategory]:
             subcontract.trade = trade
         if title:
