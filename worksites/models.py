@@ -78,16 +78,16 @@ class Worksite(models.Model):
 
     @property
     def labor_cost(self):
-        from attendance.models import AttendanceStatus
         from decimal import Decimal
         records = self.attendance_records.select_related("employee").all()
         total_labor = Decimal("0.00")
         for record in records:
-            if record.status == AttendanceStatus.PRESENT or record.status == "present":
+            status_clean = record.status.lower() if record.status else ""
+            if status_clean == "present":
                 total_labor += record.employee.wage
-            elif record.status == AttendanceStatus.LATE or record.status == "late":
+            elif status_clean == "late":
                 total_labor += record.employee.wage * Decimal("0.5")
-            elif record.status == AttendanceStatus.OVERTIME or record.status == "overtime":
+            elif status_clean == "overtime":
                 total_labor += record.employee.wage * Decimal("1.5")
         return total_labor
 

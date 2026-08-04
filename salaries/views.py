@@ -7,6 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db import models
 from django.db.models import Case, DecimalField, Prefetch, Sum, Value, When
+from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -143,9 +144,9 @@ def payroll_preview(start_date, end_date):
         # Use prefetched week_attendance instead of triggering separate query per employee
         attendance_statuses = [a.status for a in employee.week_attendance]
         paid_days = sum(
-            Decimal("1.0") if s == AttendanceStatus.PRESENT else
-            Decimal("0.5") if s == AttendanceStatus.LATE else
-            Decimal("1.5") if s == AttendanceStatus.OVERTIME else
+            Decimal("1.0") if s.lower() == "present" else
+            Decimal("0.5") if s.lower() == "late" else
+            Decimal("1.5") if s.lower() == "overtime" else
             Decimal("0.0")
             for s in attendance_statuses
         )
@@ -253,10 +254,10 @@ class SalaryPayView(LoginRequiredMixin, EngineerRequiredMixin, View):
             paid_amount = sum(p.amount for p in salary.payments.all())
 
             attendance = employee.attendance_records.filter(date__gte=start_date, date__lte=end_date)
-            paid_days = attendance.aggregate(days=Sum(Case(
-                When(status=AttendanceStatus.PRESENT, then=Value(Decimal("1.0"))),
-                When(status=AttendanceStatus.LATE, then=Value(Decimal("0.5"))),
-                When(status=AttendanceStatus.OVERTIME, then=Value(Decimal("1.5"))),
+            paid_days = attendance.annotate(status_lower=Lower('status')).aggregate(days=Sum(Case(
+                When(status_lower="present", then=Value(Decimal("1.0"))),
+                When(status_lower="late", then=Value(Decimal("0.5"))),
+                When(status_lower="overtime", then=Value(Decimal("1.5"))),
                 default=Value(Decimal("0.0")),
                 output_field=DecimalField(max_digits=5, decimal_places=1),
             )))["days"] or Decimal("0.0")
