@@ -18,3 +18,14 @@ def service_worker(request):
     response['Service-Worker-Allowed'] = '/'
     response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     return response
+
+
+def ping(request):
+    """Heartbeat endpoint that pings the database to keep both Render and Supabase awake."""
+    from django.db import connection
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        return HttpResponse("OK", content_type="text/plain")
+    except Exception as e:
+        return HttpResponse(f"Database Connection Error: {e}", status=500, content_type="text/plain")

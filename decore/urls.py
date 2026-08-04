@@ -6,11 +6,12 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
-from .views import service_worker
+from .views import service_worker, ping
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('service-worker.js', service_worker, name='service-worker'),
+    path('ping/', ping, name='ping'),
 
     path('', RedirectView.as_view(pattern_name='dashboard:index', permanent=False)),
 
