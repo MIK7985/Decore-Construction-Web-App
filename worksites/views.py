@@ -86,7 +86,7 @@ class WorksiteDetailView(LoginRequiredMixin, EngineerRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['assigned_employees'] = self.object.employees.all()
-        context['materials'] = self.object.materials.all()
+        context['materials'] = []
         context['documents'] = self.object.documents.all()
         context['document_categories'] = DocumentCategory.choices
         context['client_payments'] = self.object.client_payments.all()
