@@ -133,9 +133,9 @@
                                     {% for item in delivery.items.all %}
                                     <tr>
                                         <td class="fw-semibold text-dark">{{ item.name }}</td>
-                                        <td class="text-end font-monospace text-secondary fw-semibold">{{ item.quantity|floatformat:0 }} <span class="small text-uppercase">{{ item.unit }}</span></td>
-                                        <td class="text-end font-monospace text-muted">₹{{ item.unit_price|floatformat:0 }}</td>
-                                        <td class="text-end font-monospace text-dark fw-bold">₹{{ item.total_cost|floatformat:0|intcomma }}</td>
+                                        <td class="text-end font-monospace text-secondary fw-semibold">{{ item.quantity|floatformat:"-2" }} <span class="small text-uppercase">{{ item.unit }}</span></td>
+                                        <td class="text-end font-monospace text-muted">₹{{ item.unit_price|floatformat:2 }}</td>
+                                        <td class="text-end font-monospace text-dark fw-bold">₹{{ item.total_cost|floatformat:2|intcomma }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
