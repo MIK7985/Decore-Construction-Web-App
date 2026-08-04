@@ -82,7 +82,8 @@ class SubcontractCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
             return JsonResponse({"success": False, "error": "Worksite, Contractor Name, and Title are required."}, status=400)
 
         try:
-            contract_amount = Decimal(str(amount_str))
+            clean_amt = str(amount_str).replace(',', '').replace('₹', '').strip()
+            contract_amount = Decimal(clean_amt)
             if contract_amount <= 0:
                 return JsonResponse({"success": False, "error": "Contract amount must be greater than zero."}, status=400)
         except Exception:
@@ -145,7 +146,8 @@ class SubcontractUpdateView(LoginRequiredMixin, EngineerRequiredMixin, View):
 
         if amount_str:
             try:
-                amt = Decimal(str(amount_str))
+                clean_amt = str(amount_str).replace(',', '').replace('₹', '').strip()
+                amt = Decimal(clean_amt)
                 if amt > 0:
                     subcontract.contract_amount = amt
             except Exception:
@@ -179,7 +181,8 @@ class SubcontractPaymentCreateView(LoginRequiredMixin, EngineerRequiredMixin, Vi
             return JsonResponse({"success": False, "error": "Subcontract ID is required."}, status=400)
 
         try:
-            amount = Decimal(str(amount_str))
+            clean_amt = str(amount_str).replace(',', '').replace('₹', '').strip()
+            amount = Decimal(clean_amt)
             if amount <= 0:
                 return JsonResponse({"success": False, "error": "Payment amount must be greater than zero."}, status=400)
         except Exception:

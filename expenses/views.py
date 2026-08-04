@@ -50,10 +50,11 @@ class ExpenseCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
 
         try:
             worksite = get_object_or_404(Worksite, id=worksite_id)
+            clean_amt = str(amount).replace(',', '').replace('₹', '').strip()
             expense = Expense.objects.create(
                 category=category,
                 worksite=worksite,
-                amount=amount,
+                amount=clean_amt,
                 date=date,
                 description=description,
                 status=status,
