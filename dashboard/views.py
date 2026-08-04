@@ -32,7 +32,7 @@ class IndexView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
         now = timezone.now()
         today = timezone.localdate()
 
-        worksites = list(Worksite.objects.prefetch_related("materials", "attendance_records__employee").all())
+        worksites = list(Worksite.objects.prefetch_related("attendance_records__employee").all())
         active_worksites_cnt = sum(1 for w in worksites if w.status == WorksiteStatus.ACTIVE)
         total_employees_cnt = Employee.objects.filter(is_archived=False).count()
 
@@ -104,12 +104,12 @@ class IndexView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
             })
 
         # Materials Added
-        recent_mats = Material.objects.select_related("worksite").order_by("-id")[:2]
+        recent_mats = Material.objects.select_related("delivery__worksite").order_by("-id")[:2]
         for mat in recent_mats:
             activities.append({
                 "icon": "bi-boxes text-primary",
                 "title": f"Material added: {mat.name} ({mat.quantity} {mat.unit})",
-                "subtitle": mat.worksite.name if mat.worksite else "General Stock",
+                "subtitle": mat.delivery.worksite.name if mat.delivery and mat.delivery.worksite else "General Stock",
                 "time": "Recent",
                 "timestamp": now
             })
