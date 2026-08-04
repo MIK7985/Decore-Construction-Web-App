@@ -1,0 +1,544 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Subcontracts{% endblock %}
+
+{% block content %}
+<div class="decore-page-header d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+        <h4 class="decore-page-title mb-1"><i class="bi bi-briefcase text-decore-primary me-2"></i>Subcontracts &amp; Trade Management</h4>
+        <div class="decore-breadcrumb">Track specialized trade contractors (Electricians, Tiling, Plumbing, Interior), contract amounts, and stage payments</div>
+    </div>
+    <button type="button" class="btn btn-decore-primary rounded-pill px-4 py-2" onclick="openSubcontractModal()">
+        <i class="bi bi-plus-lg me-1.5"></i>Add Subcontract
+    </button>
+</div>
+
+<!-- KPI Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="decore-card p-3.5 border-0 shadow-sm text-center">
+            <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.7rem; letter-spacing:0.5px;">Active Contracts</div>
+            <div class="fs-4 fw-bold text-dark font-monospace">{{ stats.total_count }} <span class="fs-6 text-muted font-sans">Contracts</span></div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="decore-card p-3.5 border-0 shadow-sm text-center">
+            <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.7rem; letter-spacing:0.5px;">Agreed Contract Valuation</div>
+            <div class="fs-4 fw-bold text-decore-primary font-monospace">₹{{ stats.total_contract_value|floatformat:2|intcomma }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="decore-card p-3.5 border-0 shadow-sm text-center">
+            <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.7rem; letter-spacing:0.5px;">Total Paid to Date</div>
+            <div class="fs-4 fw-bold text-success font-monospace">₹{{ stats.total_paid|floatformat:2|intcomma }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="decore-card p-3.5 border-0 shadow-sm text-center">
+            <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.7rem; letter-spacing:0.5px;">Outstanding Balance</div>
+            <div class="fs-4 fw-bold text-warning font-monospace">₹{{ stats.total_pending|floatformat:2|intcomma }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="decore-card p-3.5 mb-4 border-0 shadow-sm">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <select name="worksite" class="form-select form-select-sm rounded-pill" onchange="this.form.submit()">
+                <option value="">All Worksites</option>
+                {% for ws in worksites %}
+                <option value="{{ ws.id }}" {% if request.GET.worksite == ws.id|stringformat:"s" %}selected{% endif %}>{{ ws.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="trade" class="form-select form-select-sm rounded-pill" onchange="this.form.submit()">
+                <option value="">All Trade Categories</option>
+                {% for val, label in trade_choices %}
+                <option value="{{ val }}" {% if request.GET.trade == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select form-select-sm rounded-pill" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if request.GET.status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <a href="{% url 'subcontracts:list' %}" class="btn btn-outline-secondary btn-sm rounded-pill w-100"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset</a>
+        </div>
+    </form>
+</div>
+
+<!-- Subcontracts Cards Container -->
+<div class="row g-3">
+    {% for sub in subcontracts %}
+    <div class="col-12 col-lg-6">
+        <div class="decore-card p-4 h-100 border-0 shadow-sm d-flex flex-column">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <span class="decore-status-badge badge-primary px-2.5 py-1 mb-1 d-inline-block font-monospace" style="font-size:0.72rem;">
+                        <i class="bi bi-geo-alt me-1"></i>{{ sub.worksite.name }}
+                    </span>
+                    <h5 class="fw-bold mb-0 text-dark">{{ sub.contractor_name }}</h5>
+                    <div class="text-muted small fw-semibold" style="font-size:0.85rem;">{{ sub.title }}</div>
+                </div>
+                <div class="text-end">
+                    {% if sub.status == 'completed' %}
+                    <span class="decore-status-badge badge-success"><span class="dot"></span>Completed</span>
+                    {% elif sub.status == 'in_progress' %}
+                    <span class="decore-status-badge badge-warning"><span class="dot"></span>In Progress</span>
+                    {% elif sub.status == 'on_hold' %}
+                    <span class="decore-status-badge badge-secondary"><span class="dot"></span>On Hold</span>
+                    {% else %}
+                    <span class="decore-status-badge badge-info"><span class="dot"></span>Pending</span>
+                    {% endif %}
+                    <div class="small text-muted mt-1" style="font-size:0.75rem;">{{ sub.get_trade_display }}</div>
+                </div>
+            </div>
+
+            <!-- Financial Summary Bar -->
+            <div class="bg-light-soft rounded-3 p-3 my-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-muted small fw-semibold" style="font-size:0.78rem;">Payment Progress:</span>
+                    <span class="fw-bold font-monospace text-decore-primary" style="font-size:0.85rem;">{{ sub.progress_percent }}% Paid</span>
+                </div>
+                <div class="progress mb-2" style="height: 6px; border-radius: 10px;">
+                    <div class="progress-bar {% if sub.progress_percent >= 100 %}bg-success{% else %}bg-primary{% endif %}" role="progressbar" style="width: {{ sub.progress_percent }}%;"></div>
+                </div>
+                <div class="row g-2 text-center pt-1" style="font-size:0.8rem;">
+                    <div class="col-4 border-end">
+                        <div class="text-muted small" style="font-size:0.68rem;">CONTRACT</div>
+                        <div class="fw-bold font-monospace text-dark">₹{{ sub.contract_amount|floatformat:0|intcomma }}</div>
+                    </div>
+                    <div class="col-4 border-end">
+                        <div class="text-muted small" style="font-size:0.68rem;">PAID</div>
+                        <div class="fw-bold font-monospace text-success">₹{{ sub.paid_amount|floatformat:0|intcomma }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-muted small" style="font-size:0.68rem;">BALANCE</div>
+                        <div class="fw-bold font-monospace text-warning">₹{{ sub.balance_amount|floatformat:0|intcomma }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes if any -->
+            {% if sub.notes %}
+            <div class="small text-muted mb-3 fst-italic" style="font-size:0.8rem;"><i class="bi bi-info-circle me-1"></i>{{ sub.notes }}</div>
+            {% endif %}
+
+            <!-- Payment Logs Accordion -->
+            <div class="mb-3">
+                <button class="btn btn-sm btn-light w-100 text-start d-flex justify-content-between align-items-center rounded-3 px-3 py-2" type="button" data-bs-toggle="collapse" data-bs-target="#payHist{{ sub.id }}" aria-expanded="false">
+                    <span class="small fw-semibold text-secondary"><i class="bi bi-clock-history me-1"></i>Disbursement History ({{ sub.payments.all|length }})</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </button>
+                <div class="collapse mt-2" id="payHist{{ sub.id }}">
+                    <div class="table-responsive rounded border border-light">
+                        <table class="table table-sm table-borderless mb-0 align-middle" style="font-size:0.8rem;">
+                            <thead class="bg-light text-muted">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Method</th>
+                                    <th class="text-end">Amount</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in sub.payments.all %}
+                                <tr>
+                                    <td class="text-muted">{{ p.payment_date|date:"d M Y" }}</td>
+                                    <td class="fw-semibold text-secondary">{{ p.get_payment_method_display }} {% if p.reference_number %}<span class="small text-muted">({{ p.reference_number }})</span>{% endif %}</td>
+                                    <td class="text-end font-monospace fw-bold text-success">₹{{ p.amount|floatformat:0|intcomma }}</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-link text-danger p-0 border-0" title="Delete Payment" onclick="deleteSubcontractPayment({{ p.id }})"><i class="bi bi-x-circle"></i></button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-2 small">No payments recorded yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Action Buttons -->
+            <div class="d-flex gap-2 mt-auto pt-2 border-top">
+                {% if sub.balance_amount > 0 %}
+                <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1 text-nowrap flex-grow-1" style="font-size:0.78rem;" onclick="openPaySubcontractorModal({{ sub.id }}, '{{ sub.contractor_name|escapejs }}', '{{ sub.balance_amount }}')">
+                    <i class="bi bi-cash-stack me-1"></i>Pay ₹{{ sub.balance_amount|floatformat:0|intcomma }}
+                </button>
+                {% else %}
+                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 text-nowrap flex-grow-1 disabled" style="font-size:0.78rem;">
+                    <i class="bi bi-check-circle me-1"></i>Fully Paid
+                </button>
+                {% endif %}
+
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:30px; height:30px;" title="Edit Contract" onclick="openEditSubcontractModal({{ sub.id }}, '{{ sub.contractor_name|escapejs }}', '{{ sub.trade }}', '{{ sub.title|escapejs }}', '{{ sub.contract_amount }}', '{{ sub.status }}', '{{ sub.notes|escapejs }}')">
+                    <i class="bi bi-pencil" style="font-size:0.75rem;"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:30px; height:30px;" title="Delete Contract" onclick="deleteSubcontract({{ sub.id }}, '{{ sub.contractor_name|escapejs }}')">
+                    <i class="bi bi-trash" style="font-size:0.75rem;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 py-5 text-center">
+        <div class="decore-empty-state py-4 text-center">
+            <i class="bi bi-briefcase text-muted fs-1 mb-2 d-block"></i>
+            <p class="mb-1 text-muted fw-semibold">No subcontracts logged yet.</p>
+            <p class="text-muted small mb-3" style="font-size:0.8rem;">Add your first electrician, tiling, or plumbing subcontract to start managing trade disbursements.</p>
+            <button type="button" class="btn btn-decore-primary rounded-pill px-4 py-2" style="font-size:0.85rem;" onclick="openSubcontractModal()">
+                <i class="bi bi-plus-lg me-1"></i>Add First Subcontract
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Subcontract Modal -->
+<div class="modal fade" id="addSubcontractModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <form id="addSubcontractForm" onsubmit="handleAddSubcontractSubmit(event)">
+                {% csrf_token %}
+                <div class="modal-header border-bottom border-light">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-briefcase text-decore-primary me-2"></i>Add Trade Subcontract</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Worksite *</label>
+                            <select class="form-select" name="worksite_id" required>
+                                <option value="">Select Worksite...</option>
+                                {% for ws in worksites %}
+                                <option value="{{ ws.id }}">{{ ws.name }} (Client: {{ ws.client }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Subcontractor Name *</label>
+                            <input type="text" class="form-control" name="contractor_name" placeholder="e.g. Apex Electricals" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Trade Category *</label>
+                            <select class="form-select" name="trade" required>
+                                {% for val, label in trade_choices %}
+                                <option value="{{ val }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Scope / Contract Title *</label>
+                            <input type="text" class="form-control" name="title" placeholder="e.g. Complete Electrical Wiring &amp; Panel Board" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Total Contract Amount (₹) *</label>
+                            <input type="number" step="0.01" min="1" class="form-control font-monospace" name="contract_amount" placeholder="e.g. 150000" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Start Date</label>
+                            <input type="date" class="form-control" name="start_date">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Target Completion Date</label>
+                            <input type="date" class="form-control" name="completion_date">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Notes / Terms</label>
+                            <textarea class="form-control" name="notes" rows="2" placeholder="e.g. 30% advance paid, 70% on final testing"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-light py-2.5">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Subcontract</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Subcontract Modal -->
+<div class="modal fade" id="editSubcontractModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <form id="editSubcontractForm" onsubmit="handleEditSubcontractSubmit(event)">
+                {% csrf_token %}
+                <input type="hidden" id="editSubcontractId">
+                <div class="modal-header border-bottom border-light">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Subcontract Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Subcontractor Name *</label>
+                            <input type="text" class="form-control" id="editContractorName" name="contractor_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Trade Category *</label>
+                            <select class="form-select" id="editTrade" name="trade" required>
+                                {% for val, label in trade_choices %}
+                                <option value="{{ val }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Scope / Contract Title *</label>
+                            <input type="text" class="form-control" id="editTitle" name="title" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Contract Amount (₹) *</label>
+                            <input type="number" step="0.01" min="1" class="form-control font-monospace" id="editContractAmount" name="contract_amount" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Contract Status *</label>
+                            <select class="form-select" id="editStatus" name="status" required>
+                                {% for val, label in status_choices %}
+                                <option value="{{ val }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Notes / Terms</label>
+                            <textarea class="form-control" id="editNotes" name="notes" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-light py-2.5">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Pay Subcontractor Modal -->
+<div class="modal fade" id="paySubcontractorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content decore-card border-0 shadow-lg">
+            <form id="paySubcontractorForm" onsubmit="handlePaySubcontractorSubmit(event)">
+                {% csrf_token %}
+                <input type="hidden" id="paySubcontractId" name="subcontract_id">
+                <div class="modal-header border-bottom border-light">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-cash-stack text-success me-2"></i>Log Subcontract Disbursement</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info py-2 px-3 small mb-3">
+                        Subcontractor: <b id="payContractorName" class="text-dark"></b><br>
+                        Max Payable Balance: <b id="payMaxBalance" class="font-monospace text-success"></b>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Disbursement Amount (₹) *</label>
+                            <input type="number" step="0.01" min="1" class="form-control font-monospace" id="payAmount" name="amount" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Payment Date *</label>
+                            <input type="date" class="form-control" id="payDate" name="payment_date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Payment Method *</label>
+                            <select class="form-select" name="payment_method" required>
+                                {% for val, label in payment_method_choices %}
+                                <option value="{{ val }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Reference / UTR Number</label>
+                            <input type="text" class="form-control" name="reference_number" placeholder="e.g. UPI-9283749">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Notes / Milestone</label>
+                            <input type="text" class="form-control" name="notes" placeholder="e.g. 1st Stage Wiring Completed">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-light py-2.5">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Record Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openSubcontractModal() {
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addSubcontractModal'));
+    modal.show();
+}
+
+function handleAddSubcontractSubmit(e) {
+    e.preventDefault();
+    decoreShowLoading();
+    const formData = new FormData(e.target);
+    fetch("{% url 'subcontracts:create' %}", {
+        method: "POST",
+        body: formData,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    })
+    .then(r => r.json())
+    .then(data => {
+        decoreHideLoading();
+        if (data.success) {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('addSubcontractModal')).hide();
+            decoreToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            decoreToast(data.error || "Failed to create subcontract.", 'danger');
+        }
+    })
+    .catch(() => {
+        decoreHideLoading();
+        decoreToast("Connection error.", 'danger');
+    });
+}
+
+function openEditSubcontractModal(id, name, trade, title, amount, status, notes) {
+    document.getElementById('editSubcontractId').value = id;
+    document.getElementById('editContractorName').value = name;
+    document.getElementById('editTrade').value = trade;
+    document.getElementById('editTitle').value = title;
+    document.getElementById('editContractAmount').value = amount;
+    document.getElementById('editStatus').value = status;
+    document.getElementById('editNotes').value = notes || '';
+    
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('editSubcontractModal')).show();
+}
+
+function handleEditSubcontractSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('editSubcontractId').value;
+    decoreShowLoading();
+    const formData = new FormData(e.target);
+    fetch(`/subcontracts/${id}/edit/`, {
+        method: "POST",
+        body: formData,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    })
+    .then(r => r.json())
+    .then(data => {
+        decoreHideLoading();
+        if (data.success) {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('editSubcontractModal')).hide();
+            decoreToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            decoreToast(data.error || "Failed to update subcontract.", 'danger');
+        }
+    })
+    .catch(() => {
+        decoreHideLoading();
+        decoreToast("Connection error.", 'danger');
+    });
+}
+
+function deleteSubcontract(id, name) {
+    decoreConfirm(`Are you sure you want to delete subcontract for "${name}"?`, function() {
+        decoreShowLoading();
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        fetch(`/subcontracts/${id}/delete/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrfToken,
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                decoreToast(data.message, 'warning');
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                decoreToast(data.error || "Failed to delete subcontract.", 'danger');
+            }
+        })
+        .catch(() => {
+            decoreHideLoading();
+            decoreToast("Connection error.", 'danger');
+        });
+    });
+}
+
+function openPaySubcontractorModal(id, name, maxBalance) {
+    document.getElementById('paySubcontractId').value = id;
+    document.getElementById('payContractorName').textContent = name;
+    document.getElementById('payMaxBalance').textContent = '₹' + parseFloat(maxBalance).toLocaleString('en-IN', {minimumFractionDigits:2});
+    document.getElementById('payAmount').value = maxBalance;
+    document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
+    
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('paySubcontractorModal')).show();
+}
+
+function handlePaySubcontractorSubmit(e) {
+    e.preventDefault();
+    decoreShowLoading();
+    const formData = new FormData(e.target);
+    fetch("{% url 'subcontracts:payment_create' %}", {
+        method: "POST",
+        body: formData,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+    })
+    .then(r => r.json())
+    .then(data => {
+        decoreHideLoading();
+        if (data.success) {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('paySubcontractorModal')).hide();
+            decoreToast(data.message, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            decoreToast(data.error || "Failed to log payment.", 'danger');
+        }
+    })
+    .catch(() => {
+        decoreHideLoading();
+        decoreToast("Connection error.", 'danger');
+    });
+}
+
+function deleteSubcontractPayment(id) {
+    decoreConfirm("Are you sure you want to reverse this payment log?", function() {
+        decoreShowLoading();
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        fetch(`/subcontracts/payments/${id}/delete/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrfToken,
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                decoreToast(data.message, 'warning');
+                setTimeout(() => window.location.reload(), 800);
+            } else {
+                decoreToast(data.error || "Failed to delete payment.", 'danger');
+            }
+        })
+        .catch(() => {
+            decoreHideLoading();
+            decoreToast("Connection error.", 'danger');
+        });
+    });
+}
+</script>
+{% endblock %}

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -93,11 +94,20 @@ class Worksite(models.Model):
 
     @property
     def expense_cost(self):
-        return sum(e.amount for e in self.expenses.all())
+        return sum((e.amount for e in self.expenses.all()), Decimal("0.00"))
+
+    @property
+    def subcontract_cost(self):
+        return sum((p.amount for sc in self.subcontracts.all() for p in sc.payments.all()), Decimal("0.00"))
 
     @property
     def total_spend(self):
-        return self.spend + self.material_cost + self.labor_cost + self.expense_cost
+        mat = Decimal(str(self.material_cost)) if self.material_cost else Decimal("0.00")
+        lab = Decimal(str(self.labor_cost)) if self.labor_cost else Decimal("0.00")
+        exp = Decimal(str(self.expense_cost)) if self.expense_cost else Decimal("0.00")
+        sub = Decimal(str(self.subcontract_cost)) if self.subcontract_cost else Decimal("0.00")
+        base = Decimal(str(self.spend)) if self.spend else Decimal("0.00")
+        return base + mat + lab + exp + sub
 
     @property
     def profit(self):

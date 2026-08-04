@@ -92,6 +92,7 @@ class WorksiteDetailView(LoginRequiredMixin, EngineerRequiredMixin, DetailView):
         context['client_payments'] = self.object.client_payments.all()
         context['daily_logs'] = self.object.daily_logs.all()
         context['payment_methods'] = PaymentMethod.choices
+        context['subcontracts'] = self.object.subcontracts.prefetch_related('payments').all()
         return context
 
 
