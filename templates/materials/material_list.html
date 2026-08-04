@@ -367,21 +367,16 @@
                                 </div>
                             </div>
 
-                            <div class="table-responsive rounded border mb-3" style="max-height: 280px; overflow-y: auto;">
-                                <table class="table table-sm decore-table mb-0 align-middle">
-                                    <thead>
-                                        <tr class="bg-light">
-                                            <th style="width: 40%; font-size:0.75rem;" class="px-2">Material Name *</th>
-                                            <th style="width: 20%; font-size:0.75rem;" class="text-end px-2">Qty *</th>
-                                            <th style="width: 15%; font-size:0.75rem;" class="px-2">Unit *</th>
-                                            <th style="width: 20%; font-size:0.75rem;" class="text-end px-2">Unit Price *</th>
-                                            <th style="width: 5%; font-size:0.75rem;" class="text-center"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="bulkMaterialTableBody">
-                                        <!-- Javascript appends rows dynamically -->
-                                    </tbody>
-                                </table>
+                            <!-- Desktop Labels Header (visible only on desktop) -->
+                            <div class="row g-2 px-3 py-1 mb-1 d-none d-md-flex text-muted small fw-semibold">
+                                <div class="col-md-4">Material Name *</div>
+                                <div class="col-md-2 text-end">Quantity *</div>
+                                <div class="col-md-2">Unit *</div>
+                                <div class="col-md-3 text-end">Unit Price (₹) *</div>
+                                <div class="col-md-1"></div>
+                            </div>
+                            <div id="bulkMaterialListContainer" class="pe-1 mb-3" style="max-height: 280px; overflow-y: auto; overflow-x: hidden;">
+                                <!-- Javascript appends card/grid items dynamically -->
                             </div>
 
                             <!-- Autocomplete datalist helper -->
@@ -612,9 +607,9 @@
         const bulkForm = document.getElementById("bulkMaterialForm");
         if (bulkForm) {
             bulkForm.reset();
-            const tbody = document.getElementById("bulkMaterialTableBody");
-            if (tbody) {
-                tbody.innerHTML = "";
+            const container = document.getElementById("bulkMaterialListContainer");
+            if (container) {
+                container.innerHTML = "";
                 addBulkRow(); // add initial empty row
             }
         }
@@ -623,43 +618,59 @@
     }
 
     function addBulkRow() {
-        const tbody = document.getElementById("bulkMaterialTableBody");
-        if (!tbody) return;
+        const container = document.getElementById("bulkMaterialListContainer");
+        if (!container) return;
         
         const rowId = 'bulk_row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-        const tr = document.createElement("tr");
-        tr.id = rowId;
-        tr.innerHTML = `
-            <td class="px-2 py-2">
-                <input list="catalogItemsDatalist" class="form-control form-control-sm fw-bold bulk-name-input text-decore-primary" name="name[]" placeholder="Cement, Steel..." required onchange="handleBulkNameChange(this)">
-            </td>
-            <td class="px-2 py-2">
-                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm text-end font-monospace fw-bold" name="quantity[]" placeholder="0.00" required>
-            </td>
-            <td class="px-2 py-2">
-                <input type="text" class="form-control form-control-sm text-uppercase fw-semibold bulk-unit-input" name="unit[]" placeholder="Bags..." required>
-            </td>
-            <td class="px-2 py-2">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text py-0 px-1.5" style="font-size:0.75rem;">₹</span>
-                    <input type="number" step="0.01" min="0.01" class="form-control form-control-sm text-end font-monospace" name="unit_price[]" placeholder="0.00" required>
+        const div = document.createElement("div");
+        div.id = rowId;
+        div.className = "bulk-item-row p-3 p-md-2 mb-3 mb-md-2 bg-light-soft rounded border position-relative";
+        div.innerHTML = `
+            <!-- Mobile delete button (top-right absolute) -->
+            <button type="button" class="btn btn-sm btn-link text-danger p-0 position-absolute d-md-none" style="top: 0.5rem; right: 0.5rem; z-index: 10;" onclick="removeBulkRow('${rowId}')" title="Remove Item">
+                <i class="bi bi-x-circle-fill fs-5"></i>
+            </button>
+            <div class="row g-2 align-items-center">
+                <!-- Name -->
+                <div class="col-12 col-md-4">
+                    <label class="form-label small text-muted mb-1 d-md-none fw-semibold">Material Name *</label>
+                    <input list="catalogItemsDatalist" class="form-control form-control-sm fw-bold bulk-name-input text-decore-primary" name="name[]" placeholder="Cement, Steel..." required onchange="handleBulkNameChange(this)">
                 </div>
-            </td>
-            <td class="text-center py-2">
-                <button type="button" class="btn btn-sm btn-icon border-0 p-1 text-danger shadow-none" onclick="removeBulkRow('${rowId}')" title="Delete Row">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
+                <!-- Qty -->
+                <div class="col-4 col-md-2">
+                    <label class="form-label small text-muted mb-1 d-md-none fw-semibold">Quantity *</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control form-control-sm text-end font-monospace fw-bold" name="quantity[]" placeholder="0.00" required>
+                </div>
+                <!-- Unit -->
+                <div class="col-3 col-md-2">
+                    <label class="form-label small text-muted mb-1 d-md-none fw-semibold">Unit *</label>
+                    <input type="text" class="form-control form-control-sm text-uppercase fw-semibold bulk-unit-input" name="unit[]" placeholder="Bags..." required>
+                </div>
+                <!-- Price -->
+                <div class="col-5 col-md-3">
+                    <label class="form-label small text-muted mb-1 d-md-none fw-semibold">Unit Price (₹) *</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text py-0 px-1.5" style="font-size:0.75rem;">₹</span>
+                        <input type="number" step="0.01" min="0.01" class="form-control form-control-sm text-end font-monospace" name="unit_price[]" placeholder="0.00" required>
+                    </div>
+                </div>
+                <!-- Desktop delete button (centered at the end) -->
+                <div class="col-md-1 d-none d-md-flex justify-content-center">
+                    <button type="button" class="btn btn-sm btn-icon border-0 p-1 text-danger shadow-none" onclick="removeBulkRow('${rowId}')" title="Delete Row">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
         `;
-        tbody.appendChild(tr);
+        container.appendChild(div);
     }
 
     function removeBulkRow(rowId) {
         const row = document.getElementById(rowId);
         if (row) {
-            const tbody = document.getElementById("bulkMaterialTableBody");
+            const container = document.getElementById("bulkMaterialListContainer");
             // Keep at least one row
-            if (tbody && tbody.children.length > 1) {
+            if (container && container.children.length > 1) {
                 row.remove();
             } else {
                 decoreToast("At least one material row is required.", "warning");
@@ -675,7 +686,7 @@
         const option = Array.from(datalist.options).find(opt => opt.value.toLowerCase() === val.toLowerCase());
         if (option) {
             // Auto populate values
-            const tr = input.closest("tr");
+            const tr = input.closest(".bulk-item-row");
             if (tr) {
                 const unitInput = tr.querySelector('.bulk-unit-input');
                 const priceInput = tr.querySelector("input[name='unit_price[]']");
@@ -703,9 +714,9 @@
             return;
         }
 
-        // Validate table items
-        const tbody = document.getElementById("bulkMaterialTableBody");
-        if (!tbody || tbody.children.length === 0) {
+        // Validate items
+        const container = document.getElementById("bulkMaterialListContainer");
+        if (!container || container.children.length === 0) {
             decoreToast("Please add at least one material to log.", "danger");
             return;
         }
