@@ -596,6 +596,17 @@
 <script>
     let activeStatusFilter = 'all';
 
+    const catalogItems = [
+        {% for cat in catalog_items %}
+        {
+            id: {{ cat.id }},
+            name: "{{ cat.name|escapejs }}",
+            unit: "{{ cat.default_unit|escapejs }}",
+            price: "{{ cat.default_unit_price }}"
+        },
+        {% endfor %}
+    ];
+
     function openMaterialModal() {
         const modalEl = document.getElementById("materialModal");
         const form = document.getElementById("materialForm");
@@ -621,6 +632,12 @@
         const container = document.getElementById("bulkMaterialListContainer");
         if (!container) return;
         
+        let selectOptions = '<option value="">-- Choose Material --</option>';
+        catalogItems.forEach(item => {
+            selectOptions += `<option value="${item.name}" data-unit="${item.unit}" data-price="${item.price}">${item.name}</option>`;
+        });
+        selectOptions += '<option value="custom">+ Custom / Other Material...</option>';
+
         const rowId = 'bulk_row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
         const div = document.createElement("div");
         div.id = rowId;
@@ -631,15 +648,19 @@
                 <i class="bi bi-x-circle-fill fs-5"></i>
             </button>
             <div class="row g-2 align-items-center">
-                <!-- Name -->
+                <!-- Name Select / Custom Wrapper -->
                 <div class="col-12 col-md-4">
                     <label class="form-label small text-muted mb-1 d-md-none fw-semibold">Material Name *</label>
-                    <input list="catalogItemsDatalist" class="form-control form-control-sm fw-bold bulk-name-input text-decore-primary" name="name[]" placeholder="Cement, Steel..." required onchange="handleBulkNameChange(this)">
+                    <input type="hidden" class="bulk-name-hidden" name="name[]" required>
+                    <select class="form-select form-select-sm fw-bold bulk-name-select text-decore-primary" required onchange="handleBulkSelectChange(this)">
+                        ${selectOptions}
+                    </select>
+                    <input type="text" class="form-control form-control-sm mt-1 bulk-name-custom d-none" placeholder="Type material name..." oninput="handleBulkCustomNameInput(this)">
                 </div>
                 <!-- Qty -->
                 <div class="col-4 col-md-2">
                     <label class="form-label small text-muted mb-1 d-md-none fw-semibold">Quantity *</label>
-                    <input type="number" step="0.01" min="0.01" class="form-control form-control-sm text-end font-monospace fw-bold" name="quantity[]" placeholder="0.00" required>
+                    <input type="number" step="0.01" min="0.01" class="form-control form-control-sm fw-bold" name="quantity[]" placeholder="0.00" required>
                 </div>
                 <!-- Unit -->
                 <div class="col-3 col-md-2">
@@ -651,7 +672,7 @@
                     <label class="form-label small text-muted mb-1 d-md-none fw-semibold">Unit Price (₹) *</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text py-0 px-1.5" style="font-size:0.75rem;">₹</span>
-                        <input type="number" step="0.01" min="0.01" class="form-control form-control-sm text-end font-monospace" name="unit_price[]" placeholder="0.00" required>
+                        <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" name="unit_price[]" placeholder="0.00" required>
                     </div>
                 </div>
                 <!-- Desktop delete button (centered at the end) -->
@@ -678,25 +699,43 @@
         }
     }
 
-    function handleBulkNameChange(input) {
-        const val = input.value.trim();
-        const datalist = document.getElementById("catalogItemsDatalist");
-        if (!datalist) return;
+    function handleBulkSelectChange(select) {
+        const row = select.closest(".bulk-item-row");
+        if (!row) return;
         
-        const option = Array.from(datalist.options).find(opt => opt.value.toLowerCase() === val.toLowerCase());
-        if (option) {
+        const customInput = row.querySelector(".bulk-name-custom");
+        const hiddenInput = row.querySelector(".bulk-name-hidden");
+        const unitInput = row.querySelector(".bulk-unit-input");
+        const priceInput = row.querySelector("input[name='unit_price[]']");
+        
+        if (select.value === "custom") {
+            customInput.classList.remove("d-none");
+            customInput.required = true;
+            customInput.focus();
+            hiddenInput.value = customInput.value;
+        } else {
+            customInput.classList.add("d-none");
+            customInput.required = false;
+            hiddenInput.value = select.value;
+            
             // Auto populate values
-            const tr = input.closest(".bulk-item-row");
-            if (tr) {
-                const unitInput = tr.querySelector('.bulk-unit-input');
-                const priceInput = tr.querySelector("input[name='unit_price[]']");
-                if (unitInput && option.dataset.unit) {
-                    unitInput.value = option.dataset.unit;
+            const selectedOption = select.options[select.selectedIndex];
+            if (selectedOption) {
+                if (unitInput && selectedOption.dataset.unit) {
+                    unitInput.value = selectedOption.dataset.unit;
                 }
-                if (priceInput && option.dataset.price) {
-                    priceInput.value = parseFloat(option.dataset.price).toFixed(2);
+                if (priceInput && selectedOption.dataset.price) {
+                    priceInput.value = parseFloat(selectedOption.dataset.price).toFixed(2);
                 }
             }
+        }
+    }
+
+    function handleBulkCustomNameInput(input) {
+        const row = input.closest(".bulk-item-row");
+        if (row) {
+            const hiddenInput = row.querySelector(".bulk-name-hidden");
+            hiddenInput.value = input.value.trim();
         }
     }
 
