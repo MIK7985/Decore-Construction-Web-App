@@ -22,6 +22,8 @@
             --benefit-text: #0369a1;
             --light-bg: #f8fafc;
             --border-color: #e2e8f0;
+            --step-bg: #f1f5f9;
+            --step-text: #475569;
         }
 
         * {
@@ -42,7 +44,7 @@
 
         /* Sidebar Navigation */
         .sidebar {
-            width: 280px;
+            width: 290px;
             background-color: white;
             border-right: 1px solid var(--border-color);
             position: fixed;
@@ -70,7 +72,7 @@
 
         .logo-text {
             font-weight: 800;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             color: var(--primary);
             letter-spacing: 0.5px;
         }
@@ -102,10 +104,10 @@
 
         /* Main Workspace Content */
         .main-workspace {
-            margin-left: 280px;
+            margin-left: 290px;
             flex-grow: 1;
             padding: 40px;
-            max-width: 1000px;
+            max-width: 1050px;
         }
 
         /* Top Action Bar */
@@ -174,7 +176,7 @@
 
         .doc-header h1 {
             color: var(--primary);
-            font-size: 2.2rem;
+            font-size: 2.4rem;
             font-weight: 800;
             margin-bottom: 8px;
         }
@@ -203,9 +205,9 @@
 
         h2.section-title {
             color: var(--primary);
-            font-size: 1.4rem;
+            font-size: 1.45rem;
             font-weight: 700;
-            margin-top: 35px;
+            margin-top: 40px;
             margin-bottom: 15px;
             padding-bottom: 8px;
             border-bottom: 1.5px solid var(--primary-soft);
@@ -218,7 +220,7 @@
             color: var(--secondary);
             font-size: 1.05rem;
             font-weight: 600;
-            margin-top: 20px;
+            margin-top: 22px;
             margin-bottom: 8px;
         }
 
@@ -238,6 +240,38 @@
             color: var(--text-dark);
         }
 
+        /* Steps workflow layout */
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin: 15px 0;
+        }
+
+        .step-row {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .step-badge {
+            background-color: var(--step-bg);
+            color: var(--step-text);
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+
+        .step-text {
+            font-size: 0.95rem;
+            color: var(--text-dark);
+        }
+
         /* Benefit Callout Box */
         .benefit-box {
             background-color: var(--benefit-bg);
@@ -245,7 +279,7 @@
             border-left: 4px solid var(--accent);
             border-radius: 8px;
             padding: 15px 18px;
-            margin: 15px 0;
+            margin: 18px 0;
             display: flex;
             gap: 12px;
             align-items: flex-start;
@@ -270,6 +304,30 @@
             line-height: 1.5;
             margin-bottom: 0;
             font-weight: 500;
+        }
+
+        /* Quick Reference Table */
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.88rem;
+        }
+
+        .ref-table th, .ref-table td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .ref-table th {
+            background-color: var(--light-bg);
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .ref-table tr:nth-child(even) {
+            background-color: #fafbfc;
         }
 
         hr {
@@ -303,7 +361,7 @@
                 page-break-before: always;
             }
             h2.section-title {
-                margin-top: 30px;
+                margin-top: 35px;
                 page-break-after: avoid;
             }
             .benefit-box {
@@ -314,6 +372,10 @@
             }
             .benefit-box p {
                 color: #0369a1 !important;
+            }
+            .ref-table th {
+                background-color: #f1f5f9 !important;
+                color: black !important;
             }
         }
 
@@ -343,6 +405,7 @@
             <span class="logo-text"><i class="bi bi-gear-fill me-2 text-accent"></i>DECORE MANUAL</span>
         </div>
         <ul class="nav-links">
+            <li><a href="#quickref"><i class="bi bi-table"></i>Quick Reference Actions</a></li>
             <li><a href="#overview"><i class="bi bi-grid-1x2"></i>1. Overview &amp; Dashboard</a></li>
             <li><a href="#worksites"><i class="bi bi-geo-alt"></i>2. Worksites Management</a></li>
             <li><a href="#employees"><i class="bi bi-people"></i>3. Crew Directory</a></li>
@@ -379,11 +442,65 @@
                 
                 <div class="meta-card">
                     <div class="meta-item"><b>Document Type:</b> User Manual &amp; Deployment Guide</div>
-                    <div class="meta-item"><b>Version:</b> 1.0 (Production Build)</div>
+                    <div class="meta-item"><b>Version:</b> 1.1 (Production Build)</div>
                     <div class="meta-item"><b>Licensed to:</b> Civil Engineer / Builder Lifetime Buyout</div>
                     <div class="meta-item"><b>Language:</b> English Manual &amp; Malayalam Benefits</div>
                 </div>
             </div>
+
+            <!-- QUICK REFERENCE SECTION -->
+            <div id="quickref">
+                <h2 class="section-title">Quick Action Reference Guide</h2>
+                <p>Use this table to quickly identify which tab to open inside the app based on your task:</p>
+                <table class="ref-table">
+                    <thead>
+                        <tr>
+                            <th>Administrative Task</th>
+                            <th>Dashboard Action Page</th>
+                            <th>Intended User Scope</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Configure site location, budget &amp; supervisors</td>
+                            <td><b>Worksites → Add Worksite</b></td>
+                            <td>Administrators</td>
+                        </tr>
+                        <tr>
+                            <td>Register worker profile photo, ID and daily wage</td>
+                            <td><b>Employees → Add Employee</b></td>
+                            <td>Admins &amp; Engineers</td>
+                        </tr>
+                        <tr>
+                            <td>Mark bulk crew headcount &amp; site allocation</td>
+                            <td><b>Attendance → Save Attendance</b></td>
+                            <td>Engineers &amp; Supervisors</td>
+                        </tr>
+                        <tr>
+                            <td>Log delivered material shipments &amp; check balances</td>
+                            <td><b>Materials → Log Delivery Voucher</b></td>
+                            <td>Engineers &amp; Supervisors</td>
+                        </tr>
+                        <tr>
+                            <td>Record onsite material consumption (e.g. cement bags used)</td>
+                            <td><b>Worksite Detail → Materials Tab (Gear Icon)</b></td>
+                            <td>Site Supervisors</td>
+                        </tr>
+                        <tr>
+                            <td>Log rentals, fuel, permits &amp; attach receipt voucher</td>
+                            <td><b>Expenses → Record Expense</b></td>
+                            <td>Admins &amp; Site Engineers</td>
+                        </tr>
+                        <tr>
+                            <td>Finalize payroll &amp; share secure receipts on WhatsApp</td>
+                            <td><b>Salaries → Preview &amp; Pay</b></td>
+                            <td>Admins &amp; Engineers</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <hr>
 
             <!-- SECTION 1 -->
             <div id="overview">
@@ -411,8 +528,23 @@
             <div id="worksites">
                 <h2 class="section-title">2. Worksites Management</h2>
                 <p>Each construction project site has its own dynamic financial sheet, worker logs, and material inventory balances.</p>
-                <h3 class="subsection-title">A. Adding/Editing a Worksite:</h3>
-                <p>Navigate to the <i>Worksites</i> page, click <i>Add Worksite</i>, and fill in the Site name, Client, and Location. Define the overall contract budget (project income) and an initial setup spend value (representing site clearing/permit costs prior to logging).</p>
+                
+                <h3 class="subsection-title">Step-by-Step Site Setup Workflow:</h3>
+                <div class="steps-container">
+                    <div class="step-row">
+                        <span class="step-badge">Step 1</span>
+                        <div class="step-text">Navigate to the <b>Worksites</b> page and click the <b>Add Worksite</b> button in the top right.</div>
+                    </div>
+                    <div class="step-row">
+                        <span class="step-badge">Step 2</span>
+                        <div class="step-text">Fill in the site name, location, start date, and client details. Input the agreed project valuation (Total Budget) and initial site setup costs.</div>
+                    </div>
+                    <div class="step-row">
+                        <span class="step-badge">Step 3</span>
+                        <div class="step-text">Assign a supervisor from the registered engineer list to give them management access to this site. Click <b>Save</b>.</div>
+                    </div>
+                </div>
+
                 <h3 class="subsection-title">B. Live Financial Analytics:</h3>
                 <p>Within a worksite's detail view, the system computes Live Budget Utilization (Spend vs Profit Margin) and Client Receivables (Amount Paid vs Balance Due) displayed in beautiful, animated doughnut charts. If a site is brand new, clean grey fallback visual states are displayed automatically to prevent system crashes.</p>
                 
@@ -432,15 +564,17 @@
             <div id="employees">
                 <h2 class="section-title">3. Workforce &amp; Crew Directory</h2>
                 <p>Keep a complete register of all masons, laborers, electricians, and supervisors.</p>
+                
                 <h3 class="subsection-title">A. Registering Employees:</h3>
-                <p>Register workers under the <i>Employees</i> tab with their role, wage rate, residential address, and phone. Use the interactive <b>cropping tool</b> to generate square profile pictures, and upload photo/PDF copies of their Aadhaar cards.</p>
+                <p>Register workers under the <i>Employees</i> tab with their role, wage rate, residential address, and phone. Upload a photo and use the interactive <b>cropping tool</b> to crop it into a neat square. You can also upload Aadhaar cards or ID images directly.</p>
+                <p><i>Note: The app checks for duplicates on mobile phone numbers automatically to prevent double registrations.</i></p>
                 
                 <!-- Malayalam Benefit Box -->
                 <div class="benefit-box">
                     <i class="bi bi-lightbulb-fill"></i>
                     <div>
                         <div class="benefit-title">പ്രയോജനം (Benefit in Malayalam)</div>
-                        <p>തൊഴിലാളികളുടെ വിവരങ്ങളും ദിവസക്കൂലിയും ഹാജർ നിലയും കൃത്യമായി രേഖപ്പെടുത്താം. ജീവനക്കാരുടെ ഫോട്ടോയും തിരിച്ചറിയൽ രേഖകളും നഷ്ടപ്പെടാതെ സുരക്ഷിതമായി ഒരൊറ്റ സ്ഥലത്ത് സൂക്ഷിക്കാൻ സഹായിക്കുന്നു.</p>
+                        <p>തൊഴിലാളികളുടെ വിവരങ്ങളും ദിവസക്കൂലിയും കൃത്യമായി രേഖപ്പെടുത്താം. ജീവനക്കാരുടെ ഫോട്ടോയും തിരിച്ചറിയൽ രേഖകളും നഷ്ടപ്പെടാതെ സുരക്ഷിതമായി ഒരൊറ്റ സ്ഥലത്ത് സൂക്ഷിക്കാൻ സഹായിക്കുന്നു.</p>
                     </div>
                 </div>
             </div>
@@ -451,6 +585,7 @@
             <div id="attendance">
                 <h2 class="section-title">4. Daily Attendance Logging</h2>
                 <p>Attendance logs serve as the mathematical base for calculating employee payroll.</p>
+                
                 <h3 class="subsection-title">Daily Sheet Management:</h3>
                 <p>Select a calendar date on the <i>Attendance</i> sheet and assign statuses in bulk. Status rules are structured as:</p>
                 <ul>
@@ -477,11 +612,27 @@
             <div id="materials">
                 <h2 class="section-title">5. Materials Procurement &amp; On-site Inventory</h2>
                 <p>Decore tracks live stock balances by subtracting logged consumption from logged deliveries on each site.</p>
-                <h3 class="subsection-title">A. Log Delivery Vouchers:</h3>
-                <p>Log shipments using the multi-row delivery form. Add rows, choose items from the pre-populated Master Catalog (default rates and units auto-populate), or enter custom items. Subtotals and Grand Totals calculate dynamically in real-time.</p>
+                
+                <h3 class="subsection-title">Step-by-Step Delivery Logging Workflow:</h3>
+                <div class="steps-container">
+                    <div class="step-row">
+                        <span class="step-badge">Step 1</span>
+                        <div class="step-text">Go to the <b>Materials</b> tab and click <b>Log Delivery</b>. Select the worksite, supplier, and delivery date.</div>
+                    </div>
+                    <div class="step-row">
+                        <span class="step-badge">Step 2</span>
+                        <div class="step-text">Select materials from the dropdown. Standard price and unit will auto-populate from the Master Catalog. Type the quantity.</div>
+                    </div>
+                    <div class="step-row">
+                        <span class="step-badge">Step 3</span>
+                        <div class="step-text">Click <b>+ Add Row</b> if logging multiple materials. Total voucher cost calculates in real-time. Click <b>Save</b>.</div>
+                    </div>
+                </div>
+
                 <h3 class="subsection-title">B. On-Site Live Balance Table:</h3>
                 <p>Live balances are calculated as <b>Delivered quantity minus Used quantity</b>. The stock count automatically turns <b>Red</b> if the balance falls below 5 units (low-stock warning), and remains <b>Green</b> if healthy. Quantities support fractional decimal inputs (like 4.5 bags or 12.8 tons).</p>
-                <h3 class="subsection-title">C. Log Usage (Gear Icon):</h3>
+                
+                <h3 class="subsection-title">C. Logging Material Stock Usage (The Gear Icon):</h3>
                 <p>Click the gear icon next to any material row to record used stock. The backend checks current balances in real-time, blocking entries that exceed current stock to prevent negative balances.</p>
                 
                 <!-- Malayalam Benefit Box -->
@@ -519,10 +670,25 @@
             <div id="payroll">
                 <h2 class="section-title">7. Weekly Payroll &amp; WhatsApp Receipts</h2>
                 <p>Never calculate payroll manually. Decore generates weekly wages automatically.</p>
-                <h3 class="subsection-title">A. Weekly Payroll Generation:</h3>
-                <p>Select a week ending date (Saturday) under the <i>Salaries</i> tab. The system aggregates all daily attendance logs, computes net wages, allows adding bonuses or deductions, and generates payroll records in bulk.</p>
+                
+                <h3 class="subsection-title">Weekly Salary Flowchart:</h3>
+                <div class="steps-container">
+                    <div class="step-row">
+                        <span class="step-badge">Step 1</span>
+                        <div class="step-text">Open the <b>Salaries</b> page. Select the weekly period (Ending Saturday) to auto-compile all wages based on attendance.</div>
+                    </div>
+                    <div class="step-row">
+                        <span class="step-badge">Step 2</span>
+                        <div class="step-text">Review and input any custom **Bonus** or **Deductions** for workers. Click **Finalize Week Salaries**.</div>
+                    </div>
+                    <div class="step-row">
+                        <span class="step-badge">Step 3</span>
+                        <div class="step-text">Click **Pay**, log the transaction reference, and click the **WhatsApp** icon to send the secure receipt link.</div>
+                    </div>
+                </div>
+
                 <h3 class="subsection-title">B. WhatsApp Signed PDF Receipts:</h3>
-                <p>Record payments (Cash/Bank Transfer) and share the receipt voucher. The system builds a WhatsApp link with a secure, cryptographically signed token. This allows workers to open and download their official PDF receipt directly on their mobile phones without logging in, while preventing access to others' details.</p>
+                <p>The system builds a WhatsApp link with a secure, cryptographically signed token. This allows workers to open and download their official PDF receipt directly on their mobile phones without logging in, while preventing access to others' details.</p>
                 
                 <!-- Malayalam Benefit Box -->
                 <div class="benefit-box">
