@@ -632,58 +632,62 @@
         const container = document.getElementById("bulkMaterialListContainer");
         if (!container) return;
         
-        let selectOptions = '<option value="">-- Choose Material --</option>';
-        catalogItems.forEach(item => {
-            selectOptions += `<option value="${item.name}" data-unit="${item.unit}" data-price="${item.price}">${item.name}</option>`;
+        var selectOptions = '<option value="">-- Choose Material --</option>';
+        catalogItems.forEach(function(item) {
+            selectOptions += '<option value="' + item.name + '" data-unit="' + item.unit + '" data-price="' + item.price + '">' + item.name + '</option>';
         });
         selectOptions += '<option value="custom">+ Custom / Other Material...</option>';
 
-        const rowId = 'bulk_row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-        const div = document.createElement("div");
+        var rowId = 'bulk_row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        var div = document.createElement("div");
         div.id = rowId;
         div.className = "bulk-item-row p-3 p-md-2 mb-3 mb-md-2 bg-light-soft rounded border position-relative";
-        div.innerHTML = `
-            <!-- Mobile delete button (top-right absolute) -->
-            <button type="button" class="btn btn-sm btn-link text-danger p-0 position-absolute d-md-none" style="top: 0.5rem; right: 0.5rem; z-index: 10;" onclick="removeBulkRow('${rowId}')" title="Remove Item">
-                <i class="bi bi-x-circle-fill fs-5"></i>
-            </button>
-            <div class="row g-2 align-items-center">
-                <!-- Name Select / Custom Wrapper -->
-                <div class="col-12 col-md-4">
-                    <label class="form-label small text-muted mb-1 d-md-none fw-semibold">Material Name *</label>
-                    <input type="hidden" class="bulk-name-hidden" name="name[]" required>
-                    <select class="form-select form-select-sm fw-bold bulk-name-select text-decore-primary" required onchange="handleBulkSelectChange(this)">
-                        ${selectOptions}
-                    </select>
-                    <input type="text" class="form-control form-control-sm mt-1 bulk-name-custom d-none" placeholder="Type material name..." oninput="handleBulkCustomNameInput(this)">
-                </div>
-                <!-- Qty -->
-                <div class="col-4 col-md-2">
-                    <label class="form-label small text-muted mb-1 d-md-none fw-semibold">Quantity *</label>
-                    <input type="number" step="0.01" min="0.01" class="form-control form-control-sm fw-bold" name="quantity[]" placeholder="0.00" required>
-                </div>
-                <!-- Unit -->
-                <div class="col-3 col-md-2">
-                    <label class="form-label small text-muted mb-1 d-md-none fw-semibold">Unit *</label>
-                    <input type="text" class="form-control form-control-sm text-uppercase fw-semibold bulk-unit-input" name="unit[]" placeholder="Bags..." required>
-                </div>
-                <!-- Price -->
-                <div class="col-5 col-md-3">
-                    <label class="form-label small text-muted mb-1 d-md-none fw-semibold">Unit Price (₹) *</label>
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text py-0 px-1.5" style="font-size:0.75rem;">₹</span>
-                        <input type="number" step="0.01" min="0.01" class="form-control form-control-sm" name="unit_price[]" placeholder="0.00" required>
-                    </div>
-                </div>
-                <!-- Desktop delete button (centered at the end) -->
-                <div class="col-md-1 d-none d-md-flex justify-content-center">
-                    <button type="button" class="btn btn-sm btn-icon border-0 p-1 text-danger shadow-none" onclick="removeBulkRow('${rowId}')" title="Delete Row">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
+        
+        div.innerHTML = 
+            '<!-- Mobile delete button -->' +
+            '<button type="button" class="btn btn-sm btn-link text-danger p-0 position-absolute d-md-none" style="top: 0.5rem; right: 0.5rem; z-index: 10;" onclick="removeBulkRow(\'' + rowId + '\')" title="Remove Item">' +
+                '<i class="bi bi-x-circle-fill fs-5"></i>' +
+            '</button>' +
+            '<div class="row g-2 align-items-center">' +
+                '<!-- Name Select -->' +
+                '<div class="col-12 col-md-4">' +
+                    '<label class="form-label small text-muted mb-1 d-md-none fw-semibold">Material Name *</label>' +
+                    '<input type="hidden" class="bulk-name-hidden" name="name[]" required>' +
+                    '<select class="form-select form-select-sm fw-bold bulk-name-select text-decore-primary" required onchange="handleBulkSelectChange(this)">' +
+                        selectOptions +
+                    '</select>' +
+                    '<input type="text" class="form-control form-control-sm mt-1 bulk-name-custom d-none" placeholder="Type material name..." oninput="handleBulkCustomNameInput(this)">' +
+                '</div>' +
+                '<!-- Qty -->' +
+                '<div class="col-4 col-md-2">' +
+                    '<label class="form-label small text-muted mb-1 d-md-none fw-semibold">Quantity *</label>' +
+                    '<input type="number" step="0.01" min="0.01" class="form-control form-control-sm fw-bold" name="quantity[]" placeholder="0.00" required>' +
+                '</div>' +
+                '<!-- Unit -->' +
+                '<div class="col-3 col-md-2">' +
+                    '<label class="form-label small text-muted mb-1 d-md-none fw-semibold">Unit *</label>' +
+                    '<input type="text" class="form-control form-control-sm text-uppercase fw-semibold bulk-unit-input" name="unit[]" placeholder="Bags..." required>' +
+                '</div>' +
+                '<!-- Price -->' +
+                '<div class="col-5 col-md-3">' +
+                    '<label class="form-label small text-muted mb-1 d-md-none fw-semibold">Unit Price (₹) *</label>' +
+                    '<div class="input-group input-group-sm">' +
+                        '<span class="input-group-text py-0 px-1.5" style="font-size:0.75rem;">₹</span>' +
+                        '<input type="number" step="0.01" min="0.01" class="form-control form-control-sm" name="unit_price[]" placeholder="0.00" required>' +
+                    '</div>' +
+                '</div>' +
+                '<!-- Desktop delete button -->' +
+                '<div class="col-md-1 d-none d-md-flex justify-content-center">' +
+                    '<button type="button" class="btn btn-sm btn-icon border-0 p-1 text-danger shadow-none" onclick="removeBulkRow(\'' + rowId + '\')" title="Delete Row">' +
+                        '<i class="bi bi-trash"></i>' +
+                    '</button>' +
+                '</div>' +
+            '</div>';
+
         container.appendChild(div);
+        
+        // Auto scroll to bottom of container on mobile so the user sees the new row immediately
+        container.scrollTop = container.scrollHeight;
     }
 
     function removeBulkRow(rowId) {
