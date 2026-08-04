@@ -65,7 +65,7 @@
                 <div class="decore-stat-label">Total Expenses / Spend</div>
                 <div class="decore-stat-value text-danger">₹{{ worksite.total_spend|floatformat:2|intcomma }}</div>
                 <div class="small text-danger mt-1 font-monospace" style="font-size: 0.68rem; font-weight: 600;">
-                    Mat: ₹{{ worksite.material_cost|floatformat:0|intcomma }} &bull; Lab: ₹{{ worksite.labor_cost|floatformat:0|intcomma }}
+                    Mat: ₹{{ worksite.material_cost|floatformat:0|intcomma }} &bull; Lab: ₹{{ worksite.labor_cost|floatformat:0|intcomma }} &bull; Exp: ₹{{ worksite.expense_cost|floatformat:0|intcomma }}
                 </div>
             </div>
         </div>

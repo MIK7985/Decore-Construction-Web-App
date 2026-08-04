@@ -46,8 +46,7 @@ class IndexView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
         today_summary_marked = bool(today_statuses)
 
         total_revenue = sum((w.budget for w in worksites), Decimal("0.00"))
-        exp_sum = Expense.objects.aggregate(total=Sum('amount'))['total'] or Decimal("0.00")
-        total_expenses = sum((w.total_spend for w in worksites), Decimal("0.00")) + exp_sum
+        total_expenses = sum((w.total_spend for w in worksites), Decimal("0.00"))
         net_profit = total_revenue - total_expenses
 
         context["stats"] = {
