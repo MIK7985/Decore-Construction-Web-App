@@ -4,6 +4,21 @@ import django.db.models.deletion
 import django.utils.timezone
 from django.db import migrations, models
 
+def backfill_deliveries(apps, schema_editor):
+    Material = apps.get_model('materials', 'Material')
+    MaterialDelivery = apps.get_model('materials', 'MaterialDelivery')
+    import datetime
+    
+    for mat in Material.objects.all():
+        d_date = mat.created_at.date() if mat.created_at else datetime.date.today()
+        delivery, created = MaterialDelivery.objects.get_or_create(
+            worksite_id=mat.worksite_id,
+            supplier=mat.supplier,
+            status=mat.status,
+            delivery_date=d_date
+        )
+        mat.delivery = delivery
+        mat.save()
 
 class Migration(migrations.Migration):
 
@@ -16,22 +31,6 @@ class Migration(migrations.Migration):
         migrations.AlterModelOptions(
             name='material',
             options={'ordering': ['created_at']},
-        ),
-        migrations.RemoveField(
-            model_name='material',
-            name='status',
-        ),
-        migrations.RemoveField(
-            model_name='material',
-            name='supplier',
-        ),
-        migrations.RemoveField(
-            model_name='material',
-            name='used_quantity',
-        ),
-        migrations.RemoveField(
-            model_name='material',
-            name='worksite',
         ),
         migrations.CreateModel(
             name='MaterialDelivery',
@@ -50,7 +49,29 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='material',
             name='delivery',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='items', to='materials.materialdelivery'),
+        ),
+        migrations.RunPython(backfill_deliveries, reverse_code=migrations.RunPython.noop),
+        migrations.AlterField(
+            model_name='material',
+            name='delivery',
             field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='items', to='materials.materialdelivery'),
             preserve_default=False,
+        ),
+        migrations.RemoveField(
+            model_name='material',
+            name='status',
+        ),
+        migrations.RemoveField(
+            model_name='material',
+            name='supplier',
+        ),
+        migrations.RemoveField(
+            model_name='material',
+            name='used_quantity',
+        ),
+        migrations.RemoveField(
+            model_name='material',
+            name='worksite',
         ),
     ]
