@@ -18,6 +18,12 @@ from attendance.models import Attendance, AttendanceStatus
 from employees.models import Employee
 from payments.models import Payment
 from .models import SalaryRecord, SalaryStatus
+import hashlib
+from django.conf import settings
+
+def get_salary_receipt_token(salary_pk):
+    return hashlib.sha256(f"receipt-{salary_pk}-{settings.SECRET_KEY}".encode()).hexdigest()[:16]
+
 
 
 def get_saturday_for_date(d):
@@ -286,7 +292,8 @@ class SalaryPayView(LoginRequiredMixin, EngineerRequiredMixin, View):
             if len(clean_phone) == 10:
                 clean_phone = "91" + clean_phone
             
-            pdf_url = request.build_absolute_uri(reverse('salaries:receipt_pdf', kwargs={'pk': salary.pk}))
+            token = get_salary_receipt_token(salary.pk)
+            pdf_url = request.build_absolute_uri(reverse('salaries:receipt_pdf', kwargs={'pk': salary.pk})) + f"?token={token}"
             week_range_str = f"{start_date.strftime('%b %d')} - {end_date.strftime('%b %d, %Y')}"
             
             # Simple, clean, professional WhatsApp receipt message
@@ -376,8 +383,16 @@ class SalaryPayAllView(LoginRequiredMixin, EngineerRequiredMixin, View):
         return redirect(f"{reverse('salaries:list')}?period={end_date.strftime('%Y-%m-%d')}")
 
 
-class SalaryReceiptPdfView(LoginRequiredMixin, View):
+class SalaryReceiptPdfView(View):
     def get(self, request, pk, *args, **kwargs):
+        # Allow access if user is logged in, OR if a valid secure receipt token is provided
+        if not request.user.is_authenticated:
+            token = request.GET.get('token')
+            expected_token = get_salary_receipt_token(pk)
+            if not token or token != expected_token:
+                from django.http import HttpResponseForbidden
+                return HttpResponseForbidden("Access Denied: Invalid or missing secure receipt token.")
+
         salary = get_object_or_404(SalaryRecord, pk=pk)
         from reports.pdf_generator import generate_salary_receipt_pdf
         
