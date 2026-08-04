@@ -241,96 +241,168 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content decore-card border-0 shadow-lg">
             <div class="modal-header border-bottom border-light">
-                <div>
-                    <h5 class="modal-title fw-bold" id="materialModalLabel"><i class="bi bi-box-seam text-primary me-2"></i>Add Material Inventory</h5>
-                    <p class="small text-muted mb-0">Select from Master Catalog or add custom items to site stock.</p>
+                <div class="w-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="modal-title fw-bold" id="materialModalLabel"><i class="bi bi-box-seam text-primary me-2"></i>Add Material Inventory</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <!-- Navigation Tabs -->
+                    <ul class="nav nav-tabs card-header-tabs border-0" id="materialAddTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold small py-2 px-3 border-0" id="single-tab" data-bs-toggle="tab" data-bs-target="#single-pane" type="button" role="tab" aria-controls="single-pane" aria-selected="true"><i class="bi bi-file-earmark-plus me-1"></i>Single Item</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold small py-2 px-3 border-0" id="bulk-tab" data-bs-toggle="tab" data-bs-target="#bulk-pane" type="button" role="tab" aria-controls="bulk-pane" aria-selected="false"><i class="bi bi-boxes me-1"></i>Bulk Delivery (Multiple)</button>
+                        </li>
+                    </ul>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            
             <div class="modal-body p-4">
-                <form id="materialForm" method="post" action="{% url 'materials:create' %}" onsubmit="handleMaterialSubmit(event)">
-                    {% csrf_token %}
-                    <div class="row g-3">
-                        <!-- Master Catalog Selector -->
-                        <div class="col-12">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label small fw-semibold mb-0" for="matCatalogSelect"><i class="bi bi-journal-bookmark me-1 text-primary"></i>Select Material from Master Catalog</label>
-                                <button type="button" class="btn btn-link text-decore-primary text-decoration-none p-0 small fw-bold" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#masterCatalogModal">
-                                    <i class="bi bi-plus-circle me-1"></i>Manage Catalog Items
-                                </button>
-                            </div>
-                            <select class="form-select fw-semibold border-primary shadow-sm" id="matCatalogSelect" onchange="handleCatalogSelect(this)">
-                                <option value="">-- Choose Material --</option>
-                                {% for cat in catalog_items %}
-                                <option value="{{ cat.id }}" id="opt_cat_{{ cat.id }}" data-name="{{ cat.name }}" data-unit="{{ cat.default_unit }}" data-price="{{ cat.default_unit_price }}" data-supplier="{{ cat.default_supplier }}">
-                                    {{ cat.name }} ({{ cat.default_unit }}) — ₹{{ cat.default_unit_price|floatformat:2 }}
-                                </option>
-                                {% endfor %}
-                                <option value="custom">+ Other / Custom Material...</option>
-                            </select>
-                            <div id="autoFillNotice" class="small text-success mt-1 d-none font-monospace" style="font-size: 0.72rem;">
-                                <i class="bi bi-check-circle me-1"></i>Auto-populated Unit &amp; Price from Master Catalog. Price can be overridden below.
-                            </div>
-                        </div>
+                <div class="tab-content" id="materialAddTabsContent">
+                    <!-- Pane 1: Single Material -->
+                    <div class="tab-pane fade show active" id="single-pane" role="tabpanel" aria-labelledby="single-tab">
+                        <form id="materialForm" method="post" action="{% url 'materials:create' %}" onsubmit="handleMaterialSubmit(event)">
+                            {% csrf_token %}
+                            <div class="row g-3">
+                                <!-- Master Catalog Selector -->
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label small fw-semibold mb-0" for="matCatalogSelect"><i class="bi bi-journal-bookmark me-1 text-primary"></i>Select Material from Master Catalog</label>
+                                        <button type="button" class="btn btn-link text-decore-primary text-decoration-none p-0 small fw-bold" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#masterCatalogModal">
+                                            <i class="bi bi-plus-circle me-1"></i>Manage Catalog Items
+                                        </button>
+                                    </div>
+                                    <select class="form-select fw-semibold border-primary shadow-sm" id="matCatalogSelect" onchange="handleCatalogSelect(this)">
+                                        <option value="">-- Choose Material --</option>
+                                        {% for cat in catalog_items %}
+                                        <option value="{{ cat.id }}" id="opt_cat_{{ cat.id }}" data-name="{{ cat.name }}" data-unit="{{ cat.default_unit }}" data-price="{{ cat.default_unit_price }}" data-supplier="{{ cat.default_supplier }}">
+                                            {{ cat.name }} ({{ cat.default_unit }}) — ₹{{ cat.default_unit_price|floatformat:2 }}
+                                        </option>
+                                        {% endfor %}
+                                        <option value="custom">+ Other / Custom Material...</option>
+                                    </select>
+                                    <div id="autoFillNotice" class="small text-success mt-1 d-none font-monospace" style="font-size: 0.72rem;">
+                                        <i class="bi bi-check-circle me-1"></i>Auto-populated Unit &amp; Price from Master Catalog. Price can be overridden below.
+                                    </div>
+                                </div>
 
-                        <div class="col-md-6" id="matNameGroup">
-                            <label class="form-label small fw-semibold" for="matName">Material Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="matName" name="name" placeholder="e.g. Cement, TMT Steel Bars" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="matWorksite">Assigned Worksite <span class="text-danger">*</span></label>
-                            <select class="form-select" id="matWorksite" name="worksite" required>
-                                <option value="">Select worksite</option>
-                                {% for site in worksites %}
-                                <option value="{{ site.id }}">{{ site.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-semibold" for="matQty">Quantity <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0.01" class="form-control" id="matQty" name="quantity" placeholder="e.g. 5" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-semibold" for="matUnit">Measurement Unit <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="matUnit" name="unit" placeholder="e.g. Bags, Tons, Pcs" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-semibold" for="matPrice">Unit Price (₹) <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">₹</span>
-                                <input type="number" step="0.01" min="0.01" class="form-control" id="matPrice" name="unit_price" placeholder="0.00" required>
-                            </div>
-                            <div class="form-text small" style="font-size: 0.68rem;">Editable if rate differs.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="matSupplier">Supplier Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="matSupplier" name="supplier" placeholder="e.g. BuildMart Materials" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold" for="matStatus">Procurement Status</label>
-                            <select class="form-select" id="matStatus" name="status" required>
-                                <option value="Delivered">Delivered</option>
-                                <option value="Ordered">Ordered</option>
-                                <option value="Pending">Pending</option>
-                            </select>
-                        </div>
+                                <div class="col-md-6" id="matNameGroup">
+                                    <label class="form-label small fw-semibold" for="matName">Material Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="matName" name="name" placeholder="e.g. Cement, TMT Steel Bars" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold" for="matWorksite">Assigned Worksite <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="matWorksite" name="worksite" required>
+                                        <option value="">Select worksite</option>
+                                        {% for site in worksites %}
+                                        <option value="{{ site.id }}">{{ site.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold" for="matQty">Quantity <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.01" min="0.01" class="form-control" id="matQty" name="quantity" placeholder="e.g. 5" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold" for="matUnit">Measurement Unit <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="matUnit" name="unit" placeholder="e.g. Bags, Tons, Pcs" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold" for="matPrice">Unit Price (₹) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" step="0.01" min="0.01" class="form-control" id="matPrice" name="unit_price" placeholder="0.00" required>
+                                    </div>
+                                    <div class="form-text small" style="font-size: 0.68rem;">Editable if rate differs.</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold" for="matSupplier">Supplier Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="matSupplier" name="supplier" placeholder="e.g. BuildMart Materials" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold" for="matStatus">Procurement Status</label>
+                                    <select class="form-select" id="matStatus" name="status" required>
+                                        <option value="Delivered">Delivered</option>
+                                        <option value="Ordered">Ordered</option>
+                                        <option value="Pending">Pending</option>
+                                    </select>
+                                </div>
 
-                        <!-- Checkbox to save new custom material to master catalog -->
-                        <div class="col-12 d-none" id="saveCatalogCheckGroup">
-                            <div class="form-check bg-light-soft p-2 ps-4 rounded border">
-                                <input class="form-check-input" type="checkbox" id="saveToCatalog" name="save_to_catalog" value="1" checked>
-                                <label class="form-check-label small fw-semibold text-decore-primary" for="saveToCatalog">
-                                    <i class="bi bi-bookmark-plus me-1"></i>Save this new material to Master Catalog for future 1-click reuse
-                                </label>
+                                <!-- Checkbox to save new custom material to master catalog -->
+                                <div class="col-12 d-none" id="saveCatalogCheckGroup">
+                                    <div class="form-check bg-light-soft p-2 ps-4 rounded border">
+                                        <input class="form-check-input" type="checkbox" id="saveToCatalog" name="save_to_catalog" value="1" checked>
+                                        <label class="form-check-label small fw-semibold text-decore-primary" for="saveToCatalog">
+                                            <i class="bi bi-bookmark-plus me-1"></i>Save this new material to Master Catalog for future 1-click reuse
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                            
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Material</button>
+                            </div>
+                        </form>
                     </div>
                     
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Material</button>
+                    <!-- Pane 2: Bulk Delivery -->
+                    <div class="tab-pane fade" id="bulk-pane" role="tabpanel" aria-labelledby="bulk-tab">
+                        <form id="bulkMaterialForm" onsubmit="handleBulkMaterialSubmit(event)">
+                            {% csrf_token %}
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Delivery Worksite <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="bulkMatWorksite" name="worksite" required>
+                                        <option value="">Select worksite</option>
+                                        {% for site in worksites %}
+                                        <option value="{{ site.id }}">{{ site.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Supplier Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="bulkMatSupplier" name="supplier" placeholder="e.g. BuildMart Materials" required>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive rounded border mb-3" style="max-height: 280px; overflow-y: auto;">
+                                <table class="table table-sm decore-table mb-0 align-middle">
+                                    <thead>
+                                        <tr class="bg-light">
+                                            <th style="width: 40%; font-size:0.75rem;" class="px-2">Material Name *</th>
+                                            <th style="width: 20%; font-size:0.75rem;" class="text-end px-2">Qty *</th>
+                                            <th style="width: 15%; font-size:0.75rem;" class="px-2">Unit *</th>
+                                            <th style="width: 20%; font-size:0.75rem;" class="text-end px-2">Unit Price *</th>
+                                            <th style="width: 5%; font-size:0.75rem;" class="text-center"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bulkMaterialTableBody">
+                                        <!-- Javascript appends rows dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Autocomplete datalist helper -->
+                            <datalist id="catalogItemsDatalist">
+                                {% for cat in catalog_items %}
+                                <option value="{{ cat.name }}" data-unit="{{ cat.default_unit }}" data-price="{{ cat.default_unit_price }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </datalist>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="addBulkRow()">
+                                    <i class="bi bi-plus-lg me-1"></i>Add Row
+                                </button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Delivery</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
@@ -535,7 +607,137 @@
         form.reset();
         document.getElementById("autoFillNotice").classList.add("d-none");
         document.getElementById("saveCatalogCheckGroup").classList.add("d-none");
+        
+        // Reset and populate bulk tab
+        const bulkForm = document.getElementById("bulkMaterialForm");
+        if (bulkForm) {
+            bulkForm.reset();
+            const tbody = document.getElementById("bulkMaterialTableBody");
+            if (tbody) {
+                tbody.innerHTML = "";
+                addBulkRow(); // add initial empty row
+            }
+        }
+        
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+
+    function addBulkRow() {
+        const tbody = document.getElementById("bulkMaterialTableBody");
+        if (!tbody) return;
+        
+        const rowId = 'bulk_row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+        const tr = document.createElement("tr");
+        tr.id = rowId;
+        tr.innerHTML = `
+            <td class="px-2 py-2">
+                <input list="catalogItemsDatalist" class="form-control form-control-sm fw-bold bulk-name-input text-decore-primary" name="name[]" placeholder="Cement, Steel..." required onchange="handleBulkNameChange(this)">
+            </td>
+            <td class="px-2 py-2">
+                <input type="number" step="0.01" min="0.01" class="form-control form-control-sm text-end font-monospace fw-bold" name="quantity[]" placeholder="0.00" required>
+            </td>
+            <td class="px-2 py-2">
+                <input type="text" class="form-control form-control-sm text-uppercase fw-semibold bulk-unit-input" name="unit[]" placeholder="Bags..." required>
+            </td>
+            <td class="px-2 py-2">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text py-0 px-1.5" style="font-size:0.75rem;">₹</span>
+                    <input type="number" step="0.01" min="0.01" class="form-control form-control-sm text-end font-monospace" name="unit_price[]" placeholder="0.00" required>
+                </div>
+            </td>
+            <td class="text-center py-2">
+                <button type="button" class="btn btn-sm btn-icon border-0 p-1 text-danger shadow-none" onclick="removeBulkRow('${rowId}')" title="Delete Row">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    function removeBulkRow(rowId) {
+        const row = document.getElementById(rowId);
+        if (row) {
+            const tbody = document.getElementById("bulkMaterialTableBody");
+            // Keep at least one row
+            if (tbody && tbody.children.length > 1) {
+                row.remove();
+            } else {
+                decoreToast("At least one material row is required.", "warning");
+            }
+        }
+    }
+
+    function handleBulkNameChange(input) {
+        const val = input.value.trim();
+        const datalist = document.getElementById("catalogItemsDatalist");
+        if (!datalist) return;
+        
+        const option = Array.from(datalist.options).find(opt => opt.value.toLowerCase() === val.toLowerCase());
+        if (option) {
+            // Auto populate values
+            const tr = input.closest("tr");
+            if (tr) {
+                const unitInput = tr.querySelector('.bulk-unit-input');
+                const priceInput = tr.querySelector("input[name='unit_price[]']");
+                if (unitInput && option.dataset.unit) {
+                    unitInput.value = option.dataset.unit;
+                }
+                if (priceInput && option.dataset.price) {
+                    priceInput.value = parseFloat(option.dataset.price).toFixed(2);
+                }
+            }
+        }
+    }
+
+    function handleBulkMaterialSubmit(event) {
+        event.preventDefault();
+        
+        const worksite = document.getElementById("bulkMatWorksite").value;
+        const supplier = document.getElementById("bulkMatSupplier").value.trim();
+        if (!worksite) {
+            decoreToast("Please select a delivery worksite.", "danger");
+            return;
+        }
+        if (!supplier) {
+            decoreToast("Please specify the supplier.", "danger");
+            return;
+        }
+
+        // Validate table items
+        const tbody = document.getElementById("bulkMaterialTableBody");
+        if (!tbody || tbody.children.length === 0) {
+            decoreToast("Please add at least one material to log.", "danger");
+            return;
+        }
+
+        decoreShowLoading();
+        const form = event.target;
+        const formData = new FormData(form);
+        const csrfToken = '{{ csrf_token }}';
+
+        fetch('{% url "materials:bulk_create" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById("materialModal")).hide();
+                decoreToast(data.message, 'success');
+                setTimeout(() => location.reload(), 600);
+            } else {
+                decoreToast(data.error || 'Failed to save bulk delivery.', 'danger');
+            }
+        })
+        .catch(err => {
+            decoreHideLoading();
+            decoreToast('Connection error.', 'danger');
+        });
     }
 
     function updateMaterialStatus(id, newStatus) {

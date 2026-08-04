@@ -27,7 +27,7 @@ class Material(models.Model):
     name = models.CharField(max_length=100)
     worksite = models.ForeignKey(Worksite, on_delete=models.CASCADE, related_name="materials")
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    used_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    used_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, blank=True)
     unit = models.CharField(max_length=20)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
     supplier = models.CharField(max_length=150)
