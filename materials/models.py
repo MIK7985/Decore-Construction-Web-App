@@ -60,3 +60,23 @@ class Material(models.Model):
 
     def __str__(self):
         return f"{self.name} — {self.quantity} {self.unit}"
+
+
+class SiteStockUsage(models.Model):
+    """Tracks how much of each material has been consumed at a worksite."""
+    worksite = models.ForeignKey(
+        "worksites.Worksite",
+        on_delete=models.CASCADE,
+        related_name="stock_usages"
+    )
+    material_name = models.CharField(max_length=100)
+    unit = models.CharField(max_length=20)
+    used_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    notes = models.TextField(blank=True)
+    logged_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-logged_at"]
+
+    def __str__(self):
+        return f"{self.material_name} used: {self.used_quantity} {self.unit} @ {self.worksite}"

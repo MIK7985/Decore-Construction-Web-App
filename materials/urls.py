@@ -13,4 +13,5 @@ urlpatterns = [
     path("catalog/create/", views.MaterialCatalogCreateView.as_view(), name="catalog_create"),
     path("catalog/<int:pk>/edit/", views.MaterialCatalogUpdateView.as_view(), name="catalog_edit"),
     path("catalog/<int:pk>/delete/", views.MaterialCatalogDeleteView.as_view(), name="catalog_delete"),
+    path("log-usage/", views.SiteStockUsageLogView.as_view(), name="log_usage"),
 ]

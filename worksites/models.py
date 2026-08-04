@@ -36,32 +36,41 @@ class Worksite(models.Model):
 
     @property
     def onsite_materials(self):
-        from materials.models import Material, MaterialStatus
+        from materials.models import Material, MaterialStatus, SiteStockUsage
         raw_items = Material.objects.filter(
             delivery__worksite=self,
             delivery__status=MaterialStatus.DELIVERED
         ).select_related("delivery")
-        
+
+        # Group delivered quantities by (name, unit)
         groups = {}
         for item in raw_items:
             key = (item.name.strip().title(), item.unit.strip().upper())
             if key not in groups:
-                groups[key] = {
-                    "quantity": 0.0,
-                    "total_val": 0.0,
-                }
+                groups[key] = {"quantity": 0.0, "total_val": 0.0}
             groups[key]["quantity"] += float(item.quantity)
             groups[key]["total_val"] += float(item.quantity * item.unit_price)
+
+        # Aggregate consumed quantities from SiteStockUsage
+        usage_qs = SiteStockUsage.objects.filter(worksite=self)
+        usage_map = {}
+        for u in usage_qs:
+            key = (u.material_name.strip().title(), u.unit.strip().upper())
+            usage_map[key] = usage_map.get(key, 0.0) + float(u.used_quantity)
 
         res = []
         for (name, unit), data in groups.items():
             qty = data["quantity"]
             total_val = data["total_val"]
             avg_p = (total_val / qty) if qty > 0 else 0.0
+            used = usage_map.get((name, unit), 0.0)
+            balance = max(qty - used, 0.0)
             res.append({
                 "name": name,
                 "unit": unit,
                 "quantity": qty,
+                "used_quantity": used,
+                "balance_quantity": balance,
                 "unit_price": avg_p,
                 "total_cost": total_val
             })

@@ -462,53 +462,76 @@
                     <h6 class="mb-0 fw-bold">Onsite Materials Stock</h6>
                 </div>
                 <a href="{% url 'materials:list' %}?worksite={{ worksite.id }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                    <i class="bi bi-plus-lg me-1"></i>Manage Deliveries
+                    <i class="bi bi-truck me-1"></i>Manage Deliveries
                 </a>
             </div>
 
-            <!-- Desktop Table View (d-none d-md-block) -->
+            <!-- Desktop Table -->
             <div class="table-responsive px-4 pb-2 d-none d-md-block">
                 <table class="decore-table-premium mb-0">
                     <thead>
                         <tr>
-                            <th class="text-nowrap-custom">Material Type</th>
-                            <th class="text-nowrap-custom text-end">Total Delivered</th>
-                            <th class="text-nowrap-custom text-end">Avg. Unit Price</th>
-                            <th class="text-nowrap-custom text-end">Total Valuation</th>
+                            <th>Material</th>
+                            <th class="text-end">Delivered</th>
+                            <th class="text-end">Used</th>
+                            <th class="text-end">Balance</th>
+                            <th class="text-end">Avg. Rate</th>
+                            <th class="text-end">Valuation</th>
+                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for mat in worksite.onsite_materials %}
                         <tr>
-                            <td class="text-nowrap-custom fw-bold text-decore-primary">{{ mat.name }}</td>
-                            <td class="text-nowrap-custom text-end font-monospace fw-semibold">{{ mat.quantity|floatformat:0 }} <span class="small text-uppercase text-muted">{{ mat.unit }}</span></td>
-                            <td class="text-nowrap-custom text-end font-monospace text-muted">₹{{ mat.unit_price|floatformat:2|intcomma }}</td>
-                            <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost|floatformat:2|intcomma }}</td>
+                            <td class="fw-bold text-decore-primary">{{ mat.name }}</td>
+                            <td class="text-end font-monospace fw-semibold">{{ mat.quantity|floatformat:0 }} <span class="small text-uppercase text-muted">{{ mat.unit }}</span></td>
+                            <td class="text-end font-monospace text-warning fw-semibold">{{ mat.used_quantity|floatformat:0 }} <span class="small text-uppercase text-muted">{{ mat.unit }}</span></td>
+                            <td class="text-end font-monospace fw-bold {% if mat.balance_quantity == 0 %}text-danger{% else %}text-success{% endif %}">{{ mat.balance_quantity|floatformat:0 }} <span class="small text-uppercase text-muted">{{ mat.unit }}</span></td>
+                            <td class="text-end font-monospace text-muted">₹{{ mat.unit_price|floatformat:2|intcomma }}</td>
+                            <td class="text-end fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost|floatformat:2|intcomma }}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-warning rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:28px;height:28px;" title="Log Usage" onclick="openStockUsageModal('{{ worksite.id }}', '{{ mat.name|escapejs }}', '{{ mat.unit|escapejs }}', {{ mat.quantity|floatformat:0 }}, {{ mat.balance_quantity|floatformat:0 }})">
+                                    <i class="bi bi-gear" style="font-size:0.75rem;"></i>
+                                </button>
+                            </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="4" class="text-center py-5 text-muted small">No materials delivered to this site yet.</td>
+                            <td colspan="7" class="text-center py-5 text-muted small">No materials delivered to this site yet.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
 
-            <!-- Mobile Card View (d-block d-md-none) -->
+            <!-- Mobile Card View -->
             <div class="d-block d-md-none p-3">
                 {% for mat in worksite.onsite_materials %}
                 <div class="decore-card p-3 mb-3 border shadow-sm">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="fw-bold text-decore-primary fs-6">{{ mat.name }}</span>
-                        <span class="fw-bold text-dark font-monospace">{{ mat.quantity|floatformat:0 }} <span class="small text-uppercase text-muted">{{ mat.unit }}</span></span>
+                        <button class="btn btn-sm btn-outline-warning rounded-pill px-2 py-1 d-flex align-items-center gap-1" style="font-size:0.75rem;" onclick="openStockUsageModal('{{ worksite.id }}', '{{ mat.name|escapejs }}', '{{ mat.unit|escapejs }}', {{ mat.quantity|floatformat:0 }}, {{ mat.balance_quantity|floatformat:0 }})">
+                            <i class="bi bi-gear" style="font-size:0.75rem;"></i> Log Use
+                        </button>
                     </div>
-                    <div class="row g-2 small text-muted pt-2 border-top border-light" style="font-size: 0.8rem;">
-                        <div class="col-6">
-                            <span>Avg Price:</span> <span class="fw-semibold text-dark font-monospace">₹{{ mat.unit_price|floatformat:2|intcomma }}</span>
+                    <!-- Stock quantities -->
+                    <div class="row g-1 mb-2 text-center rounded bg-light-soft py-2" style="font-size:0.75rem;">
+                        <div class="col-4 border-end">
+                            <div class="text-muted fw-semibold" style="font-size:0.6rem;">DELIVERED</div>
+                            <div class="fw-bold font-monospace">{{ mat.quantity|floatformat:0 }} <span class="text-muted text-uppercase" style="font-size:0.6rem;">{{ mat.unit }}</span></div>
                         </div>
-                        <div class="col-6 text-end">
-                            <span>Valuation:</span> <span class="fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost|floatformat:2|intcomma }}</span>
+                        <div class="col-4 border-end">
+                            <div class="text-muted fw-semibold" style="font-size:0.6rem;">USED</div>
+                            <div class="fw-bold font-monospace text-warning">{{ mat.used_quantity|floatformat:0 }} <span class="text-muted text-uppercase" style="font-size:0.6rem;">{{ mat.unit }}</span></div>
                         </div>
+                        <div class="col-4">
+                            <div class="text-muted fw-semibold" style="font-size:0.6rem;">BALANCE</div>
+                            <div class="fw-bold font-monospace {% if mat.balance_quantity == 0 %}text-danger{% else %}text-success{% endif %}">{{ mat.balance_quantity|floatformat:0 }} <span class="text-muted text-uppercase" style="font-size:0.6rem;">{{ mat.unit }}</span></div>
+                        </div>
+                    </div>
+                    <div class="row g-2 small text-muted" style="font-size:0.78rem;">
+                        <div class="col-6">Rate: <span class="fw-semibold text-dark font-monospace">₹{{ mat.unit_price|floatformat:2|intcomma }}</span></div>
+                        <div class="col-6 text-end">Value: <span class="fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost|floatformat:2|intcomma }}</span></div>
                     </div>
                 </div>
                 {% empty %}
@@ -520,6 +543,60 @@
             </div>
         </div>
     </div>
+
+    <!-- Stock Usage Modal -->
+    <div class="modal fade" id="stockUsageModal" tabindex="-1" aria-labelledby="stockUsageModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content decore-card border-0 shadow-lg">
+                <form id="stockUsageForm" onsubmit="handleStockUsageSubmit(event)">
+                    {% csrf_token %}
+                    <input type="hidden" id="usageWorksiteId">
+                    <input type="hidden" id="usageMatName">
+                    <input type="hidden" id="usageMatUnit">
+                    <div class="modal-header border-bottom border-light">
+                        <div>
+                            <h5 class="modal-title fw-bold" id="stockUsageModalTitle"><i class="bi bi-gear text-warning me-2"></i>Log Material Usage</h5>
+                            <p class="small text-muted mb-0">Record how much of this material was consumed on site.</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="bg-light-soft p-3 rounded border mb-3">
+                            <div class="small text-muted mb-1">Material</div>
+                            <div class="fw-bold text-decore-primary fs-6" id="usageDisplayName">—</div>
+                            <div class="row g-2 mt-2 pt-2 border-top border-light text-center small">
+                                <div class="col-6 border-end">
+                                    <div class="text-muted" style="font-size:0.7rem;">TOTAL DELIVERED</div>
+                                    <div class="fw-bold font-monospace text-dark" id="usageDisplayTotal">—</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted" style="font-size:0.7rem;">CURRENT BALANCE</div>
+                                    <div class="fw-bold font-monospace text-success" id="usageDisplayBalance">—</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold" for="usageQtyInput">Quantity Used <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0.01" class="form-control fw-bold" id="usageQtyInput" name="used_quantity" required placeholder="0.00">
+                                <span class="input-group-text fw-semibold text-uppercase" id="usageUnitDisplay">—</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label small fw-semibold" for="usageNotesInput">Notes <span class="text-muted">(optional)</span></label>
+                            <input type="text" class="form-control form-control-sm" id="usageNotesInput" placeholder="e.g. Used in column casting, Block B">
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top border-light">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Usage</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
 
     <!-- TAB 6: DOCUMENTS & PERMITS -->
     <div class="tab-pane fade" id="documents-pane" role="tabpanel">
@@ -996,6 +1073,53 @@
             }
         }
     });
+
+    // ── Stock Usage Modal ──────────────────────────────────────
+    function openStockUsageModal(worksiteId, matName, matUnit, totalQty, balanceQty) {
+        document.getElementById('usageWorksiteId').value = worksiteId;
+        document.getElementById('usageMatName').value = matName;
+        document.getElementById('usageMatUnit').value = matUnit;
+        document.getElementById('usageDisplayName').textContent = matName;
+        document.getElementById('usageDisplayTotal').textContent = totalQty + ' ' + matUnit;
+        document.getElementById('usageDisplayBalance').textContent = balanceQty + ' ' + matUnit;
+        document.getElementById('usageUnitDisplay').textContent = matUnit;
+        document.getElementById('usageQtyInput').max = balanceQty;
+        document.getElementById('usageQtyInput').value = '';
+        document.getElementById('usageNotesInput').value = '';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('stockUsageModal')).show();
+    }
+
+    function handleStockUsageSubmit(event) {
+        event.preventDefault();
+        const csrfToken = '{{ csrf_token }}';
+        const formData = new FormData();
+        formData.append('worksite_id', document.getElementById('usageWorksiteId').value);
+        formData.append('material_name', document.getElementById('usageMatName').value);
+        formData.append('unit', document.getElementById('usageMatUnit').value);
+        formData.append('used_quantity', document.getElementById('usageQtyInput').value);
+        formData.append('notes', document.getElementById('usageNotesInput').value);
+        decoreShowLoading();
+        fetch('{% url "materials:log_usage" %}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            decoreHideLoading();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('stockUsageModal')).hide();
+                decoreToast(data.message, 'success');
+                setTimeout(() => {
+                    window.location.hash = '#materials-pane';
+                    location.reload();
+                }, 600);
+            } else {
+                decoreToast(data.error || 'Failed to log usage.', 'danger');
+            }
+        })
+        .catch(() => { decoreHideLoading(); decoreToast('Connection error.', 'danger'); });
+    }
 
 </script>
 {% endblock %}

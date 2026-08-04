@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, View
 from django.db import transaction
 from django.utils import timezone
-from .models import Material, MaterialStatus, MaterialCatalog, MaterialDelivery
+from .models import Material, MaterialStatus, MaterialCatalog, MaterialDelivery, SiteStockUsage
 from worksites.models import Worksite
 from decimal import Decimal
 from accounts.mixins import EngineerRequiredMixin
@@ -253,4 +253,36 @@ class MaterialCatalogDeleteView(LoginRequiredMixin, EngineerRequiredMixin, View)
         return JsonResponse({"success": True, "message": f'Master Material "{name}" removed from catalog.'})
 
 
+class SiteStockUsageLogView(LoginRequiredMixin, EngineerRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        from worksites.models import Worksite
+        worksite_id = request.POST.get("worksite_id")
+        material_name = request.POST.get("material_name", "").strip()
+        unit = request.POST.get("unit", "").strip()
+        used_qty_str = request.POST.get("used_quantity", "0").strip()
+        notes = request.POST.get("notes", "").strip()
 
+        if not worksite_id or not material_name or not unit:
+            return JsonResponse({"success": False, "error": "Worksite, material name, and unit are required."}, status=400)
+
+        try:
+            used_quantity = Decimal(str(used_qty_str))
+            if used_quantity <= 0:
+                return JsonResponse({"success": False, "error": "Used quantity must be greater than zero."}, status=400)
+        except Exception:
+            return JsonResponse({"success": False, "error": "Invalid quantity value."}, status=400)
+
+        worksite = get_object_or_404(Worksite, pk=worksite_id)
+
+        SiteStockUsage.objects.create(
+            worksite=worksite,
+            material_name=material_name.title(),
+            unit=unit.upper(),
+            used_quantity=used_quantity,
+            notes=notes
+        )
+
+        return JsonResponse({
+            "success": True,
+            "message": f"Logged {used_quantity} {unit} of {material_name} used at {worksite.name}."
+        })
