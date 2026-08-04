@@ -199,9 +199,9 @@ class FinancialReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View)
 
 class MaterialsReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        materials = Material.objects.all().select_related('worksite')
+        materials = Material.objects.all().select_related('delivery__worksite')
         total_cost = sum(m.total_cost for m in materials)
-        delivered_count = materials.filter(status='Delivered').count()
+        delivered_count = materials.filter(delivery__status='Delivered').count()
         
         summary_cards = [
             ("Total Stock Items", f"{materials.count()} Items"),
@@ -215,12 +215,12 @@ class MaterialsReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View)
             table_data.append([
                 f"#{m.id}",
                 m.name,
-                m.worksite.name if m.worksite else "N/A",
+                m.delivery.worksite.name if m.delivery and m.delivery.worksite else "N/A",
                 f"{m.quantity} {m.unit}",
                 f"Rs. {m.unit_price:,.2f}",
                 f"Rs. {m.total_cost:,.2f}",
-                m.supplier if m.supplier else "N/A",
-                m.status
+                m.delivery.supplier if m.delivery and m.delivery.supplier else "N/A",
+                m.delivery.status if m.delivery else "N/A"
             ])
             
         pdf = generate_pdf_report(
