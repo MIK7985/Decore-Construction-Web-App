@@ -1,44 +1,21 @@
-from django import forms
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import ListView, View
 from django.db import transaction
-from .models import Material, MaterialStatus, MaterialCatalog
+from django.utils import timezone
+from .models import Material, MaterialStatus, MaterialCatalog, MaterialDelivery
 from worksites.models import Worksite
 from decimal import Decimal
 from accounts.mixins import EngineerRequiredMixin
 
-class MaterialForm(forms.ModelForm):
-    used_quantity = forms.DecimalField(required=False, initial=Decimal("0.00"), max_digits=10, decimal_places=2)
-
-    class Meta:
-        model = Material
-        fields = ["name", "worksite", "quantity", "used_quantity", "unit", "unit_price", "supplier", "status"]
-
-    def clean(self):
-        cleaned_data = super().clean()
-        quantity = cleaned_data.get("quantity")
-        used_quantity = cleaned_data.get("used_quantity")
-
-        if used_quantity is None:
-            used_quantity = Decimal("0.00")
-            cleaned_data["used_quantity"] = used_quantity
-
-        if quantity is not None:
-            if used_quantity > quantity:
-                raise forms.ValidationError("Used stock cannot exceed total procured stock.")
-            if used_quantity < 0:
-                raise forms.ValidationError("Used stock cannot be negative.")
-        return cleaned_data
-
 class MaterialListView(LoginRequiredMixin, EngineerRequiredMixin, ListView):
-    model = Material
+    model = MaterialDelivery
     template_name = "materials/material_list.html"
-    context_object_name = "materials"
+    context_object_name = "deliveries"
 
     def get_queryset(self):
-        qs = Material.objects.select_related("worksite")
+        qs = MaterialDelivery.objects.select_related("worksite").prefetch_related("items")
         worksite_id = self.request.GET.get("worksite")
         if worksite_id and worksite_id.isdigit():
             qs = qs.filter(worksite_id=int(worksite_id))
@@ -46,11 +23,11 @@ class MaterialListView(LoginRequiredMixin, EngineerRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        all_materials = Material.objects.all()
+        all_deliveries = MaterialDelivery.objects.prefetch_related("items").all()
         
-        total_materials_cost = sum(m.total_cost for m in all_materials)
-        delivered_cost = sum(m.total_cost for m in all_materials if m.status == MaterialStatus.DELIVERED)
-        pending_cost = sum(m.total_cost for m in all_materials if m.status != MaterialStatus.DELIVERED)
+        total_materials_cost = sum(d.total_cost for d in all_deliveries)
+        delivered_cost = sum(d.total_cost for d in all_deliveries if d.status == MaterialStatus.DELIVERED)
+        pending_cost = sum(d.total_cost for d in all_deliveries if d.status != MaterialStatus.DELIVERED)
         
         context["stats"] = {
             "total_materials_cost": total_materials_cost,
@@ -64,95 +41,129 @@ class MaterialListView(LoginRequiredMixin, EngineerRequiredMixin, ListView):
 
 class MaterialCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, *args, **kwargs):
-        form = MaterialForm(request.POST)
-        if form.is_valid():
-            name_clean = form.cleaned_data["name"].strip()
-            unit_clean = form.cleaned_data["unit"].strip()
-            worksite = form.cleaned_data["worksite"]
-            quantity = form.cleaned_data["quantity"]
-            unit_price = form.cleaned_data["unit_price"]
-            supplier = form.cleaned_data["supplier"].strip()
-            status = form.cleaned_data["status"]
+        worksite_id = request.POST.get("worksite")
+        supplier = request.POST.get("supplier", "").strip()
+        status = request.POST.get("status", "Delivered")
+        delivery_date_str = request.POST.get("delivery_date")
+        
+        names = request.POST.getlist("name[]")
+        quantities = request.POST.getlist("quantity[]")
+        units = request.POST.getlist("unit[]")
+        unit_prices = request.POST.getlist("unit_price[]")
 
-            # Save to Master Catalog if checkbox selected
-            if request.POST.get("save_to_catalog") == "1" and name_clean:
+        if not worksite_id:
+            return JsonResponse({"success": False, "error": "Worksite is required."}, status=400)
+        if not supplier:
+            return JsonResponse({"success": False, "error": "Supplier is required."}, status=400)
+
+        worksite = get_object_or_404(Worksite, id=worksite_id)
+        
+        try:
+            if delivery_date_str:
+                delivery_date = timezone.datetime.strptime(delivery_date_str, "%Y-%m-%d").date()
+            else:
+                delivery_date = timezone.localdate()
+        except Exception:
+            delivery_date = timezone.localdate()
+
+        items = []
+        for i in range(len(names)):
+            name_clean = names[i].strip()
+            if not name_clean:
+                continue
+            
+            unit_clean = units[i].strip() if i < len(units) else ""
+            try:
+                quantity = Decimal(str(quantities[i]).strip() or "0")
+            except Exception:
+                quantity = Decimal("0.00")
+            
+            try:
+                unit_price = Decimal(str(unit_prices[i]).strip() or "0")
+            except Exception:
+                unit_price = Decimal("0.00")
+                
+            items.append({
+                "name": name_clean,
+                "quantity": quantity,
+                "unit": unit_clean,
+                "unit_price": unit_price
+            })
+
+        if not items:
+            return JsonResponse({"success": False, "error": "At least one material item is required."}, status=400)
+
+        with transaction.atomic():
+            delivery = MaterialDelivery.objects.create(
+                worksite=worksite,
+                supplier=supplier,
+                status=status,
+                delivery_date=delivery_date
+            )
+            for item in items:
+                # Save to catalog for future auto-populate auto-reuse
                 MaterialCatalog.objects.get_or_create(
-                    name=name_clean,
+                    name=item["name"],
                     defaults={
-                        "default_unit": unit_clean,
-                        "default_unit_price": unit_price,
+                        "default_unit": item["unit"],
+                        "default_unit_price": item["unit_price"],
                         "default_supplier": supplier
                     }
                 )
+                Material.objects.create(
+                    delivery=delivery,
+                    name=item["name"],
+                    quantity=item["quantity"],
+                    unit=item["unit"],
+                    unit_price=item["unit_price"]
+                )
 
-            # Look for an existing material entry at this worksite with matching name & unit (case-insensitive)
-            existing = Material.objects.filter(
-                worksite=worksite,
-                name__iexact=name_clean,
-                unit__iexact=unit_clean
-            ).first()
-
-            if existing:
-                existing.quantity += quantity
-                if unit_price and unit_price > 0:
-                    existing.unit_price = unit_price
-                if supplier:
-                    existing.supplier = supplier
-                if status:
-                    existing.status = status
-                existing.save()
-                return JsonResponse({
-                    "success": True,
-                    "message": f'Merged stock! Added {quantity} {unit_clean} to existing {existing.name}. Total stock is now {existing.quantity} {unit_clean} on {worksite.name}.'
-                })
-            else:
-                mat = form.save()
-                return JsonResponse({
-                    "success": True,
-                    "message": f'Material "{mat.name}" ({mat.quantity} {mat.unit}) added successfully!'
-                })
-        else:
-            errors = ", ".join([f"{k}: {v[0]}" for k, v in form.errors.items()])
-            return JsonResponse({"success": False, "error": errors})
-
+        return JsonResponse({
+            "success": True,
+            "message": f"Successfully logged delivery of {len(items)} items from {supplier} to {worksite.name}."
+        })
 
 class MaterialStatusUpdateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
-        mat = get_object_or_404(Material, pk=pk)
+        delivery = get_object_or_404(MaterialDelivery, pk=pk)
         new_status = request.POST.get("status", "").strip()
 
         if new_status in [choice.value for choice in MaterialStatus]:
-            mat.status = new_status
-            mat.save()
+            delivery.status = new_status
+            delivery.save(update_fields=["status"])
             return JsonResponse({
                 "success": True,
-                "message": f'Updated status of "{mat.name}" to {mat.status}!',
-                "status": mat.status
+                "message": f"Updated status of delivery to {delivery.status}!",
+                "status": delivery.status
             })
         return JsonResponse({"success": False, "error": "Invalid status option."}, status=400)
 
-
 class MaterialUpdateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
-        mat = get_object_or_404(Material, pk=pk)
-        form = MaterialForm(request.POST, instance=mat)
-        if form.is_valid():
-            mat = form.save()
-            return JsonResponse({
-                "success": True,
-                "message": f'Material "{mat.name}" updated successfully!'
-            })
-        else:
-            errors = ", ".join([f"{k}: {v[0]}" for k, v in form.errors.items()])
-            return JsonResponse({"success": False, "error": errors})
+        delivery = get_object_or_404(MaterialDelivery, pk=pk)
+        supplier = request.POST.get("supplier", "").strip()
+        status = request.POST.get("status", "").strip()
+        delivery_date_str = request.POST.get("delivery_date")
 
+        if supplier:
+            delivery.supplier = supplier
+        if status in [choice.value for choice in MaterialStatus]:
+            delivery.status = status
+        if delivery_date_str:
+            try:
+                delivery.delivery_date = timezone.datetime.strptime(delivery_date_str, "%Y-%m-%d").date()
+            except Exception:
+                pass
+        
+        delivery.save()
+        return JsonResponse({"success": True, "message": "Delivery details updated successfully."})
 
 class MaterialDeleteView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
-        mat = get_object_or_404(Material, pk=pk)
-        name = mat.name
-        mat.delete()
-        return JsonResponse({"success": True, "message": f'Material "{name}" deleted from inventory.'})
+        delivery = get_object_or_404(MaterialDelivery, pk=pk)
+        supplier = delivery.supplier
+        delivery.delete()
+        return JsonResponse({"success": True, "message": f"Delivery from {supplier} deleted successfully."})
 
 
 class MaterialCatalogCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
@@ -242,119 +253,4 @@ class MaterialCatalogDeleteView(LoginRequiredMixin, EngineerRequiredMixin, View)
         return JsonResponse({"success": True, "message": f'Master Material "{name}" removed from catalog.'})
 
 
-class MaterialUsageUpdateView(LoginRequiredMixin, View):
-    def post(self, request, pk, *args, **kwargs):
-        mat = get_object_or_404(Material, pk=pk)
-        try:
-            used_qty = Decimal(request.POST.get("used_quantity", "0.00").strip() or "0.00")
-        except Exception:
-            return JsonResponse({"success": False, "error": "Invalid numeric value for used quantity."}, status=400)
 
-        if used_qty < 0:
-            return JsonResponse({"success": False, "error": "Used quantity cannot be negative."}, status=400)
-        if used_qty > mat.quantity:
-            return JsonResponse({"success": False, "error": "Used quantity cannot exceed total procured quantity."}, status=400)
-
-        mat.used_quantity = used_qty
-        mat.save(update_fields=["used_quantity"])
-
-        return JsonResponse({
-            "success": True,
-            "message": f'Successfully updated usage for "{mat.name}". Balance: {mat.balance_quantity} {mat.unit}.',
-            "used_quantity": float(mat.used_quantity),
-            "balance_quantity": float(mat.balance_quantity)
-        })
-
-
-class MaterialBulkCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
-    def post(self, request, *args, **kwargs):
-        import json
-        if request.content_type == 'application/json':
-            try:
-                data = json.loads(request.body)
-                worksite_id = data.get("worksite")
-                items = data.get("items", [])
-            except Exception:
-                return JsonResponse({"success": False, "error": "Invalid JSON format."}, status=400)
-        else:
-            worksite_id = request.POST.get("worksite")
-            names = request.POST.getlist("name[]")
-            quantities = request.POST.getlist("quantity[]")
-            units = request.POST.getlist("unit[]")
-            unit_prices = request.POST.getlist("unit_price[]")
-            suppliers = request.POST.getlist("supplier[]")
-            statuses = request.POST.getlist("status[]")
-            
-            items = []
-            for i in range(len(names)):
-                if not names[i].strip():
-                    continue
-                items.append({
-                    "name": names[i],
-                    "quantity": quantities[i] if i < len(quantities) else "0",
-                    "unit": units[i] if i < len(units) else "",
-                    "unit_price": unit_prices[i] if i < len(unit_prices) else "0",
-                    "supplier": suppliers[i] if i < len(suppliers) else "",
-                    "status": statuses[i] if i < len(statuses) else "Delivered",
-                })
-
-        if not worksite_id:
-            return JsonResponse({"success": False, "error": "Worksite is required."}, status=400)
-        
-        worksite = get_object_or_404(Worksite, id=worksite_id)
-        created_count = 0
-        merged_count = 0
-
-        with transaction.atomic():
-            for item in items:
-                name_clean = item.get("name", "").strip()
-                if not name_clean:
-                    continue
-                
-                unit_clean = item.get("unit", "").strip()
-                try:
-                    quantity = Decimal(str(item.get("quantity", "0")).strip() or "0")
-                except Exception:
-                    quantity = Decimal("0.00")
-                
-                try:
-                    unit_price = Decimal(str(item.get("unit_price", "0")).strip() or "0")
-                except Exception:
-                    unit_price = Decimal("0.00")
-                    
-                supplier = item.get("supplier", "").strip()
-                status = item.get("status", "Delivered")
-
-                # Check if we should merge with existing
-                existing = Material.objects.filter(
-                    worksite=worksite,
-                    name__iexact=name_clean,
-                    unit__iexact=unit_clean
-                ).first()
-
-                if existing:
-                    existing.quantity += quantity
-                    if unit_price > 0:
-                        existing.unit_price = unit_price
-                    if supplier:
-                        existing.supplier = supplier
-                    if status:
-                        existing.status = status
-                    existing.save()
-                    merged_count += 1
-                else:
-                    Material.objects.create(
-                        worksite=worksite,
-                        name=name_clean,
-                        unit=unit_clean,
-                        quantity=quantity,
-                        unit_price=unit_price,
-                        supplier=supplier,
-                        status=status
-                    )
-                    created_count += 1
-
-        return JsonResponse({
-            "success": True,
-            "message": f"Successfully logged {created_count} new material(s) and updated {merged_count} existing item(s) at {worksite.name}."
-        })

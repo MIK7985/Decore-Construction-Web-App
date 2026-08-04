@@ -83,153 +83,93 @@
         </div>
     </div>
 
-    <!-- Desktop Table View (d-none d-md-block) -->
-    <div class="table-responsive d-none d-md-block px-3 py-2">
-        <table class="decore-table-premium mb-0 align-middle">
-            <thead>
-                <tr>
-                    <th class="text-nowrap-custom">Material &amp; Supplier</th>
-                    <th class="text-nowrap-custom">Assigned Worksite</th>
-                    <th class="text-nowrap-custom text-end">Total Procured</th>
-                    <th class="text-nowrap-custom text-end">Used Stock</th>
-                    <th class="text-nowrap-custom text-end">Balance Stock</th>
-                    <th class="text-nowrap-custom text-end">Unit Rate</th>
-                    <th class="text-nowrap-custom text-end">Total Valuation</th>
-                    <th class="text-nowrap-custom text-center">Procurement Status</th>
-                    <th class="text-nowrap-custom text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for mat in materials %}
-                <tr class="material-row" id="mat_row_{{ mat.id }}" data-material-name="{{ mat.name|lower }}" data-supplier-name="{{ mat.supplier|lower }}" data-status="{{ mat.status }}">
-                    <td class="text-nowrap-custom py-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="avatar-circle bg-primary-soft text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:36px; height:36px; font-size:0.85rem;">
-                                {{ mat.name|slice:":2"|upper }}
-                            </div>
-                            <div>
-                                <div class="fw-bold text-decore-primary mat-name-val">{{ mat.name }}</div>
-                                <div class="text-muted small mat-supplier-val" style="font-size:0.75rem;"><i class="bi bi-shop me-1 text-muted"></i>{{ mat.supplier }}</div>
+    <!-- Delivery Cards Grid View -->
+    <div class="px-3 pb-3">
+        <div class="row g-3">
+            {% for delivery in deliveries %}
+            <div class="col-xl-6 col-12 delivery-row" id="delivery_row_{{ delivery.id }}" data-supplier-name="{{ delivery.supplier|lower }}" data-status="{{ delivery.status }}">
+                <div class="card decore-card border shadow-sm p-4 h-100 position-relative">
+                    <!-- Header: Supplier, Date, Status Badge -->
+                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
+                        <div>
+                            <h5 class="fw-bold text-decore-primary mb-1"><i class="bi bi-truck me-2 text-primary"></i>{{ delivery.supplier }}</h5>
+                            <div class="text-muted small d-flex flex-wrap align-items-center gap-2">
+                                <span class="badge bg-light text-dark border px-2 py-0.5"><i class="bi bi-building me-1 text-secondary"></i>{{ delivery.worksite.name }}</span>
+                                <span><i class="bi bi-calendar3 me-1"></i>{{ delivery.delivery_date|date:"d M Y" }}</span>
                             </div>
                         </div>
-                    </td>
-                    <td class="text-nowrap-custom"><span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-building me-1 text-secondary"></i><span class="mat-worksite-val">{{ mat.worksite.name }}</span></span></td>
-                    <td class="text-nowrap-custom text-end font-monospace fw-bold text-dark fs-6"><span class="mat-qty-val">{{ mat.quantity }}</span> <span class="text-muted text-uppercase small mat-unit-val" style="font-size:0.7rem;">{{ mat.unit }}</span></td>
-                    <td class="text-nowrap-custom text-end font-monospace text-warning fw-bold fs-6"><span class="mat-used-val">{{ mat.used_quantity }}</span> <span class="text-muted text-uppercase small" style="font-size:0.7rem;">{{ mat.unit }}</span></td>
-                    <td class="text-nowrap-custom text-end font-monospace text-success fw-bold fs-6"><span class="mat-balance-val">{{ mat.balance_quantity }}</span> <span class="text-muted text-uppercase small" style="font-size:0.7rem;">{{ mat.unit }}</span></td>
-                    <td class="text-nowrap-custom text-end font-monospace text-muted">₹<span class="mat-price-val">{{ mat.unit_price|floatformat:2|intcomma }}</span></td>
-                    <td class="text-nowrap-custom text-end fw-bold text-decore-primary font-monospace fs-6">₹<span class="mat-total-val">{{ mat.total_cost|floatformat:2|intcomma }}</span></td>
-                    <td class="text-nowrap-custom text-center">
                         <div class="dropdown">
                             <button class="btn btn-sm border-0 p-0 dropdown-toggle shadow-none" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                {% if mat.status == 'Delivered' %}
+                                {% if delivery.status == 'Delivered' %}
                                 <span class="decore-status-badge badge-success status-badge-target"><span class="dot"></span>Delivered</span>
-                                {% elif mat.status == 'Ordered' %}
+                                {% elif delivery.status == 'Ordered' %}
                                 <span class="decore-status-badge badge-warning status-badge-target"><span class="dot"></span>Ordered</span>
                                 {% else %}
                                 <span class="decore-status-badge badge-secondary status-badge-target"><span class="dot"></span>Pending</span>
                                 {% endif %}
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="font-size: 0.82rem;">
-                                <li><a class="dropdown-item fw-semibold text-success" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Delivered'); return false;"><i class="bi bi-check-circle me-2"></i>Mark as Delivered</a></li>
-                                <li><a class="dropdown-item fw-semibold text-warning" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Ordered'); return false;"><i class="bi bi-clock-history me-2"></i>Mark as Ordered</a></li>
-                                <li><a class="dropdown-item fw-semibold text-secondary" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Pending'); return false;"><i class="bi bi-hourglass-split me-2"></i>Mark as Pending</a></li>
-                            </ul>
-                        </div>
-                    </td>
-                    <td class="text-nowrap-custom text-end">
-                        <button type="button" class="btn btn-sm btn-icon" title="Edit Item" onclick="openEditMaterialModal({{ mat.id }}, '{{ mat.name|escapejs }}', {{ mat.worksite.id }}, '{{ mat.quantity }}', '{{ mat.used_quantity }}', '{{ mat.unit|escapejs }}', '{{ mat.unit_price }}', '{{ mat.supplier|escapejs }}', '{{ mat.status }}')">
-                            <i class="bi bi-pencil text-primary"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-icon" title="Delete Item" onclick="deleteMaterialItem({{ mat.id }}, '{{ mat.name|escapejs }}')">
-                            <i class="bi bi-trash text-danger"></i>
-                        </button>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7">
-                        <div class="decore-empty-state py-5 text-center">
-                            <i class="bi bi-boxes text-muted fs-1 mb-2 d-block"></i>
-                            <p class="mb-0 text-muted fw-semibold">No materials registered in inventory yet.</p>
-                            <button type="button" class="btn btn-decore-primary btn-sm rounded-pill mt-3 px-4" onclick="openMaterialModal()">
-                                <i class="bi bi-plus-lg me-1"></i>Add First Material Stock
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Mobile Cards View (d-block d-md-none) -->
-    <div class="d-block d-md-none p-3">
-        <div class="row g-3">
-            {% for mat in materials %}
-            <div class="col-12 material-row" id="mat_card_{{ mat.id }}" data-material-name="{{ mat.name|lower }}" data-supplier-name="{{ mat.supplier|lower }}" data-status="{{ mat.status }}">
-                <div class="card decore-card border shadow-sm p-3 h-100 position-relative">
-                    <div class="d-flex align-items-start justify-content-between mb-2">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="avatar-circle bg-primary-soft text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width:34px; height:34px; font-size:0.8rem;">
-                                {{ mat.name|slice:":2"|upper }}
-                            </div>
-                            <div>
-                                <h6 class="fw-bold text-decore-primary mb-0 mat-name-val">{{ mat.name }}</h6>
-                                <span class="badge bg-light text-dark border me-1" style="font-size:0.68rem;"><i class="bi bi-building me-1"></i><span class="mat-worksite-val">{{ mat.worksite.name }}</span></span>
-                            </div>
-                        </div>
-                        <div class="dropdown">
-                            <button class="btn btn-sm border-0 p-0 dropdown-toggle shadow-none" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                {% if mat.status == 'Delivered' %}
-                                <span class="decore-status-badge badge-success status-badge-target" style="font-size:0.68rem;"><span class="dot"></span>Delivered</span>
-                                {% elif mat.status == 'Ordered' %}
-                                <span class="decore-status-badge badge-warning status-badge-target" style="font-size:0.68rem;"><span class="dot"></span>Ordered</span>
-                                {% else %}
-                                <span class="decore-status-badge badge-secondary status-badge-target" style="font-size:0.68rem;"><span class="dot"></span>Pending</span>
-                                {% endif %}
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="font-size: 0.82rem;">
-                                <li><a class="dropdown-item fw-semibold text-success" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Delivered'); return false;"><i class="bi bi-check-circle me-2"></i>Mark Delivered</a></li>
-                                <li><a class="dropdown-item fw-semibold text-warning" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Ordered'); return false;"><i class="bi bi-clock-history me-2"></i>Mark Ordered</a></li>
-                                <li><a class="dropdown-item fw-semibold text-secondary" href="#" onclick="updateMaterialStatus({{ mat.id }}, 'Pending'); return false;"><i class="bi bi-hourglass-split me-2"></i>Mark Pending</a></li>
+                                <li><a class="dropdown-item fw-semibold text-success" href="#" onclick="updateDeliveryStatus({{ delivery.id }}, 'Delivered'); return false;"><i class="bi bi-check-circle me-2"></i>Mark Delivered</a></li>
+                                <li><a class="dropdown-item fw-semibold text-warning" href="#" onclick="updateDeliveryStatus({{ delivery.id }}, 'Ordered'); return false;"><i class="bi bi-clock-history me-2"></i>Mark Ordered</a></li>
+                                <li><a class="dropdown-item fw-semibold text-secondary" href="#" onclick="updateDeliveryStatus({{ delivery.id }}, 'Pending'); return false;"><i class="bi bi-hourglass-split me-2"></i>Mark Pending</a></li>
                             </ul>
                         </div>
                     </div>
 
-                    <div class="bg-light-soft rounded p-2 mb-2">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-muted small" style="font-size:0.68rem;">Total Procured:</span>
-                            <span class="fw-bold font-monospace text-dark" style="font-size:0.8rem;"><span class="mat-qty-val">{{ mat.quantity }}</span> {{ mat.unit }}</span>
+                    <!-- Material Items List Inside Delivery -->
+                    <div class="bg-light-soft rounded p-3 mb-3 flex-grow-1">
+                        <div class="fw-semibold text-muted small mb-2 text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px;">Shipped Materials</div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless mb-0 align-middle" style="font-size:0.88rem;">
+                                <thead>
+                                    <tr class="text-muted border-bottom border-light" style="font-size:0.75rem;">
+                                        <th>Material</th>
+                                        <th class="text-end">Qty</th>
+                                        <th class="text-end">Rate</th>
+                                        <th class="text-end">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in delivery.items.all %}
+                                    <tr>
+                                        <td class="fw-semibold text-dark">{{ item.name }}</td>
+                                        <td class="text-end font-monospace text-secondary fw-semibold">{{ item.quantity|floatformat:0 }} <span class="small text-uppercase">{{ item.unit }}</span></td>
+                                        <td class="text-end font-monospace text-muted">₹{{ item.unit_price|floatformat:0 }}</td>
+                                        <td class="text-end font-monospace text-dark fw-bold">₹{{ item.total_cost|floatformat:0|intcomma }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-muted small" style="font-size:0.68rem;">Used Stock:</span>
-                            <span class="fw-bold font-monospace text-warning" style="font-size:0.8rem;"><span class="mat-used-val">{{ mat.used_quantity }}</span> {{ mat.unit }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="text-muted small" style="font-size:0.68rem;">Balance Stock:</span>
-                            <span class="fw-bold font-monospace text-success" style="font-size:0.8rem;"><span class="mat-balance-val">{{ mat.balance_quantity }}</span> {{ mat.unit }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center border-top border-light pt-1 mt-1">
-                            <span class="text-muted small" style="font-size:0.68rem;">Total Valuation:</span>
-                            <span class="fw-bold font-monospace text-decore-primary fs-6">₹<span class="mat-total-val">{{ mat.total_cost|floatformat:2|intcomma }}</span></span>
+                        <div class="d-flex justify-content-between align-items-center border-top border-light pt-2 mt-2">
+                            <span class="text-muted fw-bold small" style="font-size:0.72rem;">TOTAL VALUE:</span>
+                            <span class="fw-bold font-monospace text-decore-primary fs-5">₹{{ delivery.total_cost|floatformat:2|intcomma }}</span>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center text-muted small" style="font-size:0.72rem;">
-                        <div class="mat-supplier-val"><i class="bi bi-shop me-1"></i>{{ mat.supplier }}</div>
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="font-monospace">₹<span class="mat-price-val">{{ mat.unit_price|floatformat:2|intcomma }}</span> / {{ mat.unit }}</div>
-                            <button type="button" class="btn btn-sm btn-link p-0 text-primary ms-1" onclick="openEditMaterialModal({{ mat.id }}, '{{ mat.name|escapejs }}', {{ mat.worksite.id }}, '{{ mat.quantity }}', '{{ mat.used_quantity }}', '{{ mat.unit|escapejs }}', '{{ mat.unit_price }}', '{{ mat.supplier|escapejs }}', '{{ mat.status }}')"><i class="bi bi-pencil"></i></button>
-                            <button type="button" class="btn btn-sm btn-link p-0 text-danger ms-1" onclick="deleteMaterialItem({{ mat.id }}, '{{ mat.name|escapejs }}')"><i class="bi bi-trash"></i></button>
+                    <!-- Footer Actions -->
+                    <div class="d-flex justify-content-between align-items-center pt-1 border-top mt-auto">
+                        <div class="text-muted small" style="font-size:0.72rem;">Logged {{ delivery.created_at|timesince }} ago</div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1" style="font-size:0.75rem;" onclick="openEditDeliveryModal({{ delivery.id }}, '{{ delivery.supplier|escapejs }}', '{{ delivery.delivery_date|date:'Y-m-d' }}', '{{ delivery.status }}')">
+                                <i class="bi bi-pencil" style="font-size:0.75rem;"></i> Edit
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1" style="font-size:0.75rem;" onclick="deleteDeliveryItem({{ delivery.id }}, '{{ delivery.supplier|escapejs }}')">
+                                <i class="bi bi-trash" style="font-size:0.75rem;"></i> Delete
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
             {% empty %}
             <div class="col-12 py-5 text-center">
-                <i class="bi bi-boxes text-muted fs-1 mb-2 d-block"></i>
-                <p class="text-muted mb-0">No material items found.</p>
+                <div class="decore-empty-state py-5 text-center">
+                    <i class="bi bi-boxes text-muted fs-1 mb-2 d-block"></i>
+                    <p class="mb-0 text-muted fw-semibold">No material deliveries registered yet.</p>
+                    <button type="button" class="btn btn-decore-primary btn-sm rounded-pill mt-3 px-4" onclick="openMaterialModal()">
+                        <i class="bi bi-plus-lg me-1"></i>Log First Shipment
+                    </button>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -241,219 +181,104 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content decore-card border-0 shadow-lg">
             <div class="modal-header border-bottom border-light">
-                <div class="w-100">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="modal-title fw-bold" id="materialModalLabel"><i class="bi bi-box-seam text-primary me-2"></i>Add Material Inventory</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <!-- Navigation Tabs -->
-                    <ul class="nav nav-tabs card-header-tabs border-0" id="materialAddTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active fw-bold small py-2 px-3 border-0" id="single-tab" data-bs-toggle="tab" data-bs-target="#single-pane" type="button" role="tab" aria-controls="single-pane" aria-selected="true"><i class="bi bi-file-earmark-plus me-1"></i>Single Item</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link fw-bold small py-2 px-3 border-0" id="bulk-tab" data-bs-toggle="tab" data-bs-target="#bulk-pane" type="button" role="tab" aria-controls="bulk-pane" aria-selected="false"><i class="bi bi-boxes me-1"></i>Bulk Delivery (Multiple)</button>
-                        </li>
-                    </ul>
+                <div>
+                    <h5 class="modal-title fw-bold" id="materialModalLabel"><i class="bi bi-truck text-primary me-2"></i>Log Material Delivery</h5>
+                    <p class="small text-muted mb-0">Record a shipment of construction materials delivered to a site.</p>
                 </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            
-            <div class="modal-body p-4">
-                <div class="tab-content" id="materialAddTabsContent">
-                    <!-- Pane 1: Single Material -->
-                    <div class="tab-pane fade show active" id="single-pane" role="tabpanel" aria-labelledby="single-tab">
-                        <form id="materialForm" method="post" action="{% url 'materials:create' %}" onsubmit="handleMaterialSubmit(event)">
-                            {% csrf_token %}
-                            <div class="row g-3">
-                                <!-- Master Catalog Selector -->
-                                <div class="col-12">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <label class="form-label small fw-semibold mb-0" for="matCatalogSelect"><i class="bi bi-journal-bookmark me-1 text-primary"></i>Select Material from Master Catalog</label>
-                                        <button type="button" class="btn btn-link text-decore-primary text-decoration-none p-0 small fw-bold" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#masterCatalogModal">
-                                            <i class="bi bi-plus-circle me-1"></i>Manage Catalog Items
-                                        </button>
-                                    </div>
-                                    <select class="form-select fw-semibold border-primary shadow-sm" id="matCatalogSelect" onchange="handleCatalogSelect(this)">
-                                        <option value="">-- Choose Material --</option>
-                                        {% for cat in catalog_items %}
-                                        <option value="{{ cat.id }}" id="opt_cat_{{ cat.id }}" data-name="{{ cat.name }}" data-unit="{{ cat.default_unit }}" data-price="{{ cat.default_unit_price }}" data-supplier="{{ cat.default_supplier }}">
-                                            {{ cat.name }} ({{ cat.default_unit }}) — ₹{{ cat.default_unit_price|floatformat:2 }}
-                                        </option>
-                                        {% endfor %}
-                                        <option value="custom">+ Other / Custom Material...</option>
-                                    </select>
-                                    <div id="autoFillNotice" class="small text-success mt-1 d-none font-monospace" style="font-size: 0.72rem;">
-                                        <i class="bi bi-check-circle me-1"></i>Auto-populated Unit &amp; Price from Master Catalog. Price can be overridden below.
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6" id="matNameGroup">
-                                    <label class="form-label small fw-semibold" for="matName">Material Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="matName" name="name" placeholder="e.g. Cement, TMT Steel Bars" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold" for="matWorksite">Assigned Worksite <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="matWorksite" name="worksite" required>
-                                        <option value="">Select worksite</option>
-                                        {% for site in worksites %}
-                                        <option value="{{ site.id }}">{{ site.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold" for="matQty">Quantity <span class="text-danger">*</span></label>
-                                    <input type="number" step="0.01" min="0.01" class="form-control" id="matQty" name="quantity" placeholder="e.g. 5" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold" for="matUnit">Measurement Unit <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="matUnit" name="unit" placeholder="e.g. Bags, Tons, Pcs" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold" for="matPrice">Unit Price (₹) <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">₹</span>
-                                        <input type="number" step="0.01" min="0.01" class="form-control" id="matPrice" name="unit_price" placeholder="0.00" required>
-                                    </div>
-                                    <div class="form-text small" style="font-size: 0.68rem;">Editable if rate differs.</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold" for="matSupplier">Supplier Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="matSupplier" name="supplier" placeholder="e.g. BuildMart Materials" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold" for="matStatus">Procurement Status</label>
-                                    <select class="form-select" id="matStatus" name="status" required>
-                                        <option value="Delivered">Delivered</option>
-                                        <option value="Ordered">Ordered</option>
-                                        <option value="Pending">Pending</option>
-                                    </select>
-                                </div>
-
-                                <!-- Checkbox to save new custom material to master catalog -->
-                                <div class="col-12 d-none" id="saveCatalogCheckGroup">
-                                    <div class="form-check bg-light-soft p-2 ps-4 rounded border">
-                                        <input class="form-check-input" type="checkbox" id="saveToCatalog" name="save_to_catalog" value="1" checked>
-                                        <label class="form-check-label small fw-semibold text-decore-primary" for="saveToCatalog">
-                                            <i class="bi bi-bookmark-plus me-1"></i>Save this new material to Master Catalog for future 1-click reuse
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="d-flex justify-content-end gap-2 mt-4">
-                                <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Material</button>
-                            </div>
-                        </form>
-                    </div>
-                    
-                    <!-- Pane 2: Bulk Delivery -->
-                    <div class="tab-pane fade" id="bulk-pane" role="tabpanel" aria-labelledby="bulk-tab">
-                        <form id="bulkMaterialForm" onsubmit="handleBulkMaterialSubmit(event)">
-                            {% csrf_token %}
-                            <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Delivery Worksite <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="bulkMatWorksite" name="worksite" required>
-                                        <option value="">Select worksite</option>
-                                        {% for site in worksites %}
-                                        <option value="{{ site.id }}">{{ site.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Supplier Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="bulkMatSupplier" name="supplier" placeholder="e.g. BuildMart Materials" required>
-                                </div>
-                            </div>
-
-                            <!-- Desktop Labels Header (visible only on desktop) -->
-                            <div class="row g-2 px-3 py-1 mb-1 d-none d-md-flex text-muted small fw-semibold">
-                                <div class="col-md-4">Material Name *</div>
-                                <div class="col-md-2 text-end">Quantity *</div>
-                                <div class="col-md-2">Unit *</div>
-                                <div class="col-md-3 text-end">Unit Price (₹) *</div>
-                                <div class="col-md-1"></div>
-                            </div>
-                            <div id="bulkMaterialListContainer" class="pe-1 mb-3" style="max-height: 280px; overflow-y: auto; overflow-x: hidden;">
-                                <!-- Javascript appends card/grid items dynamically -->
-                            </div>
-
-                            <!-- Autocomplete datalist helper -->
-                            <datalist id="catalogItemsDatalist">
-                                {% for cat in catalog_items %}
-                                <option value="{{ cat.name }}" data-unit="{{ cat.default_unit }}" data-price="{{ cat.default_unit_price }}">{{ cat.name }}</option>
+            <form id="materialForm" method="post" action="{% url 'materials:create' %}" onsubmit="handleMaterialSubmit(event)">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <!-- Delivery details -->
+                    <div class="row g-3 mb-4 p-3 bg-light-soft rounded border">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="matWorksite">Delivery Worksite <span class="text-danger">*</span></label>
+                            <select class="form-select" id="matWorksite" name="worksite" required>
+                                <option value="">Select worksite</option>
+                                {% for site in worksites %}
+                                <option value="{{ site.id }}" {% if site.id|stringformat:"d" == selected_worksite_id %}selected{% endif %}>{{ site.name }}</option>
                                 {% endfor %}
-                            </datalist>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="matSupplier">Supplier Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="matSupplier" name="supplier" placeholder="e.g. BuildMart Materials" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="matDate">Delivery Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="matDate" name="delivery_date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="matStatus">Procurement Status</label>
+                            <select class="form-select fw-semibold text-decore-primary" id="matStatus" name="status" required>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Ordered">Ordered</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                    </div>
 
-                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="addBulkRow()">
-                                    <i class="bi bi-plus-lg me-1"></i>Add Row
-                                </button>
-                                <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Delivery</button>
-                                </div>
-                            </div>
-                        </form>
+                    <!-- Dynamic list of items -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-decore-primary mb-0"><i class="bi bi-list-task me-1"></i>Material Line Items</h6>
+                        <button type="button" class="btn btn-link text-decore-primary text-decoration-none p-0 small fw-bold" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#masterCatalogModal">
+                            <i class="bi bi-plus-circle me-1"></i>Manage Dropdown List
+                        </button>
+                    </div>
+
+                    <!-- Labels Header (desktop only) -->
+                    <div class="row g-2 px-3 py-1 mb-1 d-none d-md-flex text-muted small fw-semibold">
+                        <div class="col-md-4">Material Name *</div>
+                        <div class="col-md-2">Quantity *</div>
+                        <div class="col-md-2">Unit *</div>
+                        <div class="col-md-3">Unit Price (₹) *</div>
+                        <div class="col-md-1"></div>
+                    </div>
+
+                    <div id="bulkMaterialListContainer" class="pe-1 mb-3" style="max-height: 280px; overflow-y: auto; overflow-x: hidden;">
+                        <!-- JS appends rows here -->
+                    </div>
+
+                    <div class="pt-2 border-top">
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="addBulkRow()">
+                            <i class="bi bi-plus-lg me-1"></i>Add Material Row
+                        </button>
                     </div>
                 </div>
-            </div>
+                <div class="modal-footer border-top border-light">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-decore-primary rounded-pill px-4"><i class="bi bi-check-lg me-1"></i>Save Delivery Voucher</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Edit Site Material Item Modal -->
-<div class="modal fade" id="editMaterialModal" tabindex="-1" aria-labelledby="editMaterialModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+<!-- Edit Delivery Voucher Details Modal -->
+<div class="modal fade" id="editDeliveryModal" tabindex="-1" aria-labelledby="editDeliveryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content decore-card border-0 shadow-lg">
-            <form id="editMaterialForm" onsubmit="handleEditMaterialSubmit(event)">
+            <form id="editDeliveryForm" onsubmit="handleEditDeliverySubmit(event)">
                 {% csrf_token %}
-                <input type="hidden" id="editMatId">
+                <input type="hidden" id="editDeliveryId">
                 <div class="modal-header border-bottom border-light">
-                    <h5 class="modal-title fw-bold" id="editMaterialModalLabel"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Site Material Stock</h5>
+                    <h5 class="modal-title fw-bold" id="editDeliveryModalLabel"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Delivery Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Material Name *</label>
-                            <input type="text" class="form-control" id="editMatName" name="name" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Assigned Worksite *</label>
-                            <select class="form-select" id="editMatWorksite" name="worksite" required>
-                                {% for site in worksites %}
-                                <option value="{{ site.id }}">{{ site.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-semibold">Total Procured *</label>
-                            <input type="number" step="0.01" min="0.01" class="form-control" id="editMatQty" name="quantity" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-semibold">Used Stock</label>
-                            <input type="number" step="0.01" min="0" class="form-control" id="editMatUsedQty" name="used_quantity" placeholder="0.00" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-semibold">Measurement Unit *</label>
-                            <input type="text" class="form-control" id="editMatUnit" name="unit" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-semibold">Unit Price (₹) *</label>
-                            <div class="input-group">
-                                <span class="input-group-text">₹</span>
-                                <input type="number" step="0.01" min="0.01" class="form-control" id="editMatPrice" name="unit_price" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <label class="form-label small fw-semibold">Supplier Name *</label>
-                            <input type="text" class="form-control" id="editMatSupplier" name="supplier" required>
+                            <input type="text" class="form-control" id="editDeliverySupplier" name="supplier" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Delivery Date *</label>
+                            <input type="date" class="form-control" id="editDeliveryDate" name="delivery_date" required>
+                        </div>
+                        <div class="col-12">
                             <label class="form-label small fw-semibold">Procurement Status</label>
-                            <select class="form-select" id="editMatStatus" name="status" required>
+                            <select class="form-select fw-semibold text-decore-primary" id="editDeliveryStatus" name="status" required>
                                 <option value="Delivered">Delivered</option>
                                 <option value="Ordered">Ordered</option>
                                 <option value="Pending">Pending</option>
@@ -611,18 +436,17 @@
         const modalEl = document.getElementById("materialModal");
         const form = document.getElementById("materialForm");
         form.reset();
-        document.getElementById("autoFillNotice").classList.add("d-none");
-        document.getElementById("saveCatalogCheckGroup").classList.add("d-none");
         
-        // Reset and populate bulk tab
-        const bulkForm = document.getElementById("bulkMaterialForm");
-        if (bulkForm) {
-            bulkForm.reset();
-            const container = document.getElementById("bulkMaterialListContainer");
-            if (container) {
-                container.innerHTML = "";
-                addBulkRow(); // add initial empty row
-            }
+        // Auto set delivery date to today
+        const dateInput = document.getElementById("matDate");
+        if (dateInput) {
+            dateInput.value = new Date().toISOString().split('T')[0];
+        }
+
+        const container = document.getElementById("bulkMaterialListContainer");
+        if (container) {
+            container.innerHTML = "";
+            addBulkRow(); // add initial empty row
         }
         
         bootstrap.Modal.getOrCreateInstance(modalEl).show();
@@ -685,8 +509,6 @@
             '</div>';
 
         container.appendChild(div);
-        
-        // Auto scroll to bottom of container on mobile so the user sees the new row immediately
         container.scrollTop = container.scrollHeight;
     }
 
@@ -694,7 +516,6 @@
         const row = document.getElementById(rowId);
         if (row) {
             const container = document.getElementById("bulkMaterialListContainer");
-            // Keep at least one row
             if (container && container.children.length > 1) {
                 row.remove();
             } else {
@@ -722,7 +543,6 @@
             customInput.required = false;
             hiddenInput.value = select.value;
             
-            // Auto populate values
             const selectedOption = select.options[select.selectedIndex];
             if (selectedOption) {
                 if (unitInput && selectedOption.dataset.unit) {
@@ -743,11 +563,11 @@
         }
     }
 
-    function handleBulkMaterialSubmit(event) {
+    function handleMaterialSubmit(event) {
         event.preventDefault();
         
-        const worksite = document.getElementById("bulkMatWorksite").value;
-        const supplier = document.getElementById("bulkMatSupplier").value.trim();
+        const worksite = document.getElementById("matWorksite").value;
+        const supplier = document.getElementById("matSupplier").value.trim();
         if (!worksite) {
             decoreToast("Please select a delivery worksite.", "danger");
             return;
@@ -757,7 +577,6 @@
             return;
         }
 
-        // Validate items
         const container = document.getElementById("bulkMaterialListContainer");
         if (!container || container.children.length === 0) {
             decoreToast("Please add at least one material to log.", "danger");
@@ -769,7 +588,7 @@
         const formData = new FormData(form);
         const csrfToken = '{{ csrf_token }}';
 
-        fetch('{% url "materials:bulk_create" %}', {
+        fetch('{% url "materials:create" %}', {
             method: 'POST',
             body: formData,
             headers: {
@@ -785,7 +604,7 @@
                 decoreToast(data.message, 'success');
                 setTimeout(() => location.reload(), 600);
             } else {
-                decoreToast(data.error || 'Failed to save bulk delivery.', 'danger');
+                decoreToast(data.error || 'Failed to save delivery.', 'danger');
             }
         })
         .catch(err => {
@@ -794,7 +613,7 @@
         });
     }
 
-    function updateMaterialStatus(id, newStatus) {
+    function updateDeliveryStatus(id, newStatus) {
         decoreShowLoading();
         const csrfToken = '{{ csrf_token }}';
         const formData = new FormData();
@@ -824,23 +643,18 @@
         });
     }
 
-    function openEditMaterialModal(id, name, worksiteId, qty, usedQty, unit, price, supplier, status) {
-        document.getElementById("editMatId").value = id;
-        document.getElementById("editMatName").value = name;
-        document.getElementById("editMatWorksite").value = worksiteId;
-        document.getElementById("editMatQty").value = qty;
-        document.getElementById("editMatUsedQty").value = usedQty;
-        document.getElementById("editMatUnit").value = unit;
-        document.getElementById("editMatPrice").value = parseFloat(price || 0).toFixed(2);
-        document.getElementById("editMatSupplier").value = supplier;
-        document.getElementById("editMatStatus").value = status;
+    function openEditDeliveryModal(id, supplier, date, status) {
+        document.getElementById("editDeliveryId").value = id;
+        document.getElementById("editDeliverySupplier").value = supplier;
+        document.getElementById("editDeliveryDate").value = date;
+        document.getElementById("editDeliveryStatus").value = status;
         
-        bootstrap.Modal.getOrCreateInstance(document.getElementById("editMaterialModal")).show();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("editDeliveryModal")).show();
     }
 
-    function handleEditMaterialSubmit(event) {
+    function handleEditDeliverySubmit(event) {
         event.preventDefault();
-        const id = document.getElementById("editMatId").value;
+        const id = document.getElementById("editDeliveryId").value;
         const form = event.target;
         const formData = new FormData(form);
         const csrfToken = '{{ csrf_token }}';
@@ -858,11 +672,11 @@
         .then(data => {
             decoreHideLoading();
             if (data.success) {
-                bootstrap.Modal.getInstance(document.getElementById("editMaterialModal")).hide();
+                bootstrap.Modal.getInstance(document.getElementById("editDeliveryModal")).hide();
                 decoreToast(data.message, 'success');
                 setTimeout(() => location.reload(), 600);
             } else {
-                decoreToast(data.error || 'Failed to update material item.', 'danger');
+                decoreToast(data.error || 'Failed to update delivery.', 'danger');
             }
         })
         .catch(err => {
@@ -871,8 +685,8 @@
         });
     }
 
-    function deleteMaterialItem(id, name) {
-        decoreConfirm(`Are you sure you want to delete "${name}" from inventory?`, function() {
+    function deleteDeliveryItem(id, supplier) {
+        decoreConfirm('Are you sure you want to delete this delivery from "' + supplier + '"? All items inside will be removed from site stock.', function() {
             decoreShowLoading();
             const csrfToken = '{{ csrf_token }}';
             fetch(`/materials/${id}/delete/`, {
@@ -889,7 +703,7 @@
                     decoreToast(data.message, 'success');
                     setTimeout(() => location.reload(), 600);
                 } else {
-                    decoreToast(data.error || 'Failed to delete material item.', 'danger');
+                    decoreToast(data.error || 'Failed to delete delivery.', 'danger');
                 }
             })
             .catch(err => {
@@ -897,33 +711,6 @@
                 decoreToast('Connection error.', 'danger');
             });
         });
-    }
-
-    function handleCatalogSelect(selectEl) {
-        const selectedOpt = selectEl.selectedOptions[0];
-        const val = selectEl.value;
-        const noticeEl = document.getElementById("autoFillNotice");
-        const checkGroup = document.getElementById("saveCatalogCheckGroup");
-
-        if (val && val !== 'custom') {
-            document.getElementById("matName").value = selectedOpt.dataset.name || '';
-            document.getElementById("matUnit").value = selectedOpt.dataset.unit || '';
-            document.getElementById("matPrice").value = parseFloat(selectedOpt.dataset.price || 0).toFixed(2);
-            if (selectedOpt.dataset.supplier) {
-                document.getElementById("matSupplier").value = selectedOpt.dataset.supplier;
-            }
-            noticeEl.classList.remove("d-none");
-            checkGroup.classList.add("d-none");
-        } else if (val === 'custom') {
-            document.getElementById("matName").value = '';
-            document.getElementById("matUnit").value = '';
-            document.getElementById("matPrice").value = '';
-            noticeEl.classList.add("d-none");
-            checkGroup.classList.remove("d-none");
-        } else {
-            noticeEl.classList.add("d-none");
-            checkGroup.classList.add("d-none");
-        }
     }
 
     function handleNewCatalogSubmit(event) {
@@ -947,17 +734,13 @@
                 decoreToast(data.message, 'success');
                 const item = data.catalog_item;
                 
-                // Add to Add Material Dropdown
-                const selectEl = document.getElementById("matCatalogSelect");
-                const opt = document.createElement("option");
-                opt.id = `opt_cat_${item.id}`;
-                opt.value = item.id;
-                opt.dataset.name = item.name;
-                opt.dataset.unit = item.default_unit;
-                opt.dataset.price = item.default_unit_price;
-                opt.dataset.supplier = item.default_supplier;
-                opt.textContent = `${item.name} (${item.default_unit}) — ₹${item.default_unit_price.toFixed(2)}`;
-                selectEl.insertBefore(opt, selectEl.lastElementChild);
+                // Add to new row select template cache
+                catalogItems.push({
+                    id: item.id,
+                    name: item.name,
+                    unit: item.default_unit,
+                    price: item.default_unit_price
+                });
                 
                 // Add to Catalog Table
                 const tbody = document.getElementById("catalogTableBody");
@@ -1032,14 +815,12 @@
                     row.querySelector('.cat-supplier').textContent = item.default_supplier || '—';
                 }
 
-                // Update Option in Select Dropdown
-                const opt = document.getElementById(`opt_cat_${id}`);
-                if (opt) {
-                    opt.dataset.name = item.name;
-                    opt.dataset.unit = item.default_unit;
-                    opt.dataset.price = item.default_unit_price;
-                    opt.dataset.supplier = item.default_supplier;
-                    opt.textContent = `${item.name} (${item.default_unit}) — ₹${item.default_unit_price.toFixed(2)}`;
+                // Update catalogItems array cache
+                const index = catalogItems.findIndex(c => c.id === parseInt(id));
+                if (index !== -1) {
+                    catalogItems[index].name = item.name;
+                    catalogItems[index].unit = item.default_unit;
+                    catalogItems[index].price = item.default_unit_price;
                 }
 
                 bootstrap.Modal.getOrCreateInstance(document.getElementById("masterCatalogModal")).show();
@@ -1071,8 +852,9 @@
                     decoreToast(data.message, 'success');
                     const row = document.getElementById(`cat_row_${id}`);
                     if (row) row.remove();
-                    const opt = document.getElementById(`opt_cat_${id}`);
-                    if (opt) opt.remove();
+                    
+                    const index = catalogItems.findIndex(c => c.id === parseInt(id));
+                    if (index !== -1) catalogItems.splice(index, 1);
                 } else {
                     decoreToast(data.error || 'Failed to remove catalog item.', 'danger');
                 }
@@ -1106,13 +888,19 @@
 
     function applyFilters() {
         const query = document.getElementById("materialsSearch").value.toLowerCase();
-        const rows = document.querySelectorAll(".material-row");
+        const rows = document.querySelectorAll(".delivery-row");
         rows.forEach(row => {
-            const name = row.dataset.materialName || '';
             const supplier = row.dataset.supplierName || '';
             const status = row.dataset.status || '';
 
-            const matchesSearch = name.includes(query) || supplier.includes(query);
+            let matchesItems = false;
+            row.querySelectorAll("tbody tr td:first-child").forEach(td => {
+                if (td.textContent.toLowerCase().includes(query)) {
+                    matchesItems = true;
+                }
+            });
+
+            const matchesSearch = supplier.includes(query) || matchesItems;
             const matchesStatus = (activeStatusFilter === 'all') || (status.toLowerCase() === activeStatusFilter.toLowerCase());
 
             if (matchesSearch && matchesStatus) {
@@ -1123,51 +911,6 @@
         });
     }
 
-    // Client-side instant search filtering
     document.getElementById("materialsSearch").addEventListener("input", applyFilters);
-
-    function handleMaterialSubmit(event) {
-        event.preventDefault();
-        
-        const qty = parseFloat(document.getElementById("matQty").value);
-        const price = parseFloat(document.getElementById("matPrice").value);
-        
-        if (isNaN(qty) || qty <= 0) {
-            decoreToast("Quantity must be greater than 0.", "danger");
-            return;
-        }
-        if (isNaN(price) || price <= 0) {
-            decoreToast("Unit price must be greater than 0.", "danger");
-            return;
-        }
-        
-        decoreShowLoading();
-        
-        const form = event.target;
-        fetch(form.action, {
-            method: "POST",
-            body: new FormData(form),
-            headers: {
-                "X-Requested-With": "XMLHttpRequest"
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            decoreHideLoading();
-            if (data.success) {
-                bootstrap.Modal.getInstance(document.getElementById("materialModal")).hide();
-                decoreToast(data.message, 'success');
-                setTimeout(() => {
-                    location.reload();
-                }, 800);
-            } else {
-                decoreToast(data.error || "Failed to add material.", 'danger');
-            }
-        })
-        .catch(err => {
-            decoreHideLoading();
-            decoreToast("Connection error.", 'danger');
-        });
-    }
 </script>
 {% endblock %}
