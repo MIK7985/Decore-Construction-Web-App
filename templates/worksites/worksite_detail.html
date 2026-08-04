@@ -491,7 +491,7 @@
                             <td class="fw-bold text-decore-primary">{{ mat.name }}</td>
                             <td class="text-end font-monospace fw-semibold">{{ mat.quantity|floatformat:0 }} <span class="small text-uppercase text-muted">{{ mat.unit }}</span></td>
                             <td class="text-end font-monospace text-warning fw-semibold">{{ mat.used_quantity|floatformat:0 }} <span class="small text-uppercase text-muted">{{ mat.unit }}</span></td>
-                            <td class="text-end font-monospace fw-bold {% if mat.balance_quantity == 0 %}text-danger{% else %}text-success{% endif %}">{{ mat.balance_quantity|floatformat:0 }} <span class="small text-uppercase text-muted">{{ mat.unit }}</span></td>
+                            <td class="text-end font-monospace fw-bold {% if mat.balance_quantity < 5 %}text-danger{% else %}text-success{% endif %}">{{ mat.balance_quantity|floatformat:0 }} <span class="small text-uppercase text-muted">{{ mat.unit }}</span></td>
                             <td class="text-end font-monospace text-muted">₹{{ mat.unit_price|floatformat:2|intcomma }}</td>
                             <td class="text-end fw-bold text-decore-primary font-monospace">₹{{ mat.total_cost|floatformat:2|intcomma }}</td>
                             <td class="text-end">
@@ -531,7 +531,7 @@
                         </div>
                         <div class="col-4">
                             <div class="text-muted fw-semibold" style="font-size:0.6rem;">BALANCE</div>
-                            <div class="fw-bold font-monospace {% if mat.balance_quantity == 0 %}text-danger{% else %}text-success{% endif %}">{{ mat.balance_quantity|floatformat:0 }} <span class="text-muted text-uppercase" style="font-size:0.6rem;">{{ mat.unit }}</span></div>
+                            <div class="fw-bold font-monospace {% if mat.balance_quantity < 5 %}text-danger{% else %}text-success{% endif %}">{{ mat.balance_quantity|floatformat:0 }} <span class="text-muted text-uppercase" style="font-size:0.6rem;">{{ mat.unit }}</span></div>
                         </div>
                     </div>
                     <div class="row g-2 small text-muted" style="font-size:0.78rem;">
