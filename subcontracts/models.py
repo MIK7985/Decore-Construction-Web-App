@@ -25,6 +25,7 @@ class SubcontractStatus(models.TextChoices):
 class Subcontract(models.Model):
     worksite = models.ForeignKey(Worksite, on_delete=models.CASCADE, related_name="subcontracts")
     contractor_name = models.CharField(max_length=150)
+    phone = models.CharField(max_length=20, blank=True, help_text="Subcontractor contact phone number for WhatsApp receipts")
     trade = models.CharField(max_length=50, choices=SubcontractCategory.choices, default=SubcontractCategory.OTHER)
     title = models.CharField(max_length=200)
     contract_amount = models.DecimalField(max_digits=14, decimal_places=2)
@@ -72,3 +73,14 @@ class SubcontractPayment(models.Model):
 
     def __str__(self):
         return f"₹{self.amount} to {self.subcontract.contractor_name} on {self.payment_date}"
+
+    @property
+    def secure_token(self):
+        import hashlib
+        from django.conf import settings
+        return hashlib.sha256(f"subcontract-payment-{self.pk}-{settings.SECRET_KEY}".encode()).hexdigest()[:16]
+
+    @property
+    def receipt_url(self):
+        from django.urls import reverse
+        return reverse("subcontracts:payment_pdf", kwargs={"pk": self.pk}) + f"?token={self.secure_token}"

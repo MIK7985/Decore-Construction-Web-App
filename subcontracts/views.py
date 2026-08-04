@@ -1,9 +1,13 @@
+import hashlib
+import urllib.parse
 from decimal import Decimal
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Sum
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -13,7 +17,12 @@ from django.views.generic import ListView
 from accounts.mixins import EngineerRequiredMixin
 from worksites.models import Worksite
 from payments.models import Payment
+from reports.pdf_generator import generate_subcontract_receipt_pdf
 from .models import Subcontract, SubcontractCategory, SubcontractPayment, SubcontractStatus
+
+
+def get_subcontract_payment_token(payment_pk):
+    return hashlib.sha256(f"subcontract-payment-{payment_pk}-{settings.SECRET_KEY}".encode()).hexdigest()[:16]
 
 
 class SubcontractListView(LoginRequiredMixin, EngineerRequiredMixin, ListView):
@@ -71,6 +80,7 @@ class SubcontractCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         worksite_id = request.POST.get("worksite_id")
         contractor_name = request.POST.get("contractor_name", "").strip()
+        phone = request.POST.get("phone", "").strip()
         trade = request.POST.get("trade", "").strip()
         title = request.POST.get("title", "").strip()
         amount_str = request.POST.get("contract_amount", "0").strip()
@@ -108,6 +118,7 @@ class SubcontractCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
         subcontract = Subcontract.objects.create(
             worksite=worksite,
             contractor_name=contractor_name,
+            phone=phone,
             trade=trade or SubcontractCategory.OTHER,
             title=title,
             contract_amount=contract_amount,
@@ -127,6 +138,7 @@ class SubcontractUpdateView(LoginRequiredMixin, EngineerRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         subcontract = get_object_or_404(Subcontract, pk=pk)
         contractor_name = request.POST.get("contractor_name", "").strip()
+        phone = request.POST.get("phone", "").strip()
         trade = request.POST.get("trade", "").strip()
         title = request.POST.get("title", "").strip()
         amount_str = request.POST.get("contract_amount", "").strip()
@@ -135,6 +147,7 @@ class SubcontractUpdateView(LoginRequiredMixin, EngineerRequiredMixin, View):
 
         if contractor_name:
             subcontract.contractor_name = contractor_name
+        subcontract.phone = phone
         if trade in [c.value for c in SubcontractCategory]:
             subcontract.trade = trade
         if title:
@@ -203,7 +216,7 @@ class SubcontractPaymentCreateView(LoginRequiredMixin, EngineerRequiredMixin, Vi
             except Exception:
                 pass
 
-        SubcontractPayment.objects.create(
+        payment = SubcontractPayment.objects.create(
             subcontract=subcontract,
             amount=amount,
             payment_date=payment_date,
@@ -217,9 +230,34 @@ class SubcontractPaymentCreateView(LoginRequiredMixin, EngineerRequiredMixin, Vi
             subcontract.status = SubcontractStatus.COMPLETED
             subcontract.save(update_fields=["status"])
 
+        # Generate WhatsApp link if phone is provided
+        wa_link = None
+        if subcontract.phone:
+            phone_clean = "".join(filter(str.isdigit, subcontract.phone))
+            if len(phone_clean) == 10:
+                phone_clean = "91" + phone_clean
+            if phone_clean:
+                token = get_subcontract_payment_token(payment.pk)
+                receipt_pdf_url = request.build_absolute_uri(
+                    reverse("subcontracts:payment_pdf", kwargs={"pk": payment.pk}) + f"?token={token}"
+                )
+                msg_text = (
+                    f"Hello {subcontract.contractor_name},\n\n"
+                    f"A payment disbursement of ₹{payment.amount:,.2f} for {subcontract.get_trade_display()} ({subcontract.title}) "
+                    f"on worksite '{subcontract.worksite.name}' has been processed successfully!\n\n"
+                    f"• Payment Method: {payment.get_payment_method_display()}\n"
+                    f"• Contract Valuation: ₹{subcontract.contract_amount:,.2f}\n"
+                    f"• Total Paid to Date: ₹{subcontract.paid_amount:,.2f}\n"
+                    f"• Remaining Balance: ₹{subcontract.balance_amount:,.2f}\n\n"
+                    f"View Official Payment Receipt PDF:\n{receipt_pdf_url}\n\n"
+                    f"Thank you,\nDecore Construction Management"
+                )
+                wa_link = f"https://wa.me/{phone_clean}?text={urllib.parse.quote(msg_text)}"
+
         return JsonResponse({
             "success": True,
-            "message": f"Logged disbursement of ₹{amount:,.2f} to {subcontract.contractor_name}."
+            "message": f"Logged disbursement of ₹{amount:,.2f} to {subcontract.contractor_name}.",
+            "whatsapp_link": wa_link
         })
 
 
@@ -235,3 +273,36 @@ class SubcontractPaymentDeleteView(LoginRequiredMixin, EngineerRequiredMixin, Vi
             subcontract.save(update_fields=["status"])
 
         return JsonResponse({"success": True, "message": f"Reversed payment of ₹{amt:,.2f} for {subcontract.contractor_name}."})
+
+
+class SubcontractPaymentReceiptPdfView(View):
+    def get(self, request, pk, *args, **kwargs):
+        if not request.user.is_authenticated:
+            token = request.GET.get('token')
+            expected_token = get_subcontract_payment_token(pk)
+            if not token or token != expected_token:
+                return HttpResponseForbidden("Access Denied: Invalid or missing secure receipt token.")
+
+        payment = get_object_or_404(SubcontractPayment.objects.select_related("subcontract", "subcontract__worksite"), pk=pk)
+        subcontract = payment.subcontract
+
+        data = {
+            'contractor_name': subcontract.contractor_name,
+            'trade_display': subcontract.get_trade_display(),
+            'title': subcontract.title,
+            'phone': subcontract.phone,
+            'worksite_name': subcontract.worksite.name,
+            'payment_date': payment.payment_date.strftime("%d %b %Y"),
+            'disbursed_amount': float(payment.amount),
+            'payment_method': payment.get_payment_method_display(),
+            'reference_number': payment.reference_number,
+            'contract_amount': float(subcontract.contract_amount),
+            'paid_amount': float(subcontract.paid_amount),
+            'balance_amount': float(subcontract.balance_amount),
+            'notes': payment.notes
+        }
+
+        pdf = generate_subcontract_receipt_pdf(data)
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="Subcontract_Receipt_{subcontract.contractor_name}_{payment.payment_date}.pdf"'
+        return response

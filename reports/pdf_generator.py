@@ -499,3 +499,107 @@ def generate_salary_receipt_pdf(data):
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
+
+def generate_subcontract_receipt_pdf(data):
+    """
+    Generate a clean, high-precision PDF payment receipt for Subcontractors.
+    """
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        rightMargin=28, leftMargin=28, topMargin=28, bottomMargin=28
+    )
+    story = []
+    styles = getSampleStyleSheet()
+
+    primary_color = colors.HexColor('#1e3a8a')
+    card_bg = colors.HexColor('#f8fafc')
+
+    # Brand Header
+    logo_path = get_decore_logo_path()
+    if logo_path:
+        logo_img = Image(logo_path, width=0.45*inch, height=0.45*inch)
+        brand_p = Paragraph("<font size='16' color='#1e3a8a'><b>DECORE CONSTRUCTION</b></font><br/><font size='8' color='#64748b'>Subcontractor Payment Voucher</font>", styles['Normal'])
+        header_tbl = Table([[logo_img, brand_p]], colWidths=[0.6*inch, 6.9*inch])
+        header_tbl.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
+        story.append(header_tbl)
+    else:
+        story.append(Paragraph("<font size='16' color='#1e3a8a'><b>DECORE CONSTRUCTION</b></font>", styles['Normal']))
+    
+    story.append(Spacer(1, 10))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=primary_color, spaceAfter=15))
+
+    # Meta Info Card
+    meta_html = f"""
+    <b>SUBCONTRACTOR:</b> {data.get('contractor_name')}<br/>
+    <b>TRADE &amp; SCOPE:</b> {data.get('trade_display')} &bull; {data.get('title')}<br/>
+    <b>WORKSITE:</b> {data.get('worksite_name')}<br/>
+    <b>CONTACT PHONE:</b> {data.get('phone') or 'N/A'}
+    """
+    date_html = f"""
+    <b>PAYMENT DATE:</b> {data.get('payment_date')}<br/>
+    <b>PAYMENT METHOD:</b> {data.get('payment_method')}<br/>
+    <b>REFERENCE / UTR:</b> {data.get('reference_number') or 'N/A'}<br/>
+    <b>VOUCHER STATUS:</b> <font color='#16a34a'><b>DISBURSED</b></font>
+    """
+    p_meta = Paragraph(meta_html, ParagraphStyle('MetaL', parent=styles['Normal'], leading=14, fontSize=8.5))
+    p_date = Paragraph(date_html, ParagraphStyle('MetaR', parent=styles['Normal'], leading=14, fontSize=8.5, alignment=2))
+    
+    meta_table = Table([[p_meta, p_date]], colWidths=[4.2*inch, 3.3*inch])
+    meta_table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), card_bg),
+        ('PADDING', (0,0), (-1,-1), 8),
+        ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#e2e8f0')),
+        ('VALIGN', (0,0), (-1,-1), 'TOP')
+    ]))
+    story.append(meta_table)
+    story.append(Spacer(1, 15))
+
+    # Payment Breakdown Table
+    cell_h = ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', textColor=colors.white, fontSize=9)
+    cell_l = ParagraphStyle('TL', parent=styles['Normal'], fontSize=8.5)
+    cell_r = ParagraphStyle('TR', parent=styles['Normal'], fontSize=8.5, alignment=2)
+
+    rows = [
+        [Paragraph("DESCRIPTION", cell_h), Paragraph("VALUATION", ParagraphStyle('THr', parent=cell_h, alignment=2))],
+        [Paragraph("Agreed Contract Amount", cell_l), Paragraph(f"Rs. {data.get('contract_amount', 0):,.2f}", cell_r)],
+        [Paragraph("Total Cumulative Paid (Including this Payment)", cell_l), Paragraph(f"Rs. {data.get('paid_amount', 0):,.2f}", cell_r)],
+        [Paragraph("Remaining Contract Balance Outstanding", cell_l), Paragraph(f"Rs. {data.get('balance_amount', 0):,.2f}", cell_r)],
+    ]
+    tbl = Table(rows, colWidths=[5.2*inch, 2.3*inch])
+    tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), primary_color),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1')),
+        ('PADDING', (0,0), (-1,-1), 6),
+    ]))
+    story.append(tbl)
+    story.append(Spacer(1, 15))
+
+    # Payment Amount Banner
+    disbursed = data.get('disbursed_amount', 0)
+    net_p = Paragraph(f"<b>AMOUNT DISBURSED IN THIS PAYMENT:</b> &nbsp;&nbsp;<font size='14' color='#16a34a'><b>Rs. {disbursed:,.2f}</b></font>", ParagraphStyle('Net', parent=styles['Normal'], alignment=2))
+    net_tbl = Table([[net_p]], colWidths=[7.5*inch])
+    net_tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#f0fdf4')),
+        ('BOX', (0,0), (-1,-1), 1.5, colors.HexColor('#16a34a')),
+        ('PADDING', (0,0), (-1,-1), 8),
+    ]))
+    story.append(net_tbl)
+    story.append(Spacer(1, 25))
+
+    # Signature Block
+    sign_l = Paragraph("<b>SUBCONTRACTOR ACKNOWLEDGEMENT</b><br/><br/><br/>_______________________<br/><font color='#64748b' size='7.5'>Subcontractor Signature</font>", styles['Normal'])
+    sign_r = Paragraph("<b>AUTHORIZED ISSUER</b><br/><br/><br/>_______________________<br/><font color='#64748b' size='7.5'>Decore Site Manager / Engineer</font>", ParagraphStyle('R', parent=styles['Normal'], alignment=2))
+    sign_tbl = Table([[sign_l, sign_r]], colWidths=[3.75*inch, 3.75*inch])
+    sign_tbl.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'BOTTOM')]))
+    story.append(sign_tbl)
+
+    story.append(Spacer(1, 20))
+    footer = "<font size='7' color='#94a3b8'>Decore Construction Platform &bull; Official Subcontractor Payment Receipt</font>"
+    story.append(Paragraph(footer, ParagraphStyle('F', parent=styles['Normal'], alignment=1)))
+
+    doc.build(story)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf

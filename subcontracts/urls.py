@@ -10,4 +10,5 @@ urlpatterns = [
     path("<int:pk>/delete/", views.SubcontractDeleteView.as_view(), name="delete"),
     path("payments/create/", views.SubcontractPaymentCreateView.as_view(), name="payment_create"),
     path("payments/<int:pk>/delete/", views.SubcontractPaymentDeleteView.as_view(), name="payment_delete"),
+    path("payments/<int:pk>/receipt/pdf/", views.SubcontractPaymentReceiptPdfView.as_view(), name="payment_pdf"),
 ]

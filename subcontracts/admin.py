@@ -3,9 +3,9 @@ from .models import Subcontract, SubcontractPayment
 
 @admin.register(Subcontract)
 class SubcontractAdmin(admin.ModelAdmin):
-    list_display = ("contractor_name", "trade", "title", "worksite", "contract_amount", "paid_amount", "balance_amount", "status")
+    list_display = ("contractor_name", "phone", "trade", "title", "worksite", "contract_amount", "paid_amount", "balance_amount", "status")
     list_filter = ("status", "trade", "worksite")
-    search_fields = ("contractor_name", "title", "worksite__name")
+    search_fields = ("contractor_name", "phone", "title", "worksite__name")
 
 @admin.register(SubcontractPayment)
 class SubcontractPaymentAdmin(admin.ModelAdmin):
