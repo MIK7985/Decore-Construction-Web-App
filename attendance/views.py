@@ -120,6 +120,11 @@ class AttendanceSheetView(LoginRequiredMixin, View):
             if not date_str:
                 return JsonResponse({'success': False, 'error': 'Date is required.'}, status=400)
 
+            # Pre-fetch active employees to avoid N+1 database queries
+            employees_dict = {
+                e.id: e for e in Employee.objects.filter(is_archived=False)
+            }
+
             with transaction.atomic():
                 for item in records:
                     emp_id = item.get('employee_id')
@@ -130,7 +135,10 @@ class AttendanceSheetView(LoginRequiredMixin, View):
                     if not emp_id or not status:
                         continue
 
-                    emp = Employee.objects.get(id=emp_id)
+                    emp = employees_dict.get(int(emp_id))
+                    if not emp:
+                        continue
+
                     if not worksite_id and emp.worksite_id:
                         worksite_id = emp.worksite_id
 

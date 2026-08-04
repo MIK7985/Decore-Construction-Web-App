@@ -1080,14 +1080,15 @@
         const clientBalance = parseFloat("{{ worksite.client_balance|stringformat:'.2f' }}");
 
         // 1. Budget Breakdown Chart
+        const hasBudgetData = spend > 0 || profit > 0;
         const budgetCtx = document.getElementById('budgetBreakdownChart').getContext('2d');
         const budgetChart = new Chart(budgetCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Spend', 'Profit Margin'],
+                labels: hasBudgetData ? ['Spend', 'Profit Margin'] : ['No Spend Data'],
                 datasets: [{
-                    data: [spend, profit > 0 ? profit : 0],
-                    backgroundColor: ['#ef4444', '#10b981'],
+                    data: hasBudgetData ? [spend, profit > 0 ? profit : 0] : [1],
+                    backgroundColor: hasBudgetData ? ['#ef4444', '#10b981'] : ['#e2e8f0'],
                     borderWidth: 0
                 }]
             },
@@ -1107,6 +1108,7 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        enabled: hasBudgetData,
                         callbacks: {
                             label: function(context) {
                                 return context.label + ': ₹' + context.raw.toLocaleString('en-IN', {maximumFractionDigits: 2});
@@ -1119,14 +1121,15 @@
         });
 
         // 2. Billing Status Chart
+        const hasBillingData = clientPaid > 0 || clientBalance > 0;
         const billingCtx = document.getElementById('billingStatusChart').getContext('2d');
         const billingChart = new Chart(billingCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Paid', 'Balance Due'],
+                labels: hasBillingData ? ['Paid', 'Balance Due'] : ['No Billing Data'],
                 datasets: [{
-                    data: [clientPaid, clientBalance > 0 ? clientBalance : 0],
-                    backgroundColor: ['#3b82f6', '#f59e0b'],
+                    data: hasBillingData ? [clientPaid, clientBalance > 0 ? clientBalance : 0] : [1],
+                    backgroundColor: hasBillingData ? ['#3b82f6', '#f59e0b'] : ['#e2e8f0'],
                     borderWidth: 0
                 }]
             },
@@ -1146,6 +1149,7 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
+                        enabled: hasBillingData,
                         callbacks: {
                             label: function(context) {
                                 return context.label + ': ₹' + context.raw.toLocaleString('en-IN', {maximumFractionDigits: 2});
