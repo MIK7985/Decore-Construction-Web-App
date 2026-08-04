@@ -274,6 +274,29 @@ class SiteStockUsageLogView(LoginRequiredMixin, EngineerRequiredMixin, View):
 
         worksite = get_object_or_404(Worksite, pk=worksite_id)
 
+        # Validate that usage does not exceed current stock balance
+        from django.db.models import Sum
+        delivered_qty = Material.objects.filter(
+            delivery__worksite=worksite,
+            delivery__status="Delivered",
+            name__iexact=material_name,
+            unit__iexact=unit
+        ).aggregate(total=Sum("quantity"))["total"] or Decimal("0.0")
+
+        used_qty_so_far = SiteStockUsage.objects.filter(
+            worksite=worksite,
+            material_name__iexact=material_name,
+            unit__iexact=unit
+        ).aggregate(total=Sum("used_quantity"))["total"] or Decimal("0.0")
+
+        current_balance = max(delivered_qty - used_qty_so_far, Decimal("0.0"))
+
+        if used_quantity > current_balance:
+            return JsonResponse({
+                "success": False,
+                "error": f"Insufficient stock. Available balance of {material_name} is {current_balance:.2f} {unit}, but you requested to log {used_quantity:.2f} {unit}."
+            }, status=400)
+
         SiteStockUsage.objects.create(
             worksite=worksite,
             material_name=material_name.title(),
