@@ -130,6 +130,11 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold rounded-pill py-2" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses-pane" type="button" role="tab">
+                <i class="bi bi-receipt me-1"></i>Other Expenses <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ worksite.expenses.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link fw-semibold rounded-pill py-2" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents-pane" type="button" role="tab">
                 <i class="bi bi-folder2-open me-1"></i>Documents <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ documents|length }}</span>
             </button>
@@ -595,8 +600,96 @@
             </div>
         </div>
     </div>
+    <!-- TAB: OTHER EXPENSES -->
+    <div class="tab-pane fade" id="expenses-pane" role="tabpanel">
+        <div class="decore-card shadow-sm">
+            <div class="decore-card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-receipt text-decore-primary fs-5"></i>
+                    <h6 class="mb-0 fw-bold">Other Site Expenses</h6>
+                </div>
+                <a href="{% url 'expenses:list' %}?worksite={{ worksite.id }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="bi bi-plus-lg me-1"></i>Manage Expenses
+                </a>
+            </div>
 
+            <!-- Desktop Table -->
+            <div class="table-responsive px-4 pb-2 d-none d-md-block">
+                <table class="decore-table-premium mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end">Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exp in worksite.expenses.all %}
+                        <tr>
+                            <td class="text-nowrap-custom font-monospace text-muted">{{ exp.date|date:"d M, Y" }}</td>
+                            <td><span class="badge bg-primary-soft text-primary rounded-pill px-2.5 py-1" style="font-size: 0.72rem; font-weight:600;">{{ exp.category }}</span></td>
+                            <td class="text-muted" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ exp.description }}</td>
+                            <td>
+                                {% if exp.status == 'Approved' %}
+                                <span class="badge bg-success-soft text-success rounded-pill px-2.5 py-1" style="font-size: 0.72rem; font-weight:600;"><i class="bi bi-check-circle me-1"></i>Approved</span>
+                                {% else %}
+                                <span class="badge bg-warning-soft text-warning rounded-pill px-2.5 py-1" style="font-size: 0.72rem; font-weight:600;"><i class="bi bi-hourglass-split me-1"></i>Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end fw-bold text-danger font-monospace">₹{{ exp.amount|floatformat:2|intcomma }}</td>
+                            <td class="text-end">
+                                {% if exp.receipt %}
+                                <a href="{{ exp.receipt.url }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 d-inline-flex align-items-center gap-1" style="font-size:0.75rem;">
+                                    <i class="bi bi-file-earmark-pdf"></i> View
+                                </a>
+                                {% else %}
+                                <span class="text-muted small">No Receipt</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted small">No other operational expenses logged for this site yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
+            <!-- Mobile Card View -->
+            <div class="d-block d-md-none p-3">
+                {% for exp in worksite.expenses.all %}
+                <div class="decore-card p-3 mb-3 border shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge bg-primary-soft text-primary rounded-pill px-2 py-0.5" style="font-size:0.72rem;">{{ exp.category }}</span>
+                        <span class="fw-bold text-danger font-monospace">₹{{ exp.amount|floatformat:2|intcomma }}</span>
+                    </div>
+                    <p class="mb-2 text-muted small">{{ exp.description }}</p>
+                    <div class="row g-2 small text-muted pt-2 border-top border-light" style="font-size: 0.78rem;">
+                        <div class="col-6">
+                            <span>Date:</span> <span class="fw-semibold text-dark font-monospace">{{ exp.date|date:"d M, Y" }}</span>
+                        </div>
+                        <div class="col-6 text-end">
+                            {% if exp.receipt %}
+                            <a href="{{ exp.receipt.url }}" target="_blank" class="text-primary text-decoration-none fw-semibold"><i class="bi bi-file-earmark-pdf me-0.5"></i>Receipt</a>
+                            {% else %}
+                            <span class="text-muted small">No Receipt</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="decore-empty-state py-5 text-center">
+                    <i class="bi bi-receipt text-muted fs-2 mb-2 d-block"></i>
+                    <p class="mb-0 text-muted">No other operational expenses logged for this site yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 
     <!-- TAB 6: DOCUMENTS & PERMITS -->
     <div class="tab-pane fade" id="documents-pane" role="tabpanel">
