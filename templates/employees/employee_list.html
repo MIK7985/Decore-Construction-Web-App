@@ -391,7 +391,9 @@
         const idPhotoInput = document.getElementById("empIdPhoto");
 
         if (croppedPhotoBlob) {
-            formData.append("photo", croppedPhotoBlob, "profile_cropped.jpg");
+            const timestamp = Date.now();
+            const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            formData.append("photo", croppedPhotoBlob, `profile_${safeName}_${timestamp}.jpg`);
         } else if (photoInput && photoInput.files.length > 0) {
             const compressedPhoto = await compressImage(photoInput.files[0], 1000, 1000, 0.75);
             formData.append("photo", compressedPhoto);
