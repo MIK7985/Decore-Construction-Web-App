@@ -22,6 +22,8 @@ class WorksiteWorkflowTests(TestCase):
             "location": "Pune, Maharashtra",
             "supervisor": str(self.user.pk),
             "budget": "2500000.00",
+            "spend": "0.00",
+            "client_paid": "0.00",
             "start_date": "2026-07-01",
             "status": WorksiteStatus.ACTIVE,
             "progress": "15",
@@ -31,7 +33,11 @@ class WorksiteWorkflowTests(TestCase):
 
     def test_authenticated_user_can_create_and_update_worksite(self):
         response = self.client.post(reverse("worksites:create"), self.payload())
-        self.assertRedirects(response, reverse("worksites:list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(response.content.decode(), {
+            "success": True,
+            "message": 'Worksite "Riverside Apartments" created successfully!'
+        })
         site = Worksite.objects.get(name="Riverside Apartments")
         self.assertEqual(site.progress, 15)
         self.assertEqual(site.supervisor, self.user)
@@ -40,7 +46,11 @@ class WorksiteWorkflowTests(TestCase):
             reverse("worksites:edit", args=[site.pk]),
             self.payload(progress="100", status=WorksiteStatus.COMPLETED),
         )
-        self.assertRedirects(response, reverse("worksites:list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(response.content.decode(), {
+            "success": True,
+            "message": 'Worksite "Riverside Apartments" updated successfully!'
+        })
         site.refresh_from_db()
         self.assertEqual(site.status, WorksiteStatus.COMPLETED)
         self.assertEqual(site.progress, 100)
@@ -52,7 +62,7 @@ class WorksiteWorkflowTests(TestCase):
         )
         employee = Employee.objects.create(
             name="Asha Singh", role="Mason", worksite=site, phone="9999999999",
-            email="asha@example.com", wage=500,
+            wage=500,
         )
         response = self.client.post(reverse("worksites:delete", args=[site.pk]))
         self.assertRedirects(response, reverse("worksites:list"))
