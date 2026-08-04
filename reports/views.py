@@ -117,7 +117,7 @@ class WorksiteReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View):
                 ws.client,
                 ws.location,
                 f"Rs. {ws.budget:,.2f}",
-                f"Rs. {ws.spend:,.2f}",
+                f"Rs. {ws.total_spend:,.2f}",
                 f"Rs. {ws.client_paid:,.2f}",
                 f"Rs. {ws.client_balance:,.2f}",
                 f"{ws.progress}%"
@@ -248,11 +248,12 @@ class SummaryReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View):
         materials_sum = Material.objects.annotate(
             cost=ExpressionWrapper(F('quantity') * F('unit_price'), output_field=models.DecimalField(max_digits=15, decimal_places=2))
         ).aggregate(total=Sum('cost'))['total'] or 0
+        worksites_base_spend = Worksite.objects.aggregate(total=Sum('spend'))['total'] or 0
         
         summary_cards = [
             ("Active Workforce", f"{emp_count} Employees"),
             ("Active Worksites", f"{site_count} Worksites"),
-            ("Total Operation Costs", f"Rs. {(salaries_sum + expenses_sum + materials_sum):,.2f}")
+            ("Total Operation Costs", f"Rs. {(salaries_sum + expenses_sum + materials_sum + worksites_base_spend):,.2f}")
         ]
         
         table_headers = ["Operational Audit Metric", "Category", "Recorded Value / Amount", "System Status"]
@@ -263,6 +264,7 @@ class SummaryReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View):
             ["Total Payments Disbursed", "Disbursements", f"Rs. {payments_sum:,.2f}", "Completed"],
             ["Total Materials Inventory Spend", "Procurement", f"Rs. {materials_sum:,.2f}", "Audited"],
             ["Total Operational Site Expenses", "Expenses", f"Rs. {expenses_sum:,.2f}", "Recorded"],
+            ["Base Worksites Setup Costs", "Site Setup", f"Rs. {worksites_base_spend:,.2f}", "Initial"],
         ]
         
         pdf = generate_pdf_report(

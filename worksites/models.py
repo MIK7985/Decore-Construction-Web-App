@@ -97,7 +97,7 @@ class Worksite(models.Model):
 
     @property
     def total_spend(self):
-        return self.material_cost + self.labor_cost + self.expense_cost
+        return self.spend + self.material_cost + self.labor_cost + self.expense_cost
 
     @property
     def profit(self):
