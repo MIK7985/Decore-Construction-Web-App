@@ -153,19 +153,30 @@ class IndexView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
                 "action_text": "View Receivables"
             })
 
-        # Alert B: Low Material Stock
-        low_mats = Material.objects.filter(quantity__lte=5).only('name', 'quantity', 'unit')
-        low_mats_list = list(low_mats)
-        if low_mats_list:
-            count_low = len(low_mats_list)
-            first_mat = low_mats_list[0]
+        # Alert B: Low Material Stock (using actual computed balance)
+        low_stock_items = []
+        for w in worksites:
+            for mat in w.onsite_materials:
+                # Alert if balance is low (e.g. <= 5 units)
+                if mat["balance_quantity"] <= 5:
+                    low_stock_items.append({
+                        "name": mat["name"],
+                        "balance": mat["balance_quantity"],
+                        "unit": mat["unit"],
+                        "worksite_name": w.name,
+                        "worksite_id": w.id
+                    })
+
+        if low_stock_items:
+            count_low = len(low_stock_items)
+            first_item = low_stock_items[0]
             alerts.append({
                 "type": "danger",
                 "icon": "bi-box-seam-fill text-danger",
                 "title": f"Low Stock Alert: {count_low} Material(s)",
-                "description": f"Item '{first_mat.name}' is running low ({first_mat.quantity} {first_mat.unit} remaining).",
-                "action_url": "/materials/",
-                "action_text": "Reorder Stock"
+                "description": f"'{first_item['name']}' at {first_item['worksite_name']} is running low ({first_item['balance']:.0f} {first_item['unit']} remaining).",
+                "action_url": f"/worksites/{first_item['worksite_id']}/#materials-pane",
+                "action_text": "View Stock"
             })
 
         # Alert C: Pending Expense Approvals
