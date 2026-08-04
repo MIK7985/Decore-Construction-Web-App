@@ -11,4 +11,5 @@ urlpatterns = [
     path("export/materials/", views.MaterialsReportExportView.as_view(), name="export_materials"),
     path("export/summary/", views.SummaryReportExportView.as_view(), name="export_summary"),
     path("export/attendance/", views.MonthlyAttendanceExportView.as_view(), name="export_attendance"),
+    path("user-manual/", views.UserManualView.as_view(), name="user_manual"),
 ]

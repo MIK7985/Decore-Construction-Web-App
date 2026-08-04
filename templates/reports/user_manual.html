@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decore Construction — User Manual &amp; Operational Guide</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Vanilla CSS Theme -->
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-soft: #eff6ff;
+            --secondary: #0f172a;
+            --accent: #2563eb;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --benefit-bg: #f0f9ff;
+            --benefit-border: #cbd5e1;
+            --benefit-text: #0369a1;
+            --light-bg: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+            font-size: 15px;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-img {
+            height: 32px;
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--primary);
+            letter-spacing: 0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-dark);
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 550;
+            transition: all 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            background-color: var(--primary-soft);
+            color: var(--accent);
+        }
+
+        /* Main Workspace Content */
+        .main-workspace {
+            margin-left: 280px;
+            flex-grow: 1;
+            padding: 40px;
+            max-width: 1000px;
+        }
+
+        /* Top Action Bar */
+        .top-action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            padding: 16px 24px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background-color: white;
+            color: var(--text-muted);
+            border-color: var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+        }
+
+        /* Document Styling */
+        .document-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 48px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02);
+        }
+
+        .doc-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1.5px solid var(--border-color);
+        }
+
+        .doc-header h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .doc-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .meta-card {
+            background-color: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 18px;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        .meta-item b {
+            color: var(--secondary);
+        }
+
+        h2.section-title {
+            color: var(--primary);
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-top: 35px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1.5px solid var(--primary-soft);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h3.subsection-title {
+            color: var(--secondary);
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 8px;
+        }
+
+        p {
+            margin-bottom: 12px;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        li {
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+
+        /* Benefit Callout Box */
+        .benefit-box {
+            background-color: var(--benefit-bg);
+            border: 1px solid var(--benefit-border);
+            border-left: 4px solid var(--accent);
+            border-radius: 8px;
+            padding: 15px 18px;
+            margin: 15px 0;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .benefit-box i {
+            color: var(--accent);
+            font-size: 1.2rem;
+            margin-top: 2px;
+        }
+
+        .benefit-title {
+            font-weight: 700;
+            color: var(--secondary);
+            font-size: 0.92rem;
+            margin-bottom: 4px;
+        }
+
+        .benefit-box p {
+            color: var(--benefit-text);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 30px 0;
+        }
+
+        /* Print Media Styles */
+        @media print {
+            body {
+                background-color: white !important;
+                color: black !important;
+                font-size: 10.5pt;
+            }
+            .sidebar, .top-action-bar, .logo-section {
+                display: none !important;
+            }
+            .main-workspace {
+                margin-left: 0 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+            }
+            .document-card {
+                border: none !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            h2.section-title {
+                margin-top: 30px;
+                page-break-after: avoid;
+            }
+            .benefit-box {
+                background-color: #f0f9ff !important;
+                border: 1px solid #bae6fd !important;
+                border-left: 4px solid #0284c7 !important;
+                page-break-inside: avoid;
+            }
+            .benefit-box p {
+                color: #0369a1 !important;
+            }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            .main-workspace {
+                margin-left: 0;
+                padding: 20px;
+            }
+            .document-card {
+                padding: 24px;
+            }
+            .meta-card {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation (Screen only) -->
+    <div class="sidebar">
+        <div class="logo-section">
+            <span class="logo-text"><i class="bi bi-gear-fill me-2 text-accent"></i>DECORE MANUAL</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#overview"><i class="bi bi-grid-1x2"></i>1. Overview &amp; Dashboard</a></li>
+            <li><a href="#worksites"><i class="bi bi-geo-alt"></i>2. Worksites Management</a></li>
+            <li><a href="#employees"><i class="bi bi-people"></i>3. Crew Directory</a></li>
+            <li><a href="#attendance"><i class="bi bi-calendar-check"></i>4. Attendance Logs</a></li>
+            <li><a href="#materials"><i class="bi bi-box-seam"></i>5. On-site Materials</a></li>
+            <li><a href="#expenses"><i class="bi bi-cash-stack"></i>6. Operational Expenses</a></li>
+            <li><a href="#payroll"><i class="bi bi-receipt"></i>7. Salaries &amp; WhatsApp</a></li>
+            <li><a href="#reports"><i class="bi bi-file-earmark-pdf"></i>8. Executive PDF Reports</a></li>
+            <li><a href="#maintenance"><i class="bi bi-wrench"></i>9. Technical FAQs</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Workspace Content Area -->
+    <div class="main-workspace">
+        
+        <!-- Top Action Bar (Screen only) -->
+        <div class="top-action-bar no-print">
+            <a href="{% url 'reports:index' %}" class="btn btn-outline">
+                <i class="bi bi-arrow-left"></i> Back to Reports
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="bi bi-printer"></i> Print / Save as PDF
+            </button>
+        </div>
+
+        <!-- The Document Card -->
+        <div class="document-card">
+            
+            <!-- Document Header Banner -->
+            <div class="doc-header">
+                <h1>D E C O R E</h1>
+                <p>Construction Project Management &amp; Enterprise Ledger Suite</p>
+                <div style="font-weight: 700; color: var(--accent); margin-top: 10px; font-size: 0.95rem;">OFFICIAL USER MANUAL &amp; OPERATION GUIDE</div>
+                
+                <div class="meta-card">
+                    <div class="meta-item"><b>Document Type:</b> User Manual &amp; Deployment Guide</div>
+                    <div class="meta-item"><b>Version:</b> 1.0 (Production Build)</div>
+                    <div class="meta-item"><b>Licensed to:</b> Civil Engineer / Builder Lifetime Buyout</div>
+                    <div class="meta-item"><b>Language:</b> English Manual &amp; Malayalam Benefits</div>
+                </div>
+            </div>
+
+            <!-- SECTION 1 -->
+            <div id="overview">
+                <h2 class="section-title">1. System Overview &amp; Dashboard</h2>
+                <p>Decore is a secure, cloud-hosted construction management portal built specifically to optimize civil contractor and builder workflows.</p>
+                <h3 class="subsection-title">Dashboard Visual Panels:</h3>
+                <ul>
+                    <li><b>KPI Analytics Cards:</b> Tracks overall active worksites, total registered crew size, budgets/revenues, total expenses, and aggregate net profits in real-time.</li>
+                    <li><b>Actionable Alerts Box:</b> Flags low material stock balances (below 5 units), pending client receivables milestones, unprocessed weekly payrolls, and pending expense approvals directly as soon as you log in.</li>
+                </ul>
+                
+                <!-- Malayalam Benefit Box -->
+                <div class="benefit-box">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <div>
+                        <div class="benefit-title">പ്രയോജനം (Benefit in Malayalam)</div>
+                        <p>സൈറ്റിന്റെ മൊത്തത്തിലുള്ള പുരോഗതിയും വരവ്-ചിലവ് കണക്കുകളും ഒറ്റനോട്ടത്തിൽ കാണാം. മെറ്റീരിയൽ കുറവാണെങ്കിലോ, പണം ലഭിക്കാനുണ്ടെങ്കിലോ അലർട്ടുകൾ വഴി വേഗത്തിൽ അറിഞ്ഞ് നടപടിയെടുക്കാം.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- SECTION 2 -->
+            <div id="worksites">
+                <h2 class="section-title">2. Worksites Management</h2>
+                <p>Each construction project site has its own dynamic financial sheet, worker logs, and material inventory balances.</p>
+                <h3 class="subsection-title">A. Adding/Editing a Worksite:</h3>
+                <p>Navigate to the <i>Worksites</i> page, click <i>Add Worksite</i>, and fill in the Site name, Client, and Location. Define the overall contract budget (project income) and an initial setup spend value (representing site clearing/permit costs prior to logging).</p>
+                <h3 class="subsection-title">B. Live Financial Analytics:</h3>
+                <p>Within a worksite's detail view, the system computes Live Budget Utilization (Spend vs Profit Margin) and Client Receivables (Amount Paid vs Balance Due) displayed in beautiful, animated doughnut charts. If a site is brand new, clean grey fallback visual states are displayed automatically to prevent system crashes.</p>
+                
+                <!-- Malayalam Benefit Box -->
+                <div class="benefit-box">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <div>
+                        <div class="benefit-title">പ്രയോജനം (Benefit in Malayalam)</div>
+                        <p>ഓരോ സൈറ്റിലും അനുവദിച്ച ബജറ്റും യഥാർത്ഥ ചിലവും താരതമ്യം ചെയ്യാം. പണം നഷ്ടപ്പെടാതെ ലാഭവിഹിതം കൂട്ടാൻ ഇത് സഹായിക്കുന്നു.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="page-break">
+
+            <!-- SECTION 3 -->
+            <div id="employees">
+                <h2 class="section-title">3. Workforce &amp; Crew Directory</h2>
+                <p>Keep a complete register of all masons, laborers, electricians, and supervisors.</p>
+                <h3 class="subsection-title">A. Registering Employees:</h3>
+                <p>Register workers under the <i>Employees</i> tab with their role, wage rate, residential address, and phone. Use the interactive <b>cropping tool</b> to generate square profile pictures, and upload photo/PDF copies of their Aadhaar cards.</p>
+                
+                <!-- Malayalam Benefit Box -->
+                <div class="benefit-box">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <div>
+                        <div class="benefit-title">പ്രയോജനം (Benefit in Malayalam)</div>
+                        <p>തൊഴിലാളികളുടെ വിവരങ്ങളും ദിവസക്കൂലിയും ഹാജർ നിലയും കൃത്യമായി രേഖപ്പെടുത്താം. ജീവനക്കാരുടെ ഫോട്ടോയും തിരിച്ചറിയൽ രേഖകളും നഷ്ടപ്പെടാതെ സുരക്ഷിതമായി ഒരൊറ്റ സ്ഥലത്ത് സൂക്ഷിക്കാൻ സഹായിക്കുന്നു.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- SECTION 4 -->
+            <div id="attendance">
+                <h2 class="section-title">4. Daily Attendance Logging</h2>
+                <p>Attendance logs serve as the mathematical base for calculating employee payroll.</p>
+                <h3 class="subsection-title">Daily Sheet Management:</h3>
+                <p>Select a calendar date on the <i>Attendance</i> sheet and assign statuses in bulk. Status rules are structured as:</p>
+                <ul>
+                    <li><b>Present:</b> Entitles the worker to 100% of their daily wage.</li>
+                    <li><b>Late:</b> Truncates wage calculation by 50% for the day.</li>
+                    <li><b>Overtime:</b> Grants 150% of their daily wage rate.</li>
+                    <li><b>Absent:</b> Entitles the worker to 0.0 wage.</li>
+                </ul>
+                <p><i>Database Query Optimization: Bulk attendance sheets pre-fetch active workers in a single operation, keeping page transitions lightning-fast.</i></p>
+                
+                <!-- Malayalam Benefit Box -->
+                <div class="benefit-box">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <div>
+                        <div class="benefit-title">പ്രയോജനം (Benefit in Malayalam)</div>
+                        <p>തൊഴിലാളികളുടെ ഹാജർ നില കൃത്യമായി രേഖപ്പെടുത്തുന്നതിലൂടെ തെറ്റായ ശമ്പള കണക്കുകൂട്ടലുകൾ ഇല്ലാതാകുന്നു.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="page-break">
+
+            <!-- SECTION 5 -->
+            <div id="materials">
+                <h2 class="section-title">5. Materials Procurement &amp; On-site Inventory</h2>
+                <p>Decore tracks live stock balances by subtracting logged consumption from logged deliveries on each site.</p>
+                <h3 class="subsection-title">A. Log Delivery Vouchers:</h3>
+                <p>Log shipments using the multi-row delivery form. Add rows, choose items from the pre-populated Master Catalog (default rates and units auto-populate), or enter custom items. Subtotals and Grand Totals calculate dynamically in real-time.</p>
+                <h3 class="subsection-title">B. On-Site Live Balance Table:</h3>
+                <p>Live balances are calculated as <b>Delivered quantity minus Used quantity</b>. The stock count automatically turns <b>Red</b> if the balance falls below 5 units (low-stock warning), and remains <b>Green</b> if healthy. Quantities support fractional decimal inputs (like 4.5 bags or 12.8 tons).</p>
+                <h3 class="subsection-title">C. Log Usage (Gear Icon):</h3>
+                <p>Click the gear icon next to any material row to record used stock. The backend checks current balances in real-time, blocking entries that exceed current stock to prevent negative balances.</p>
+                
+                <!-- Malayalam Benefit Box -->
+                <div class="benefit-box">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <div>
+                        <div class="benefit-title">പ്രയോജനം (Benefit in Malayalam)</div>
+                        <p>സൈറ്റിൽ ഇറക്കിയ ലോഡുകളും ഉപയോഗിച്ച അളവും പരിശോധിച്ച് മെറ്റീരിയലുകൾ പാഴായിപ്പോകുന്നത് (wastage/theft) തടയാം. സ്റ്റോക്ക് തീരുന്നതിനനുസരിച്ച് ചുവന്ന അലർട്ട് കാണിക്കും.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- SECTION 6 -->
+            <div id="expenses">
+                <h2 class="section-title">6. Operational Site Expenses</h2>
+                <p>Track cash outgoings like machinery rentals, fuel, safety gear, and permits.</p>
+                <h3 class="subsection-title">Expense Logging:</h3>
+                <p>Log non-wage expenditures like fuel bills, machinery rentals, or permit costs. Upload receipts and assign approval statuses. Approved expenses are automatically added to the site's total spend calculations.</p>
+                
+                <!-- Malayalam Benefit Box -->
+                <div class="benefit-box">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <div>
+                        <div class="benefit-title">പ്രയോജനം (Benefit in Malayalam)</div>
+                        <p>വണ്ടിക്കൂലി, വാടക തുടങ്ങിയ ചിലവുകൾ ബില്ലുകൾ സഹിതം രേഖപ്പെടുത്താം. ഇത് സൈറ്റിന്റെ കൃത്യമായ ചിലവ് വിവരങ്ങൾ നൽകുന്നു.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="page-break">
+
+            <!-- SECTION 7 -->
+            <div id="payroll">
+                <h2 class="section-title">7. Weekly Payroll &amp; WhatsApp Receipts</h2>
+                <p>Never calculate payroll manually. Decore generates weekly wages automatically.</p>
+                <h3 class="subsection-title">A. Weekly Payroll Generation:</h3>
+                <p>Select a week ending date (Saturday) under the <i>Salaries</i> tab. The system aggregates all daily attendance logs, computes net wages, allows adding bonuses or deductions, and generates payroll records in bulk.</p>
+                <h3 class="subsection-title">B. WhatsApp Signed PDF Receipts:</h3>
+                <p>Record payments (Cash/Bank Transfer) and share the receipt voucher. The system builds a WhatsApp link with a secure, cryptographically signed token. This allows workers to open and download their official PDF receipt directly on their mobile phones without logging in, while preventing access to others' details.</p>
+                
+                <!-- Malayalam Benefit Box -->
+                <div class="benefit-box">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <div>
+                        <div class="benefit-title">പ്രയോജനം (Benefit in Malayalam)</div>
+                        <p>വാട്സാപ്പ് വഴി തൊഴിലാളികൾക്ക് ലോഗിൻ ചെയ്യാതെ തന്നെ അവരുടെ ശമ്പള രസീതുകൾ സുരക്ഷിതമായി ഡൗൺലോഡ് ചെയ്യാനുള്ള ലിങ്ക് അയച്ചു നൽകാം.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- SECTION 8 -->
+            <div id="reports">
+                <h2 class="section-title">8. Executive PDF Reports</h2>
+                <p>Create print-ready reports in the <i>Reports</i> tab:</p>
+                <ul>
+                    <li><b>Workforce Directory Report:</b> Roster of all workers, wage rates, and contact details.</li>
+                    <li><b>Worksites Ledger Report:</b> Project valuations, budgets, spendings, client billing balances, and progress percentages.</li>
+                    <li><b>Financial Ledger Audit:</b> Chronological log of payroll distributions, payment receipts, and operational expenses.</li>
+                    <li><b>Materials Inventory Report:</b> Raw material deliveries, unit valuations, and supplier logs.</li>
+                    <li><b>Executive Summary:</b> A high-level audit metric PDF summarizing workforce, active worksites, and aggregate ledger totals.</li>
+                </ul>
+                
+                <!-- Malayalam Benefit Box -->
+                <div class="benefit-box">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <div>
+                        <div class="benefit-title">പ്രയോജനം (Benefit in Malayalam)</div>
+                        <p>എൻ.ആർ.ഐ (NRI) ക്ലയന്റുകൾക്കും മറ്റും സൈറ്റ് പുരോഗതിയുടെയും ചിലവുകളുടെയും പ്രൊഫഷണൽ റിപ്പോർട്ടുകൾ പി.ഡി.എഫ് രൂപത്തിൽ അയച്ചു നൽകാൻ സാധിക്കുന്നു.</p>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- SECTION 9 -->
+            <div id="maintenance">
+                <h2 class="section-title">9. Technical Maintenance &amp; FAQs</h2>
+                <h3 class="subsection-title">FAQs:</h3>
+                <ul>
+                    <li><b>Supabase DB Backups:</b> Backups are automated and managed directly in your Supabase database console.</li>
+                    <li><b>Render Free Tier Sleep:</b> If using the free tier, the server enters sleep after 15 minutes of inactivity. Simply refresh the page and wait 30-50 seconds for it to wake up.</li>
+                    <li><b>Role Restrictions:</b> Site supervisors can only view and edit logs for worksites explicitly assigned to them. Administrators retain full access across all modules.</li>
+                </ul>
+                
+                <!-- Malayalam Benefit Box -->
+                <div class="benefit-box">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <div>
+                        <div class="benefit-title">പ്രയോജനം (Benefit in Malayalam)</div>
+                        <p>വിവരങ്ങൾ സുരക്ഷിതമായി ബാക്കപ്പ് ചെയ്യാനും സൂക്ഷിക്കാനും എളുപ്പമാണ്. സൈറ്റിന്റെ ഡാറ്റാ നിയന്ത്രണം നിങ്ങളുടെ കൈകളിൽ തന്നെയായിരിക്കും.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

@@ -294,3 +294,7 @@ class MonthlyAttendanceExportView(LoginRequiredMixin, EngineerRequiredMixin, Vie
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="Attendance_Roster_{month}_{year}.pdf"'
         return response
+
+
+class UserManualView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
+    template_name = "reports/user_manual.html"
