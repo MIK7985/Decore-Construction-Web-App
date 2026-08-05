@@ -93,6 +93,7 @@ class WorksiteDetailView(LoginRequiredMixin, EngineerRequiredMixin, DetailView):
         context['daily_logs'] = self.object.daily_logs.all()
         context['payment_methods'] = PaymentMethod.choices
         context['subcontracts'] = self.object.subcontracts.prefetch_related('payments').all()
+        context['attendance_records'] = self.object.attendance_records.select_related('employee').order_by('-date', 'employee__name')
         return context
 
 
