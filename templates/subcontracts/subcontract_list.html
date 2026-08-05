@@ -89,43 +89,43 @@
 <!-- KPI Summary Cards Grid -->
 <div class="row g-3 mb-4">
     <!-- Active Contracts -->
-    <div class="col-sm-6 col-xl-3">
-        <div class="decore-card p-3.5 border-0 shadow-sm d-flex align-items-center justify-content-between">
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100 shadow-sm">
+            <span class="decore-stat-icon bg-primary-soft"><i class="bi bi-briefcase text-primary"></i></span>
             <div>
-                <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.68rem; letter-spacing:0.5px;">Active Contracts</div>
-                <div class="fs-3 fw-bold text-dark font-monospace">{{ stats.total_count }}</div>
+                <div class="decore-stat-label">Active Contracts</div>
+                <div class="decore-stat-value text-primary font-monospace fw-bold">{{ stats.total_count }}</div>
             </div>
-            <div class="kpi-icon-box bg-primary-soft text-primary"><i class="bi bi-briefcase fs-4"></i></div>
         </div>
     </div>
     <!-- Agreed Valuation -->
-    <div class="col-sm-6 col-xl-3">
-        <div class="decore-card p-3.5 border-0 shadow-sm d-flex align-items-center justify-content-between">
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100 shadow-sm">
+            <span class="decore-stat-icon bg-indigo-soft"><i class="bi bi-currency-rupee text-indigo"></i></span>
             <div>
-                <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.68rem; letter-spacing:0.5px;">Contract Valuation</div>
-                <div class="fs-3 fw-bold text-decore-primary font-monospace">₹{{ stats.total_contract_value|floatformat:0|intcomma }}</div>
+                <div class="decore-stat-label">Contract Valuation</div>
+                <div class="decore-stat-value text-decore-primary font-monospace fw-bold">₹{{ stats.total_contract_value|floatformat:0|intcomma }}</div>
             </div>
-            <div class="kpi-icon-box bg-indigo-soft text-indigo"><i class="bi bi-currency-rupee fs-4"></i></div>
         </div>
     </div>
     <!-- Paid to Date -->
-    <div class="col-sm-6 col-xl-3">
-        <div class="decore-card p-3.5 border-0 shadow-sm d-flex align-items-center justify-content-between">
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100 shadow-sm">
+            <span class="decore-stat-icon bg-success-soft"><i class="bi bi-check-circle text-success"></i></span>
             <div>
-                <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.68rem; letter-spacing:0.5px;">Total Paid to Date</div>
-                <div class="fs-3 fw-bold text-success font-monospace">₹{{ stats.total_paid|floatformat:0|intcomma }}</div>
+                <div class="decore-stat-label">Total Paid to Date</div>
+                <div class="decore-stat-value text-success font-monospace fw-bold">₹{{ stats.total_paid|floatformat:0|intcomma }}</div>
             </div>
-            <div class="kpi-icon-box bg-success-soft text-success"><i class="bi bi-check-circle fs-4"></i></div>
         </div>
     </div>
     <!-- Outstanding Balance -->
-    <div class="col-sm-6 col-xl-3">
-        <div class="decore-card p-3.5 border-0 shadow-sm d-flex align-items-center justify-content-between">
+    <div class="col-xl-3 col-md-6">
+        <div class="decore-card decore-stat-card h-100 shadow-sm">
+            <span class="decore-stat-icon bg-warning-soft"><i class="bi bi-hourglass-split text-warning"></i></span>
             <div>
-                <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.68rem; letter-spacing:0.5px;">Outstanding Balance</div>
-                <div class="fs-3 fw-bold text-warning font-monospace">₹{{ stats.total_pending|floatformat:0|intcomma }}</div>
+                <div class="decore-stat-label">Outstanding Balance</div>
+                <div class="decore-stat-value text-warning font-monospace fw-bold">₹{{ stats.total_pending|floatformat:0|intcomma }}</div>
             </div>
-            <div class="kpi-icon-box bg-warning-soft text-warning"><i class="bi bi-hourglass-split fs-4"></i></div>
         </div>
     </div>
 </div>
