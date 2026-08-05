@@ -24,8 +24,58 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Decore">
     <link rel="apple-touch-icon" href="{% static 'images/icon-192.png' %}">
+    <!-- Instant theme paint & loading splash check: runs before rendering -->
+    <script>
+      (function(){
+        // 1. Initial theme set
+        var t=localStorage.getItem('decore-theme')||'light';
+        document.documentElement.setAttribute('data-bs-theme',t);
+        
+        // 2. Classify if this is a manual page refresh/reload
+        var isRefresh = false;
+        try {
+          var navs = performance.getEntriesByType("navigation");
+          if (navs && navs.length > 0) {
+            isRefresh = (navs[0].type === "reload");
+          } else if (window.performance && window.performance.navigation) {
+            isRefresh = (window.performance.navigation.type === 1);
+          }
+        } catch(e) {}
+
+        // 3. Classify if this is an internal link navigation
+        var isInternalNavigation = false;
+        var host = window.location.hostname;
+        var origin = window.location.origin || (window.location.protocol + "//" + window.location.host);
+        if (document.referrer && (document.referrer.indexOf(origin) !== -1 || document.referrer.indexOf(host) !== -1)) {
+          isInternalNavigation = true;
+        }
+
+        // Hide brand logo loader only during internal link navigations (not on fresh open or refresh)
+        if (isInternalNavigation && !isRefresh) {
+          document.documentElement.classList.add('app-already-loaded');
+        }
+      })();
+    </script>
 </head>
 <body>
+    <!-- Initial App-Opening Splash Loader Overlay (Mobile only / Startup only) -->
+    <div id="decoreInitialLoader" class="decore-loading-overlay active" style="z-index: 999999;">
+        <div class="d-flex flex-column align-items-center justify-content-center w-100 h-100" style="background-color: var(--decore-bg-color, #f8fafc);">
+            <div class="text-center position-relative">
+                <!-- Glowing Outer Spinner Ring -->
+                <div class="spinner-border text-primary spinner-brand-ring position-absolute" role="status" style="width: 96px; height: 96px; top: -16px; left: -16px;"></div>
+                <!-- Centered Pulsing Logo -->
+                <div class="logo-pulse-box bg-white shadow-sm rounded-circle" style="width: 64px; height: 64px;">
+                    <img src="{% static 'images/logo.png' %}?v=2" alt="Decore logo" style="width: 36px; height: 36px; object-fit: contain;">
+                </div>
+            </div>
+            <div class="mt-4 text-center">
+                <h5 class="fw-bold mb-1 text-dark" style="letter-spacing: 0.8px; font-family: 'Plus Jakarta Sans', sans-serif;">DECORE</h5>
+                <p class="text-muted small mb-0 font-monospace" style="font-size: 0.68rem; letter-spacing: 1.5px; font-weight: 500;">CONSTRUCTION PLATFORM</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Loading overlay -->
     <div id="decoreLoadingOverlay" class="decore-loading-overlay">
         <div class="d-flex flex-column align-items-center justify-content-center w-100 h-100" style="background-color: var(--decore-bg-color, #f8fafc); z-index: 100000;">
@@ -112,6 +162,18 @@
                 passwordInput.type = 'password';
                 icon.classList.remove('bi-eye-slash');
                 icon.classList.add('bi-eye');
+            }
+        });
+
+        // Hide brand logo initial loader once page fully finishes loading
+        window.addEventListener('load', function() {
+            var initial = document.getElementById("decoreInitialLoader");
+            if (initial) {
+                initial.classList.add("fade-out-loader");
+                setTimeout(function() {
+                    initial.classList.remove("active");
+                    initial.style.display = "none";
+                }, 350);
             }
         });
     </script>
