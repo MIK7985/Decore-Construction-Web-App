@@ -1819,3 +1819,27 @@ body {
   display: none !important;
 }
 
+/* Mobile Sidebar Close Button */
+.sidebar-close-btn {
+  opacity: 0.75;
+  transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff !important;
+  text-decoration: none !important;
+}
+.sidebar-close-btn:hover {
+  opacity: 1;
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.15);
+}
+.sidebar-close-btn:active {
+  transform: scale(0.95);
+}
+
