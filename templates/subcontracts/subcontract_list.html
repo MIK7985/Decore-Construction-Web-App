@@ -4,6 +4,78 @@
 {% block title %}Subcontracts{% endblock %}
 
 {% block content %}
+<style>
+    /* Premium CSS variables & soft background tints */
+    .bg-warning-soft { background-color: rgba(245, 158, 11, 0.1) !important; }
+    .bg-info-soft { background-color: rgba(6, 182, 212, 0.1) !important; }
+    .bg-teal-soft { background-color: rgba(13, 148, 136, 0.1) !important; }
+    .bg-danger-soft { background-color: rgba(225, 29, 72, 0.1) !important; }
+    .bg-purple-soft { background-color: rgba(124, 58, 237, 0.1) !important; }
+    .bg-indigo-soft { background-color: rgba(79, 70, 229, 0.1) !important; }
+    .bg-primary-soft { background-color: rgba(37, 99, 235, 0.1) !important; }
+    .bg-orange-soft { background-color: rgba(234, 88, 12, 0.1) !important; }
+    .bg-success-soft { background-color: rgba(16, 185, 129, 0.1) !important; }
+    
+    .text-teal { color: #0d9488 !important; }
+    .text-purple { color: #7c3aed !important; }
+    .text-orange { color: #ea580c !important; }
+
+    /* KPI Icon Boxes styling */
+    .kpi-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* Subcontract Card Transitions */
+    .subcontract-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        border-radius: 14px !important;
+        animation: fadeInUp 0.4s ease-out forwards;
+    }
+    .subcontract-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px -10px rgba(0,0,0,0.12) !important;
+    }
+
+    /* Dynamic Left Accent Borders based on Status */
+    .subcontract-card-completed { border-left: 6px solid #10b981 !important; }
+    .subcontract-card-progress { border-left: 6px solid #f59e0b !important; }
+    .subcontract-card-hold { border-left: 6px solid #94a3b8 !important; }
+    .subcontract-card-pending { border-left: 6px solid #06b6d4 !important; }
+
+    /* Fade-in Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Custom progress bar styles */
+    .progress-bar-glow {
+        box-shadow: 0 0 12px rgba(37, 99, 235, 0.35);
+        border-radius: 10px;
+    }
+    
+    /* Hover scale for circular buttons */
+    .btn-circle-action {
+        transition: all 0.2s ease;
+    }
+    .btn-circle-action:hover {
+        transform: scale(1.1);
+    }
+</style>
+
 <div class="decore-page-header d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
     <div>
         <h4 class="decore-page-title mb-1"><i class="bi bi-briefcase text-decore-primary me-2"></i>Subcontracts &amp; Trade Management</h4>
@@ -14,36 +86,52 @@
     </button>
 </div>
 
-<!-- KPI Summary Cards -->
+<!-- KPI Summary Cards Grid -->
 <div class="row g-3 mb-4">
+    <!-- Active Contracts -->
     <div class="col-sm-6 col-xl-3">
-        <div class="decore-card p-3.5 border-0 shadow-sm text-center">
-            <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.7rem; letter-spacing:0.5px;">Active Contracts</div>
-            <div class="fs-4 fw-bold text-dark font-monospace">{{ stats.total_count }} <span class="fs-6 text-muted font-sans">Contracts</span></div>
+        <div class="decore-card p-3.5 border-0 shadow-sm d-flex align-items-center justify-content-between">
+            <div>
+                <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.68rem; letter-spacing:0.5px;">Active Contracts</div>
+                <div class="fs-3 fw-bold text-dark font-monospace">{{ stats.total_count }}</div>
+            </div>
+            <div class="kpi-icon-box bg-primary-soft text-primary"><i class="bi bi-briefcase fs-4"></i></div>
         </div>
     </div>
+    <!-- Agreed Valuation -->
     <div class="col-sm-6 col-xl-3">
-        <div class="decore-card p-3.5 border-0 shadow-sm text-center">
-            <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.7rem; letter-spacing:0.5px;">Agreed Contract Valuation</div>
-            <div class="fs-4 fw-bold text-decore-primary font-monospace">₹{{ stats.total_contract_value|floatformat:2|intcomma }}</div>
+        <div class="decore-card p-3.5 border-0 shadow-sm d-flex align-items-center justify-content-between">
+            <div>
+                <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.68rem; letter-spacing:0.5px;">Contract Valuation</div>
+                <div class="fs-3 fw-bold text-decore-primary font-monospace">₹{{ stats.total_contract_value|floatformat:0|intcomma }}</div>
+            </div>
+            <div class="kpi-icon-box bg-indigo-soft text-indigo"><i class="bi bi-currency-rupee fs-4"></i></div>
         </div>
     </div>
+    <!-- Paid to Date -->
     <div class="col-sm-6 col-xl-3">
-        <div class="decore-card p-3.5 border-0 shadow-sm text-center">
-            <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.7rem; letter-spacing:0.5px;">Total Paid to Date</div>
-            <div class="fs-4 fw-bold text-success font-monospace">₹{{ stats.total_paid|floatformat:2|intcomma }}</div>
+        <div class="decore-card p-3.5 border-0 shadow-sm d-flex align-items-center justify-content-between">
+            <div>
+                <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.68rem; letter-spacing:0.5px;">Total Paid to Date</div>
+                <div class="fs-3 fw-bold text-success font-monospace">₹{{ stats.total_paid|floatformat:0|intcomma }}</div>
+            </div>
+            <div class="kpi-icon-box bg-success-soft text-success"><i class="bi bi-check-circle fs-4"></i></div>
         </div>
     </div>
+    <!-- Outstanding Balance -->
     <div class="col-sm-6 col-xl-3">
-        <div class="decore-card p-3.5 border-0 shadow-sm text-center">
-            <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.7rem; letter-spacing:0.5px;">Outstanding Balance</div>
-            <div class="fs-4 fw-bold text-warning font-monospace">₹{{ stats.total_pending|floatformat:2|intcomma }}</div>
+        <div class="decore-card p-3.5 border-0 shadow-sm d-flex align-items-center justify-content-between">
+            <div>
+                <div class="text-muted fw-semibold small text-uppercase mb-1" style="font-size:0.68rem; letter-spacing:0.5px;">Outstanding Balance</div>
+                <div class="fs-3 fw-bold text-warning font-monospace">₹{{ stats.total_pending|floatformat:0|intcomma }}</div>
+            </div>
+            <div class="kpi-icon-box bg-warning-soft text-warning"><i class="bi bi-hourglass-split fs-4"></i></div>
         </div>
     </div>
 </div>
 
 <!-- Filters Bar -->
-<div class="decore-card p-3.5 mb-4 border-0 shadow-sm">
+<div class="decore-card p-3 mb-4 border-0 shadow-sm bg-light-soft">
     <form method="get" class="row g-2 align-items-center">
         <div class="col-md-4">
             <select name="worksite" class="form-select form-select-sm rounded-pill" onchange="this.form.submit()">
@@ -79,58 +167,80 @@
 <div class="row g-3">
     {% for sub in subcontracts %}
     <div class="col-12 col-lg-6">
-        <div class="decore-card p-4 h-100 border-0 shadow-sm d-flex flex-column">
+        <div class="decore-card p-4 h-100 border-0 shadow-sm d-flex flex-column subcontract-card {% if sub.status == 'completed' %}subcontract-card-completed{% elif sub.status == 'in_progress' %}subcontract-card-progress{% elif sub.status == 'on_hold' %}subcontract-card-hold{% else %}subcontract-card-pending{% endif %}">
             <!-- Header -->
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
-                    <span class="decore-status-badge badge-primary px-2.5 py-1 mb-1 d-inline-block font-monospace" style="font-size:0.72rem;">
+                    <span class="decore-status-badge badge-primary px-2.5 py-1 mb-2 d-inline-block font-monospace" style="font-size:0.72rem;">
                         <i class="bi bi-geo-alt me-1"></i>{{ sub.worksite.name }}
                     </span>
                     <h5 class="fw-bold mb-0 text-dark">
                         {{ sub.contractor_name }}
                         {% if sub.phone %}
-                        <a href="https://wa.me/{% if not sub.phone|slice:':2' == '91' and not sub.phone|slice:':3' == '+91' %}91{% endif %}{{ sub.phone }}" target="_blank" class="text-success ms-1.5" title="WhatsApp Subcontractor" style="font-size: 0.9rem;"><i class="bi bi-whatsapp"></i></a>
+                        <a href="https://wa.me/{% if not sub.phone|slice:':2' == '91' and not sub.phone|slice:':3' == '+91' %}91{% endif %}{{ sub.phone }}" target="_blank" class="text-success ms-1.5 btn-circle-action" title="WhatsApp Subcontractor" style="font-size: 0.95rem;"><i class="bi bi-whatsapp"></i></a>
                         {% endif %}
                     </h5>
                     {% if sub.phone %}
-                    <div class="text-muted small font-monospace" style="font-size:0.78rem;"><i class="bi bi-telephone me-1"></i>{{ sub.phone }}</div>
+                    <div class="text-muted small font-monospace mt-0.5" style="font-size:0.78rem;"><i class="bi bi-telephone me-1"></i>{{ sub.phone }}</div>
                     {% endif %}
-                    <div class="text-muted small fw-semibold mt-1" style="font-size:0.85rem;">{{ sub.title }}</div>
+                    <div class="text-secondary small fw-semibold mt-2" style="font-size:0.85rem;"><i class="bi bi-file-earmark-text me-1"></i>{{ sub.title }}</div>
                 </div>
                 <div class="text-end">
                     {% if sub.status == 'completed' %}
-                    <span class="decore-status-badge badge-success"><span class="dot"></span>Completed</span>
+                    <span class="decore-status-badge badge-success px-2.5 py-1 rounded-pill mb-1 d-inline-block"><span class="dot"></span>Completed</span>
                     {% elif sub.status == 'in_progress' %}
-                    <span class="decore-status-badge badge-warning"><span class="dot"></span>In Progress</span>
+                    <span class="decore-status-badge badge-warning px-2.5 py-1 rounded-pill mb-1 d-inline-block"><span class="dot"></span>In Progress</span>
                     {% elif sub.status == 'on_hold' %}
-                    <span class="decore-status-badge badge-secondary"><span class="dot"></span>On Hold</span>
+                    <span class="decore-status-badge badge-secondary px-2.5 py-1 rounded-pill mb-1 d-inline-block"><span class="dot"></span>On Hold</span>
                     {% else %}
-                    <span class="decore-status-badge badge-info"><span class="dot"></span>Pending</span>
+                    <span class="decore-status-badge badge-info px-2.5 py-1 rounded-pill mb-1 d-inline-block"><span class="dot"></span>Pending</span>
                     {% endif %}
-                    <div class="small text-muted mt-1" style="font-size:0.75rem;">{{ sub.get_trade_display }}</div>
+                    
+                    <!-- Customized Category Badges -->
+                    <div class="mt-2">
+                        {% if sub.trade == 'electrical' %}
+                        <span class="badge bg-warning-soft text-warning fw-semibold px-2 py-0.5 rounded-pill" style="font-size: 0.72rem;"><i class="bi bi-lightning-charge me-1"></i>Electrical</span>
+                        {% elif sub.trade == 'plumbing' %}
+                        <span class="badge bg-info-soft text-info fw-semibold px-2 py-0.5 rounded-pill" style="font-size: 0.72rem;"><i class="bi bi-water me-1"></i>Plumbing</span>
+                        {% elif sub.trade == 'tiling' %}
+                        <span class="badge bg-teal-soft text-teal fw-semibold px-2 py-0.5 rounded-pill" style="font-size: 0.72rem;"><i class="bi bi-grid-3x3-gap me-1"></i>Tiling</span>
+                        {% elif sub.trade == 'painting' %}
+                        <span class="badge bg-danger-soft text-danger fw-semibold px-2 py-0.5 rounded-pill" style="font-size: 0.72rem;"><i class="bi bi-paint-bucket me-1"></i>Painting</span>
+                        {% elif sub.trade == 'interior' %}
+                        <span class="badge bg-purple-soft text-purple fw-semibold px-2 py-0.5 rounded-pill" style="font-size: 0.72rem;"><i class="bi bi-house-heart me-1"></i>Interior</span>
+                        {% elif sub.trade == 'roofing' %}
+                        <span class="badge bg-indigo-soft text-indigo fw-semibold px-2 py-0.5 rounded-pill" style="font-size: 0.72rem;"><i class="bi bi-house me-1"></i>Roofing</span>
+                        {% elif sub.trade == 'false_ceiling' %}
+                        <span class="badge bg-primary-soft text-primary fw-semibold px-2 py-0.5 rounded-pill" style="font-size: 0.72rem;"><i class="bi bi-border-style me-1"></i>Ceiling</span>
+                        {% elif sub.trade == 'masonry' %}
+                        <span class="badge bg-orange-soft text-orange fw-semibold px-2 py-0.5 rounded-pill" style="font-size: 0.72rem;"><i class="bi bi-bricks me-1"></i>Masonry</span>
+                        {% else %}
+                        <span class="badge bg-success-soft text-success fw-semibold px-2 py-0.5 rounded-pill" style="font-size: 0.72rem;"><i class="bi bi-hammer me-1"></i>Other Trade</span>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
             <!-- Financial Summary Bar -->
             <div class="bg-light-soft rounded-3 p-3 my-3">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="text-muted small fw-semibold" style="font-size:0.78rem;">Payment Progress:</span>
+                <div class="d-flex justify-content-between align-items-center mb-1.5">
+                    <span class="text-muted small fw-semibold" style="font-size:0.78rem;">Disbursement Progress:</span>
                     <span class="fw-bold font-monospace text-decore-primary" style="font-size:0.85rem;">{{ sub.progress_percent }}% Paid</span>
                 </div>
-                <div class="progress mb-2" style="height: 6px; border-radius: 10px;">
-                    <div class="progress-bar {% if sub.progress_percent >= 100 %}bg-success{% else %}bg-primary{% endif %}" role="progressbar" style="width: {{ sub.progress_percent }}%;"></div>
+                <div class="progress mb-2.5" style="height: 7px; border-radius: 10px; background-color: rgba(0,0,0,0.06);">
+                    <div class="progress-bar progress-bar-glow {% if sub.progress_percent >= 100 %}bg-success{% else %}bg-primary{% endif %}" role="progressbar" style="width: {{ sub.progress_percent }}%;"></div>
                 </div>
                 <div class="row g-2 text-center pt-1" style="font-size:0.8rem;">
                     <div class="col-4 border-end">
-                        <div class="text-muted small" style="font-size:0.68rem;">CONTRACT</div>
+                        <div class="text-muted small" style="font-size:0.68rem; letter-spacing: 0.3px;">CONTRACT VAL</div>
                         <div class="fw-bold font-monospace text-dark">₹{{ sub.contract_amount|floatformat:0|intcomma }}</div>
                     </div>
                     <div class="col-4 border-end">
-                        <div class="text-muted small" style="font-size:0.68rem;">PAID</div>
+                        <div class="text-muted small" style="font-size:0.68rem; letter-spacing: 0.3px;">TOTAL PAID</div>
                         <div class="fw-bold font-monospace text-success">₹{{ sub.paid_amount|floatformat:0|intcomma }}</div>
                     </div>
                     <div class="col-4">
-                        <div class="text-muted small" style="font-size:0.68rem;">BALANCE</div>
+                        <div class="text-muted small" style="font-size:0.68rem; letter-spacing: 0.3px;">OUTSTANDING</div>
                         <div class="fw-bold font-monospace text-warning">₹{{ sub.balance_amount|floatformat:0|intcomma }}</div>
                     </div>
                 </div>
@@ -138,18 +248,18 @@
 
             <!-- Notes if any -->
             {% if sub.notes %}
-            <div class="small text-muted mb-3 fst-italic" style="font-size:0.8rem;"><i class="bi bi-info-circle me-1"></i>{{ sub.notes }}</div>
+            <div class="small text-muted mb-3 fst-italic p-2 bg-light rounded" style="font-size:0.8rem;"><i class="bi bi-info-circle me-1 text-primary"></i>{{ sub.notes }}</div>
             {% endif %}
 
             <!-- Payment Logs Accordion -->
             <div class="mb-3">
-                <button class="btn btn-sm btn-light w-100 text-start d-flex justify-content-between align-items-center rounded-3 px-3 py-2" type="button" data-bs-toggle="collapse" data-bs-target="#payHist{{ sub.id }}" aria-expanded="false">
-                    <span class="small fw-semibold text-secondary"><i class="bi bi-clock-history me-1"></i>Disbursement History ({{ sub.payments.all|length }})</span>
-                    <i class="bi bi-chevron-down small"></i>
+                <button class="btn btn-sm btn-light w-100 text-start d-flex justify-content-between align-items-center rounded-3 px-3 py-2 border-0 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#payHist{{ sub.id }}" aria-expanded="false">
+                    <span class="small fw-semibold text-secondary"><i class="bi bi-clock-history me-1.5"></i>Disbursement History ({{ sub.payments.all|length }})</span>
+                    <i class="bi bi-chevron-down small text-muted"></i>
                 </button>
                 <div class="collapse mt-2" id="payHist{{ sub.id }}">
                     <div class="table-responsive rounded border border-light">
-                        <table class="table table-sm table-borderless mb-0 align-middle" style="font-size:0.8rem;">
+                        <table class="table table-sm table-hover table-borderless mb-0 align-middle" style="font-size:0.8rem;">
                             <thead class="bg-light text-muted">
                                 <tr>
                                     <th>Date</th>
@@ -160,21 +270,21 @@
                             </thead>
                             <tbody>
                                 {% for p in sub.payments.all %}
-                                <tr>
+                                <tr style="border-bottom: 1px solid rgba(0,0,0,0.02);">
                                     <td class="text-muted">{{ p.payment_date|date:"d M Y" }}</td>
-                                    <td class="fw-semibold text-secondary">{{ p.get_payment_method_display }} {% if p.reference_number %}<span class="small text-muted">({{ p.reference_number }})</span>{% endif %}</td>
+                                    <td class="fw-semibold text-secondary">{{ p.get_payment_method_display }} {% if p.reference_number %}<span class="small text-muted font-monospace">({{ p.reference_number }})</span>{% endif %}</td>
                                     <td class="text-end font-monospace fw-bold text-success">₹{{ p.amount|floatformat:0|intcomma }}</td>
                                     <td class="text-end">
-                                        <a href="{{ p.receipt_url }}" target="_blank" class="btn btn-link text-primary p-0 border-0 me-2" title="Download Receipt PDF"><i class="bi bi-file-earmark-pdf"></i></a>
+                                        <a href="{{ p.receipt_url }}" target="_blank" class="btn btn-link text-primary p-0 border-0 me-2 btn-circle-action" title="Download Receipt PDF"><i class="bi bi-file-earmark-pdf fs-5"></i></a>
                                         {% if sub.phone %}
-                                        <button type="button" class="btn btn-link text-success p-0 border-0 me-2" title="Share via WhatsApp" onclick="shareSubcontractReceipt('{{ sub.contractor_name|escapejs }}', '{{ sub.phone }}', '{{ p.amount }}', '{{ sub.get_trade_display|escapejs }}', '{{ sub.title|escapejs }}', '{{ p.receipt_url }}')"><i class="bi bi-whatsapp"></i></button>
+                                        <button type="button" class="btn btn-link text-success p-0 border-0 me-2 btn-circle-action" title="Share via WhatsApp" onclick="shareSubcontractReceipt('{{ sub.contractor_name|escapejs }}', '{{ sub.phone }}', '{{ p.amount }}', '{{ sub.get_trade_display|escapejs }}', '{{ sub.title|escapejs }}', '{{ p.receipt_url }}')"><i class="bi bi-whatsapp fs-5"></i></button>
                                         {% endif %}
-                                        <button type="button" class="btn btn-link text-danger p-0 border-0" title="Delete Payment" onclick="deleteSubcontractPayment({{ p.id }})"><i class="bi bi-x-circle"></i></button>
+                                        <button type="button" class="btn btn-link text-danger p-0 border-0 btn-circle-action" title="Delete Payment" onclick="deleteSubcontractPayment({{ p.id }})"><i class="bi bi-x-circle fs-5"></i></button>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-2 small">No payments recorded yet.</td>
+                                    <td colspan="4" class="text-center text-muted py-3 small">No payment disbursements logged yet.</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -186,20 +296,20 @@
             <!-- Footer Action Buttons -->
             <div class="d-flex gap-2 mt-auto pt-2 border-top">
                 {% if sub.balance_amount > 0 %}
-                <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-1 text-nowrap flex-grow-1" style="font-size:0.78rem;" onclick="openPaySubcontractorModal({{ sub.id }}, '{{ sub.contractor_name|escapejs }}', '{{ sub.balance_amount }}')">
-                    <i class="bi bi-cash-stack me-1"></i>Pay ₹{{ sub.balance_amount|floatformat:0|intcomma }}
+                <button type="button" class="btn btn-sm btn-success rounded-pill px-3 py-2 text-nowrap flex-grow-1 fw-bold shadow-sm" style="font-size:0.78rem;" onclick="openPaySubcontractorModal({{ sub.id }}, '{{ sub.contractor_name|escapejs }}', '{{ sub.balance_amount }}')">
+                    <i class="bi bi-cash-stack me-1.5"></i>Record Payment (₹{{ sub.balance_amount|floatformat:0|intcomma }})
                 </button>
                 {% else %}
-                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 text-nowrap flex-grow-1 disabled" style="font-size:0.78rem;">
-                    <i class="bi bi-check-circle me-1"></i>Fully Paid
+                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 py-2 text-nowrap flex-grow-1 disabled" style="font-size:0.78rem;">
+                    <i class="bi bi-check-circle me-1.5"></i>Contract Fully Settled
                 </button>
                 {% endif %}
 
-                <button type="button" class="btn btn-sm btn-outline-primary rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:30px; height:30px;" title="Edit Contract" onclick="openEditSubcontractModal({{ sub.id }}, '{{ sub.contractor_name|escapejs }}', '{{ sub.phone|escapejs }}', '{{ sub.trade }}', '{{ sub.title|escapejs }}', '{{ sub.contract_amount }}', '{{ sub.status }}', '{{ sub.notes|escapejs }}')">
-                    <i class="bi bi-pencil" style="font-size:0.75rem;"></i>
+                <button type="button" class="btn btn-sm btn-outline-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center btn-circle-action" style="width:34px; height:34px;" title="Edit Contract" onclick="openEditSubcontractModal({{ sub.id }}, '{{ sub.contractor_name|escapejs }}', '{{ sub.phone|escapejs }}', '{{ sub.trade }}', '{{ sub.title|escapejs }}', '{{ sub.contract_amount }}', '{{ sub.status }}', '{{ sub.notes|escapejs }}')">
+                    <i class="bi bi-pencil" style="font-size:0.8rem;"></i>
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle p-1 d-inline-flex align-items-center justify-content-center" style="width:30px; height:30px;" title="Delete Contract" onclick="deleteSubcontract({{ sub.id }}, '{{ sub.contractor_name|escapejs }}')">
-                    <i class="bi bi-trash" style="font-size:0.75rem;"></i>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle p-2 d-inline-flex align-items-center justify-content-center btn-circle-action" style="width:34px; height:34px;" title="Delete Contract" onclick="deleteSubcontract({{ sub.id }}, '{{ sub.contractor_name|escapejs }}')">
+                    <i class="bi bi-trash" style="font-size:0.8rem;"></i>
                 </button>
             </div>
         </div>
@@ -209,7 +319,7 @@
         <div class="decore-empty-state py-4 text-center">
             <i class="bi bi-briefcase text-muted fs-1 mb-2 d-block"></i>
             <p class="mb-1 text-muted fw-semibold">No subcontracts logged yet.</p>
-            <p class="text-muted small mb-3" style="font-size:0.8rem;">Add your first electrician, tiling, or plumbing subcontract to start managing trade disbursements.</p>
+            <p class="text-muted small mb-3" style="font-size:0.8rem;">Add your first subcontractor (e.g. Electrical, Tiles, or Masonry) to start tracking contract stage payments.</p>
             <button type="button" class="btn btn-decore-primary rounded-pill px-4 py-2" style="font-size:0.85rem;" onclick="openSubcontractModal()">
                 <i class="bi bi-plus-lg me-1"></i>Add First Subcontract
             </button>
