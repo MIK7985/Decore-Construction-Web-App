@@ -1424,7 +1424,8 @@
     function unassignEmployee(empId, empName) {
         decoreConfirm(`Are you sure you want to unassign ${empName} from this worksite?`, function() {
             decoreShowLoading();
-            fetch(`/worksites/employees/${empId}/unassign/`, {
+            const url = "{% url 'worksites:unassign_crew' pk=999999 %}".replace('999999', empId);
+            fetch(url, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',
