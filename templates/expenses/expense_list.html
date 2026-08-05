@@ -87,8 +87,9 @@
                     <td class="d-none d-md-table-cell text-muted small">{{ exp.date }}</td>
                     <td>
                         {% if exp.receipt %}
-                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 small" onclick="viewReceipt('{{ exp.receipt.url }}', '{{ exp.category|escapejs }}', '₹{{ exp.amount }}')">
-                            <i class="bi bi-paperclip me-1"></i>Receipt Proof
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 text-nowrap d-inline-flex align-items-center justify-content-center" style="min-width: 32px; height: 32px;" onclick="viewReceipt('{{ exp.receipt.url }}', '{{ exp.category|escapejs }}', '₹{{ exp.amount }}')" title="View Receipt">
+                            <i class="bi bi-paperclip"></i>
+                            <span class="d-none d-md-inline ms-1" style="font-size: 0.78rem;">Receipt Proof</span>
                         </button>
                         {% else %}
                         <span class="text-muted small">—</span>
