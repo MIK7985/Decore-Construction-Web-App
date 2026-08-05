@@ -25,7 +25,9 @@
 
         // 3. Classify if this is an internal link navigation
         var isInternalNavigation = false;
-        if (document.referrer && document.referrer.indexOf(window.location.origin) !== -1) {
+        var host = window.location.hostname;
+        var origin = window.location.origin || (window.location.protocol + "//" + window.location.host);
+        if (document.referrer && (document.referrer.indexOf(origin) !== -1 || document.referrer.indexOf(host) !== -1)) {
           isInternalNavigation = true;
         }
 
@@ -53,9 +55,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Decore theme (critical, preloaded for fastest paint) -->
-    <link rel="preload" href="{% static 'css/style.css' %}?v=15" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="{% static 'css/style.css' %}?v=15"></noscript>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=15">
+    <link rel="preload" href="{% static 'css/style.css' %}?v=16" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{% static 'css/style.css' %}?v=16"></noscript>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=16">
     
     <!-- PWA Manifest & Icons -->
     <link rel="manifest" href="{% static 'manifest.json' %}">
@@ -193,7 +195,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <!-- Decore app JS -->
-    <script src="{% static 'js/app.js' %}?v=15"></script>
+    <script src="{% static 'js/app.js' %}?v=16"></script>
 
     <!-- PWA Service Worker Registration -->
     <script>

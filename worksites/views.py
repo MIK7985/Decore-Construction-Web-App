@@ -99,14 +99,17 @@ class WorksiteDetailView(LoginRequiredMixin, EngineerRequiredMixin, DetailView):
         att_end = self.request.GET.get('att_end')
         records = self.object.attendance_records.select_related('employee')
         
-        if att_start:
+        from datetime import datetime
+        if att_start and att_start.strip():
             try:
-                records = records.filter(date__gte=att_start)
+                parsed_start = datetime.strptime(att_start.strip(), '%Y-%m-%d').date()
+                records = records.filter(date__gte=parsed_start)
             except (ValueError, TypeError):
                 pass
-        if att_end:
+        if att_end and att_end.strip():
             try:
-                records = records.filter(date__lte=att_end)
+                parsed_end = datetime.strptime(att_end.strip(), '%Y-%m-%d').date()
+                records = records.filter(date__lte=parsed_end)
             except (ValueError, TypeError):
                 pass
                 
