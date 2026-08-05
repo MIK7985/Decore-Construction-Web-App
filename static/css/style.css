@@ -985,14 +985,8 @@ a:hover {
   z-index: 1050;
 }
 
-/* Action dropdowns in table/card rows — keep inside viewport on all screens */
-.dropdown-menu-end {
-  right: 0 !important;
-  left: auto !important;
-}
-
 @media (max-width: 576px) {
-  /* On small screens, shrink action dropdowns and pull them from the right edge */
+  /* On small screens, shrink action dropdowns slightly */
   td .dropdown-menu,
   .decore-card .dropdown-menu {
     min-width: 160px;
