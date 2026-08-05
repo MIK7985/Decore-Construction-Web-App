@@ -404,10 +404,12 @@
                                     <div class="text-muted small" style="font-size: 0.72rem;">{{ emp.role }}</div>
                                 </div>
                             </div>
-                            <div class="d-flex gap-1">
-                                <a href="tel:{{ emp.phone }}" class="btn btn-outline-primary btn-sm rounded-circle p-1.5" title="Call"><i class="bi bi-telephone"></i></a>
-                                <button type="button" class="btn btn-outline-danger btn-sm rounded-circle p-1.5" title="Unassign" onclick="unassignEmployee('{{ emp.id }}', '{{ emp.name|escapejs }}')">
-                                    <i class="bi bi-person-dash"></i>
+                            <div class="d-flex gap-2">
+                                <a href="tel:{{ emp.phone }}" class="btn btn-sm rounded-circle d-inline-flex align-items-center justify-content-center border-0 p-0 shadow-sm" style="width: 34px; height: 34px; background-color: rgba(99, 102, 241, 0.12); color: var(--decore-primary); transition: all 0.2s ease-in-out;" onmouseover="this.style.backgroundColor='rgba(99, 102, 241, 0.22)'; this.style.transform='scale(1.08)';" onmouseout="this.style.backgroundColor='rgba(99, 102, 241, 0.12)'; this.style.transform='scale(1)';" title="Call">
+                                    <i class="bi bi-telephone-fill" style="font-size: 0.85rem;"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm rounded-circle d-inline-flex align-items-center justify-content-center border-0 p-0 shadow-sm" style="width: 34px; height: 34px; background-color: rgba(239, 68, 68, 0.12); color: #ef4444; transition: all 0.2s ease-in-out;" onmouseover="this.style.backgroundColor='rgba(239, 68, 68, 0.22)'; this.style.transform='scale(1.08)';" onmouseout="this.style.backgroundColor='rgba(239, 68, 68, 0.12)'; this.style.transform='scale(1)';" title="Unassign" onclick="unassignEmployee('{{ emp.id }}', '{{ emp.name|escapejs }}')">
+                                    <i class="bi bi-person-x-fill" style="font-size: 0.95rem;"></i>
                                 </button>
                             </div>
                         </div>
