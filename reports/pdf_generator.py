@@ -304,7 +304,7 @@ def generate_monthly_attendance_pdf(year, month, worksite_id=None):
     story.append(main_table)
 
     story.append(Spacer(1, 10))
-    footer_text = f"<font size='6.5' color='#94a3b8'>Decore Construction Platform &bull; P: Present &bull; L: Late (0.5 Day) &bull; A: Absent &bull; OT: Overtime (1.5 Day) &bull; Confidential Official Roster</font>"
+    footer_text = f"<font size='6.5' color='#94a3b8'>Decore Construction Platform &bull; P: Present &bull; L: Late (0.5 Day) &bull; A: Absent &bull; OT: Overtime (Daily wage + Extra hours * hourly rate) &bull; Confidential Official Roster</font>"
     story.append(Paragraph(footer_text, ParagraphStyle('Footer', parent=styles['Normal'], alignment=1)))
 
     doc.build(story)
