@@ -14,7 +14,7 @@ from .models import Attendance
 class AttendanceForm(forms.ModelForm):
     class Meta:
         model = Attendance
-        fields = ("employee", "worksite", "date", "status", "notes")
+        fields = ("employee", "worksite", "date", "status", "notes", "overtime_hours")
 
     def clean(self):
         cleaned = super().clean()
@@ -89,7 +89,7 @@ class AttendanceSheetView(LoginRequiredMixin, View):
             Attendance.objects
             .filter(date=date_str)
             .select_related("employee")
-            .only("id", "employee_id", "worksite_id", "status", "notes")
+            .only("id", "employee_id", "worksite_id", "status", "notes", "overtime_hours")
         )
         saved_dict = {r.employee_id: r for r in attendance_records}
         
@@ -100,6 +100,7 @@ class AttendanceSheetView(LoginRequiredMixin, View):
                 'employee': emp,
                 'status': saved.status if saved else 'present',
                 'notes': saved.notes if saved else '',
+                'overtime_hours': float(saved.overtime_hours) if saved and saved.overtime_hours else 0.0,
                 'worksite_id': saved.worksite_id if saved else (emp.worksite_id or '')
             })
 
@@ -142,13 +143,17 @@ class AttendanceSheetView(LoginRequiredMixin, View):
                     if not worksite_id and emp.worksite_id:
                         worksite_id = emp.worksite_id
 
+                    overtime_hours = item.get('overtime_hours') or 0.0
+                    from decimal import Decimal
+
                     Attendance.objects.update_or_create(
                         employee_id=emp_id,
                         date=date_str,
                         defaults={
                             'status': status,
                             'notes': notes,
-                            'worksite_id': worksite_id
+                            'worksite_id': worksite_id,
+                            'overtime_hours': Decimal(str(overtime_hours))
                         }
                     )
             return JsonResponse({'success': True, 'message': 'Daily attendance sheet saved successfully!'})

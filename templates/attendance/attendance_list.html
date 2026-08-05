@@ -138,6 +138,10 @@
                                 <option value="overtime">Overtime</option>
                             </select>
                         </div>
+                        <div class="col-md-6" id="listOtContainer" style="display: none;">
+                            <label class="form-label small fw-semibold">Overtime Hours</label>
+                            <input type="number" step="0.5" min="0.5" max="16" class="form-control" name="overtime_hours" id="attnOtHours" value="1.0" placeholder="e.g. 2">
+                        </div>
                         <div class="col-12">
                             <label class="form-label small fw-semibold">Notes</label>
                             <input class="form-control" name="notes" id="attnNotes" maxlength="255" placeholder="Optional note">
@@ -163,7 +167,8 @@ const attendanceData = {
         worksite: "{{ log.worksite_id|default:'' }}",
         date: "{{ log.date|date:'Y-m-d' }}",
         status: "{{ log.status }}",
-        notes: "{{ log.notes|escapejs }}"
+        notes: "{{ log.notes|escapejs }}",
+        overtime_hours: "{{ log.overtime_hours }}"
     },
     {% endfor %}
 };
@@ -187,13 +192,34 @@ function openAttendanceModal(mode, id) {
             document.getElementById('attnDate').value = r.date;
             document.getElementById('attnStatus').value = r.status;
             document.getElementById('attnNotes').value = r.notes;
+            
+            const otContainer = document.getElementById('listOtContainer');
+            if (r.status === 'overtime') {
+                otContainer.style.display = 'block';
+                document.getElementById('attnOtHours').value = r.overtime_hours || '1.0';
+            } else {
+                otContainer.style.display = 'none';
+                document.getElementById('attnOtHours').value = '1.0';
+            }
         }
+    } else {
+        document.getElementById('listOtContainer').style.display = 'none';
+        document.getElementById('attnOtHours').value = '1.0';
     }
     bootstrap.Modal.getOrCreateInstance(document.getElementById('attendanceModal')).show();
 }
 
 document.getElementById('attnEmployee').addEventListener('change', function() {
     document.getElementById('attnWorksite').value = this.selectedOptions[0]?.dataset.worksite || '';
+});
+
+document.getElementById('attnStatus').addEventListener('change', function() {
+    const otContainer = document.getElementById('listOtContainer');
+    if (this.value === 'overtime') {
+        otContainer.style.display = 'block';
+    } else {
+        otContainer.style.display = 'none';
+    }
 });
 
 // Client-side search logic

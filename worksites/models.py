@@ -89,7 +89,8 @@ class Worksite(models.Model):
             elif status_clean == "late":
                 total_labor += record.employee.wage * Decimal("0.5")
             elif status_clean == "overtime":
-                total_labor += record.employee.wage * Decimal("1.5")
+                extra = record.overtime_hours if hasattr(record, "overtime_hours") and record.overtime_hours else Decimal("0.0")
+                total_labor += record.employee.wage + (Decimal(str(extra)) * (record.employee.wage / Decimal("8.0")))
         return total_labor
 
     @property

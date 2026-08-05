@@ -81,17 +81,23 @@
                         </td>
                         <td class="text-nowrap-custom">
                             <div class="btn-group btn-group-sm w-100" role="group">
-                                <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_pres_{{ row.employee.id }}" value="present" {% if row.status == "present" %}checked{% endif %}>
+                                <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_pres_{{ row.employee.id }}" value="present" {% if row.status == "present" %}checked{% endif %} onchange="toggleOtHours({{ row.employee.id }}, 'present')">
                                 <label class="btn btn-outline-success" for="status_pres_{{ row.employee.id }}"><i class="bi bi-check-circle me-1"></i>Present</label>
 
-                                <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_late_{{ row.employee.id }}" value="late" {% if row.status == "late" %}checked{% endif %}>
+                                <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_late_{{ row.employee.id }}" value="late" {% if row.status == "late" %}checked{% endif %} onchange="toggleOtHours({{ row.employee.id }}, 'late')">
                                 <label class="btn btn-outline-warning" for="status_late_{{ row.employee.id }}"><i class="bi bi-clock me-1"></i>Late</label>
 
-                                <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_abs_{{ row.employee.id }}" value="absent" {% if row.status == "absent" %}checked{% endif %}>
+                                <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_abs_{{ row.employee.id }}" value="absent" {% if row.status == "absent" %}checked{% endif %} onchange="toggleOtHours({{ row.employee.id }}, 'absent')">
                                 <label class="btn btn-outline-danger" for="status_abs_{{ row.employee.id }}"><i class="bi bi-x-circle me-1"></i>Absent</label>
 
-                                <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_ot_{{ row.employee.id }}" value="overtime" {% if row.status == "overtime" %}checked{% endif %}>
+                                <input type="radio" class="btn-check status-radio" name="status_{{ row.employee.id }}" id="status_ot_{{ row.employee.id }}" value="overtime" {% if row.status == "overtime" %}checked{% endif %} onchange="toggleOtHours({{ row.employee.id }}, 'overtime')">
                                 <label class="btn btn-outline-info" for="status_ot_{{ row.employee.id }}"><i class="bi bi-plus-circle me-1"></i>Overtime</label>
+                            </div>
+                            <div class="ot-hours-container mt-1 justify-content-center" id="ot_container_{{ row.employee.id }}" style="display: {% if row.status == 'overtime' %}flex{% else %}none{% endif %} !important;">
+                                <div class="input-group input-group-sm" style="width: 130px;">
+                                    <span class="input-group-text bg-light text-muted small px-1.5" style="font-size:0.7rem;">Extra Hrs</span>
+                                    <input type="number" step="0.5" min="0.5" max="16" class="form-control text-center font-monospace ot-hours-input" value="{{ row.overtime_hours|default:'1.0' }}">
+                                </div>
                             </div>
                         </td>
                         <td class="text-nowrap-custom">
@@ -164,28 +170,34 @@
                     </label>
                     <div class="row g-1">
                         <div class="col-3">
-                            <input type="radio" class="btn-check status-radio-mobile" name="mobile_status_{{ row.employee.id }}" id="m_pres_{{ row.employee.id }}" value="present" {% if row.status == "present" %}checked{% endif %}>
+                            <input type="radio" class="btn-check status-radio-mobile" name="mobile_status_{{ row.employee.id }}" id="m_pres_{{ row.employee.id }}" value="present" {% if row.status == "present" %}checked{% endif %} onchange="toggleOtHoursMobile({{ row.employee.id }}, 'present')">
                             <label class="btn btn-outline-success btn-sm w-100 text-nowrap px-1 py-2 rounded-2" for="m_pres_{{ row.employee.id }}" style="font-size: 0.72rem; font-weight: 600;">
                                 <i class="bi bi-check-lg d-block fs-6 mb-1"></i>Present
                             </label>
                         </div>
                         <div class="col-3">
-                            <input type="radio" class="btn-check status-radio-mobile" name="mobile_status_{{ row.employee.id }}" id="m_late_{{ row.employee.id }}" value="late" {% if row.status == "late" %}checked{% endif %}>
+                            <input type="radio" class="btn-check status-radio-mobile" name="mobile_status_{{ row.employee.id }}" id="m_late_{{ row.employee.id }}" value="late" {% if row.status == "late" %}checked{% endif %} onchange="toggleOtHoursMobile({{ row.employee.id }}, 'late')">
                             <label class="btn btn-outline-warning btn-sm w-100 text-nowrap px-1 py-2 rounded-2" for="m_late_{{ row.employee.id }}" style="font-size: 0.72rem; font-weight: 600;">
                                 <i class="bi bi-clock d-block fs-6 mb-1"></i>Late
                             </label>
                         </div>
                         <div class="col-3">
-                            <input type="radio" class="btn-check status-radio-mobile" name="mobile_status_{{ row.employee.id }}" id="m_abs_{{ row.employee.id }}" value="absent" {% if row.status == "absent" %}checked{% endif %}>
+                            <input type="radio" class="btn-check status-radio-mobile" name="mobile_status_{{ row.employee.id }}" id="m_abs_{{ row.employee.id }}" value="absent" {% if row.status == "absent" %}checked{% endif %} onchange="toggleOtHoursMobile({{ row.employee.id }}, 'absent')">
                             <label class="btn btn-outline-danger btn-sm w-100 text-nowrap px-1 py-2 rounded-2" for="m_abs_{{ row.employee.id }}" style="font-size: 0.72rem; font-weight: 600;">
                                 <i class="bi bi-x-lg d-block fs-6 mb-1"></i>Absent
                             </label>
                         </div>
                         <div class="col-3">
-                            <input type="radio" class="btn-check status-radio-mobile" name="mobile_status_{{ row.employee.id }}" id="m_ot_{{ row.employee.id }}" value="overtime" {% if row.status == "overtime" %}checked{% endif %}>
+                            <input type="radio" class="btn-check status-radio-mobile" name="mobile_status_{{ row.employee.id }}" id="m_ot_{{ row.employee.id }}" value="overtime" {% if row.status == "overtime" %}checked{% endif %} onchange="toggleOtHoursMobile({{ row.employee.id }}, 'overtime')">
                             <label class="btn btn-outline-info btn-sm w-100 text-nowrap px-1 py-2 rounded-2" for="m_ot_{{ row.employee.id }}" style="font-size: 0.72rem; font-weight: 600;">
                                 <i class="bi bi-plus-lg d-block fs-6 mb-1"></i>Overtime
                             </label>
+                        </div>
+                    </div>
+                    <div class="ot-hours-container-mobile mt-2" id="ot_container_mobile_{{ row.employee.id }}" style="display: {% if row.status == 'overtime' %}block{% else %}none{% endif %} !important;">
+                        <div class="input-group input-group-sm" style="width: 100%;">
+                            <span class="input-group-text bg-light text-muted small"><i class="bi bi-clock me-1"></i>Extra Overtime Hours</span>
+                            <input type="number" step="0.5" min="0.5" max="16" class="form-control text-center font-monospace ot-hours-input-mobile" value="{{ row.overtime_hours|default:'1.0' }}">
                         </div>
                     </div>
                 </div>
@@ -275,11 +287,18 @@
                 const checkedRadio = card.querySelector(".status-radio-mobile:checked");
                 const status = checkedRadio ? checkedRadio.value : 'present';
 
+                let overtimeHours = 0.0;
+                if (status === 'overtime') {
+                    const otInput = card.querySelector(".ot-hours-input-mobile");
+                    overtimeHours = otInput ? parseFloat(otInput.value) || 0.0 : 0.0;
+                }
+
                 records.push({
                     employee_id: parseInt(employeeId),
                     worksite_id: worksiteId ? parseInt(worksiteId) : null,
                     status: status,
-                    notes: notes
+                    notes: notes,
+                    overtime_hours: overtimeHours
                 });
             });
         } else {
@@ -293,11 +312,18 @@
                 const checkedRadio = row.querySelector(".status-radio:checked");
                 const status = checkedRadio ? checkedRadio.value : 'present';
 
+                let overtimeHours = 0.0;
+                if (status === 'overtime') {
+                    const otInput = card.querySelector(".ot-hours-input-mobile");
+                    overtimeHours = otInput ? parseFloat(otInput.value) || 0.0 : 0.0;
+                }
+
                 records.push({
                     employee_id: parseInt(employeeId),
                     worksite_id: worksiteId ? parseInt(worksiteId) : null,
                     status: status,
-                    notes: notes
+                    notes: notes,
+                    overtime_hours: overtimeHours
                 });
             });
         }
@@ -355,6 +381,28 @@
                 decoreToast("Connection error: Attendance could not be saved.", 'danger');
             }
         });
+    }
+
+    function toggleOtHours(employeeId, status) {
+        const container = document.getElementById(`ot_container_${employeeId}`);
+        if (container) {
+            if (status === 'overtime') {
+                container.style.setProperty('display', 'flex', 'important');
+            } else {
+                container.style.setProperty('display', 'none', 'important');
+            }
+        }
+    }
+
+    function toggleOtHoursMobile(employeeId, status) {
+        const container = document.getElementById(`ot_container_mobile_${employeeId}`);
+        if (container) {
+            if (status === 'overtime') {
+                container.style.setProperty('display', 'block', 'important');
+            } else {
+                container.style.setProperty('display', 'none', 'important');
+            }
+        }
     }
 </script>
 {% endblock %}

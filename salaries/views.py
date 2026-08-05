@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db import models
-from django.db.models import Case, DecimalField, Prefetch, Sum, Value, When
+from django.db.models import Case, DecimalField, F, Prefetch, Sum, Value, When
 from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -134,7 +134,7 @@ def payroll_preview(start_date, end_date):
                 'attendance_records',
                 queryset=Attendance.objects.filter(
                     date__gte=start_date, date__lte=end_date
-                ).only('employee_id', 'status'),
+                ).only('employee_id', 'status', 'overtime_hours'),
                 to_attr='week_attendance'
             )
         )
@@ -142,13 +142,12 @@ def payroll_preview(start_date, end_date):
     )
     for employee in employees:
         # Use prefetched week_attendance instead of triggering separate query per employee
-        attendance_statuses = [a.status for a in employee.week_attendance]
         paid_days = sum(
-            Decimal("1.0") if s.lower() == "present" else
-            Decimal("0.5") if s.lower() == "late" else
-            Decimal("1.5") if s.lower() == "overtime" else
+            Decimal("1.0") if a.status.lower() == "present" else
+            Decimal("0.5") if a.status.lower() == "late" else
+            (Decimal("1.0") + Decimal(str(a.overtime_hours or 0.0)) / Decimal("8.0")) if a.status.lower() == "overtime" else
             Decimal("0.0")
-            for s in attendance_statuses
+            for a in employee.week_attendance
         )
         
         record = existing.get(employee.id)
@@ -257,9 +256,9 @@ class SalaryPayView(LoginRequiredMixin, EngineerRequiredMixin, View):
             paid_days = attendance.annotate(status_lower=Lower('status')).aggregate(days=Sum(Case(
                 When(status_lower="present", then=Value(Decimal("1.0"))),
                 When(status_lower="late", then=Value(Decimal("0.5"))),
-                When(status_lower="overtime", then=Value(Decimal("1.5"))),
+                When(status_lower="overtime", then=Value(Decimal("1.0")) + F("overtime_hours") / Value(Decimal("8.0"))),
                 default=Value(Decimal("0.0")),
-                output_field=DecimalField(max_digits=5, decimal_places=1),
+                output_field=DecimalField(max_digits=7, decimal_places=3),
             )))["days"] or Decimal("0.0")
 
             salary.present_days = paid_days

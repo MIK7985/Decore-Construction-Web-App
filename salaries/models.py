@@ -17,7 +17,7 @@ class SalaryRecord(models.Model):
     month = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(12)], null=True, blank=True)
     week_end_date = models.DateField(null=True, blank=True)
     daily_wage = models.DecimalField(max_digits=10, decimal_places=2)
-    present_days = models.DecimalField(max_digits=5, decimal_places=1, default=0)
+    present_days = models.DecimalField(max_digits=7, decimal_places=3, default=0)
     bonus = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     deductions = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     net_salary = models.DecimalField(max_digits=12, decimal_places=2)
