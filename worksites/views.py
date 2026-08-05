@@ -93,7 +93,24 @@ class WorksiteDetailView(LoginRequiredMixin, EngineerRequiredMixin, DetailView):
         context['daily_logs'] = self.object.daily_logs.all()
         context['payment_methods'] = PaymentMethod.choices
         context['subcontracts'] = self.object.subcontracts.prefetch_related('payments').all()
-        context['attendance_records'] = self.object.attendance_records.select_related('employee').order_by('-date', 'employee__name')
+        
+        # Get date filter parameters for Daily Site Attendance History
+        att_start = self.request.GET.get('att_start')
+        att_end = self.request.GET.get('att_end')
+        records = self.object.attendance_records.select_related('employee')
+        
+        if att_start:
+            try:
+                records = records.filter(date__gte=att_start)
+            except (ValueError, TypeError):
+                pass
+        if att_end:
+            try:
+                records = records.filter(date__lte=att_end)
+            except (ValueError, TypeError):
+                pass
+                
+        context['attendance_records'] = records.order_by('-date', 'employee__name')
         return context
 
 

@@ -423,6 +423,24 @@
                     </div>
                     
                     <div class="decore-card-body p-3">
+                        <!-- Date Filter Form -->
+                        <div class="row g-2 mb-3 align-items-end bg-light-soft p-2.5 rounded-3 border border-light">
+                            <div class="col-6 col-sm-4">
+                                <label class="form-label text-muted mb-1 small fw-semibold font-monospace" style="font-size: 0.68rem; letter-spacing: 0.5px;"><i class="bi bi-calendar-date me-1 text-primary"></i>START DATE</label>
+                                <input type="date" id="attStartInput" class="form-control form-control-sm rounded-pill" value="{{ request.GET.att_start|default:'' }}">
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="form-label text-muted mb-1 small fw-semibold font-monospace" style="font-size: 0.68rem; letter-spacing: 0.5px;"><i class="bi bi-calendar-date me-1 text-primary"></i>END DATE</label>
+                                <input type="date" id="attEndInput" class="form-control form-control-sm rounded-pill" value="{{ request.GET.att_end|default:'' }}">
+                            </div>
+                            <div class="col-12 col-sm-4 d-flex gap-2">
+                                <button type="button" onclick="filterAttendance()" class="btn btn-decore-primary btn-sm rounded-pill px-3 flex-grow-1"><i class="bi bi-funnel me-1"></i>Filter</button>
+                                {% if request.GET.att_start or request.GET.att_end %}
+                                <a href="{% url 'worksites:detail' pk=worksite.id %}#crew-pane" class="btn btn-outline-secondary btn-sm rounded-pill px-3" title="Clear Filters"><i class="bi bi-x-lg"></i></a>
+                                {% endif %}
+                            </div>
+                        </div>
+
                         <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                             <table class="decore-table-premium table-sm mb-0">
                                 <thead>
@@ -1286,6 +1304,26 @@
             }
         })
         .catch(() => { decoreHideLoading(); decoreToast('Connection error.', 'danger'); });
+    }
+    function filterAttendance() {
+        const start = document.getElementById('attStartInput').value;
+        const end = document.getElementById('attEndInput').value;
+        const url = new URL(window.location.href);
+        
+        if (start) {
+            url.searchParams.set('att_start', start);
+        } else {
+            url.searchParams.delete('att_start');
+        }
+        
+        if (end) {
+            url.searchParams.set('att_end', end);
+        } else {
+            url.searchParams.delete('att_end');
+        }
+        
+        url.hash = '#crew-pane';
+        window.location.href = url.toString();
     }
 
 </script>
