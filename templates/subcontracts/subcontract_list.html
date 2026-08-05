@@ -632,11 +632,11 @@ function handlePaySubcontractorSubmit(e) {
         decoreHideLoading();
         if (data.success) {
             bootstrap.Modal.getOrCreateInstance(document.getElementById('paySubcontractorModal')).hide();
-            decoreToast(data.message, 'success');
             if (data.whatsapp_link) {
-                window.open(data.whatsapp_link, '_blank');
+                sessionStorage.setItem('share_whatsapp_link', data.whatsapp_link);
+                sessionStorage.setItem('share_whatsapp_msg', data.message);
             }
-            setTimeout(() => window.location.reload(), 800);
+            window.location.reload();
         } else {
             decoreToast(data.error || "Failed to log payment.", 'danger');
         }
@@ -683,10 +683,41 @@ function shareSubcontractReceipt(name, phone, amount, trade, title, relativeRece
     
     let absoluteUrl = window.location.origin + relativeReceiptUrl;
     
-    let msg = `Hello ${name},\n\nA payment disbursement of ₹${parseFloat(amount).toLocaleString('en-IN')} for ${trade} (${title}) has been processed successfully!\n\nView Official Receipt PDF:\n${absoluteUrl}\n\nThank you,\nDecore Construction Management`;
+    let msg = `Hello ${name},\n\nA payment disbursement of ₹${parseFloat(amount).toLocaleString('en-IN')} for ${trade} (${title}) has been processed successfully!\n\nView Official Receipt PDF:\n${absoluteUrl}\n\nThank you,\nDecore Builders`;
     
     let waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
     window.open(waLink, '_blank');
 }
+
+// Post-reload WhatsApp Share Prompt
+document.addEventListener("DOMContentLoaded", function() {
+    const waLink = sessionStorage.getItem('share_whatsapp_link');
+    const waMsg = sessionStorage.getItem('share_whatsapp_msg');
+    if (waLink) {
+        sessionStorage.removeItem('share_whatsapp_link');
+        sessionStorage.removeItem('share_whatsapp_msg');
+        
+        const alertHtml = `
+            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center justify-content-between gap-3 flex-wrap shadow-lg border-success-subtle position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 9999; min-width: 320px; border-radius: 12px; background: rgba(255,255,255,0.98); backdrop-filter: blur(8px);" role="alert">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-success-soft d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 1.1rem;"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">Payment Logged!</div>
+                        <div class="text-muted small" style="font-size: 0.72rem;">${waMsg || 'Subcontractor payment recorded.'}</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="${waLink}" target="_blank" class="btn btn-success btn-sm rounded-pill px-3 py-1 fw-bold d-inline-flex align-items-center gap-1.5" style="background-color: #25D366; border-color: #25D366; font-size: 0.75rem;" onclick="this.closest('.alert').remove();">
+                        <i class="bi bi-whatsapp"></i>Send Receipt
+                    </a>
+                    <button type="button" class="btn-close static position-relative ms-0" data-bs-dismiss="alert" aria-label="Close" style="padding: 0.5rem;"></button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+    }
+});
 </script>
 {% endblock %}
