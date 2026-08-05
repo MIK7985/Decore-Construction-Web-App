@@ -74,12 +74,14 @@ class MaterialCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
             
             unit_clean = units[i].strip() if i < len(units) else ""
             try:
-                quantity = Decimal(str(quantities[i]).strip() or "0")
+                clean_qty = str(quantities[i]).replace(',', '').replace('₹', '').strip()
+                quantity = Decimal(clean_qty or "0")
             except Exception:
                 quantity = Decimal("0.00")
             
             try:
-                unit_price = Decimal(str(unit_prices[i]).strip() or "0")
+                clean_price = str(unit_prices[i]).replace(',', '').replace('₹', '').strip()
+                unit_price = Decimal(clean_price or "0")
             except Exception:
                 unit_price = Decimal("0.00")
                 
