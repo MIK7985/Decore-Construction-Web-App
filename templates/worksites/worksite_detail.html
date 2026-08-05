@@ -102,44 +102,45 @@
 </div>
 
 <!-- Navigation Tabs Bar -->
-<div class="decore-card p-2 mb-4 shadow-sm">
-    <ul class="nav nav-pills nav-fill flex-column flex-sm-row gap-1" id="worksiteTab" role="tablist">
-        <li class="nav-item" role="presentation">
+<!-- Navigation Tabs Bar -->
+<div class="decore-card p-2 mb-4 shadow-sm worksite-tab-scroll-wrapper" style="overflow: hidden;">
+    <ul class="nav nav-pills flex-nowrap gap-1 pb-1" id="worksiteTab" role="tablist" style="overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;">
+        <li class="nav-item" role="presentation" style="flex-shrink: 0;">
             <button class="nav-link active fw-semibold rounded-pill py-2" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-pane" type="button" role="tab">
                 <i class="bi bi-grid-1x2 me-1"></i>Overview
             </button>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item" role="presentation" style="flex-shrink: 0;">
             <button class="nav-link fw-semibold rounded-pill py-2" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing-pane" type="button" role="tab">
                 <i class="bi bi-wallet2 me-1"></i>Client Payments <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ client_payments|length }}</span>
             </button>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item" role="presentation" style="flex-shrink: 0;">
             <button class="nav-link fw-semibold rounded-pill py-2" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs-pane" type="button" role="tab">
                 <i class="bi bi-journal-text me-1"></i>Site Work Diary <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ daily_logs|length }}</span>
             </button>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item" role="presentation" style="flex-shrink: 0;">
             <button class="nav-link fw-semibold rounded-pill py-2" id="crew-tab" data-bs-toggle="tab" data-bs-target="#crew-pane" type="button" role="tab">
                 <i class="bi bi-people me-1"></i>Crew <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ assigned_employees|length }}</span>
             </button>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item" role="presentation" style="flex-shrink: 0;">
             <button class="nav-link fw-semibold rounded-pill py-2" id="materials-tab" data-bs-toggle="tab" data-bs-target="#materials-pane" type="button" role="tab">
                 <i class="bi bi-boxes me-1"></i>Materials <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ worksite.onsite_materials|length }}</span>
             </button>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item" role="presentation" style="flex-shrink: 0;">
             <button class="nav-link fw-semibold rounded-pill py-2" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses-pane" type="button" role="tab">
                 <i class="bi bi-receipt me-1"></i>Other Expenses <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ worksite.expenses.count }}</span>
             </button>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item" role="presentation" style="flex-shrink: 0;">
             <button class="nav-link fw-semibold rounded-pill py-2" id="subcontracts-tab" data-bs-toggle="tab" data-bs-target="#subcontracts-pane" type="button" role="tab">
                 <i class="bi bi-briefcase me-1"></i>Subcontracts <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ subcontracts|length }}</span>
             </button>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item" role="presentation" style="flex-shrink: 0;">
             <button class="nav-link fw-semibold rounded-pill py-2" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents-pane" type="button" role="tab">
                 <i class="bi bi-folder2-open me-1"></i>Documents <span class="badge bg-primary-soft text-primary rounded-pill ms-1">{{ documents|length }}</span>
             </button>
@@ -1303,14 +1304,31 @@
             }
         });
 
-        // Check if hash present in URL to activate specific tab
+        // Check if hash present in URL to activate specific tab and scroll smoothly
         const hash = window.location.hash;
         if (hash) {
             const triggerEl = document.querySelector(`button[data-bs-target="${hash}"]`);
             if (triggerEl) {
                 bootstrap.Tab.getOrCreateInstance(triggerEl).show();
+                setTimeout(() => {
+                    const tabContainer = document.getElementById('worksiteTab');
+                    if (tabContainer) {
+                        tabContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }, 300);
             }
         }
+
+        // Listen for tab shown event to update URL hash without scrolling the viewport
+        const tabElList = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabElList.forEach(tabEl => {
+            tabEl.addEventListener('shown.bs.tab', function (event) {
+                const targetHash = event.target.getAttribute('data-bs-target');
+                if (targetHash) {
+                    history.replaceState(null, null, targetHash);
+                }
+            });
+        });
     });
 
     // ── Stock Usage Modal ──────────────────────────────────────
