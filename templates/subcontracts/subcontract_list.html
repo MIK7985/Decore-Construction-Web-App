@@ -166,8 +166,8 @@
 <!-- Subcontracts Cards Container -->
 <div class="row g-3">
     {% for sub in subcontracts %}
-    <div class="col-12 col-lg-6">
-        <div class="decore-card p-4 h-100 border-0 shadow-sm d-flex flex-column subcontract-card {% if sub.status == 'completed' %}subcontract-card-completed{% elif sub.status == 'in_progress' %}subcontract-card-progress{% elif sub.status == 'on_hold' %}subcontract-card-hold{% else %}subcontract-card-pending{% endif %}">
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="decore-card p-3 h-100 border-0 shadow-sm d-flex flex-column subcontract-card {% if sub.status == 'completed' %}subcontract-card-completed{% elif sub.status == 'in_progress' %}subcontract-card-progress{% elif sub.status == 'on_hold' %}subcontract-card-hold{% else %}subcontract-card-pending{% endif %}">
             <!-- Header -->
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
@@ -222,12 +222,12 @@
             </div>
 
             <!-- Financial Summary Bar -->
-            <div class="bg-light-soft rounded-3 p-3 my-3">
+            <div class="bg-light-soft rounded-3 p-2.5 my-2.5">
                 <div class="d-flex justify-content-between align-items-center mb-1.5">
                     <span class="text-muted small fw-semibold" style="font-size:0.78rem;">Disbursement Progress:</span>
                     <span class="fw-bold font-monospace text-decore-primary" style="font-size:0.85rem;">{{ sub.progress_percent }}% Paid</span>
                 </div>
-                <div class="progress mb-2.5" style="height: 7px; border-radius: 10px; background-color: rgba(0,0,0,0.06);">
+                <div class="progress mb-2.5" style="height: 6px; border-radius: 10px; background-color: rgba(0,0,0,0.06);">
                     <div class="progress-bar progress-bar-glow {% if sub.progress_percent >= 100 %}bg-success{% else %}bg-primary{% endif %}" role="progressbar" style="width: {{ sub.progress_percent }}%;"></div>
                 </div>
                 <div class="row g-2 text-center pt-1" style="font-size:0.8rem;">

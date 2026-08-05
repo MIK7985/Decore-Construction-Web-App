@@ -10,6 +10,9 @@
         if(localStorage.getItem('decore-sidebar-collapsed')==='true'){
           document.documentElement.classList.add('sidebar-pre-collapsed');
         }
+        if(sessionStorage.getItem('decore-app-loaded')==='true'){
+          document.documentElement.classList.add('app-already-loaded');
+        }
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -49,20 +52,19 @@
     <!-- Instant Navigation Progress Bar -->
     <div id="topNavProgressBar" style="position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, #6366F1, #38BDF8); z-index: 99999; transition: width 0.2s ease, opacity 0.3s ease; opacity: 0; pointer-events: none;"></div>
 
-    <!-- Page-Level Skeleton Loader Overlay -->
+    <!-- Page-Level Skeleton Loader Overlay (Navigation Skeletons) -->
     <div id="decoreLoadingOverlay" class="decore-loading-overlay">
-        <!-- Desktop: Mock Skeletons -->
-        <div class="d-none d-lg-flex w-100 h-100">
+        <div class="d-flex w-100 h-100">
             <!-- Mock Sidebar Skeleton (Desktop only) -->
-            <div class="d-flex flex-column gap-3 p-3 position-fixed" style="width: 260px; top: 1rem; left: 1rem; bottom: 1rem; background: linear-gradient(180deg, #1E1B4B 0%, #0F172A 100%); border-radius: 1.25rem;">
+            <div class="d-none d-lg-flex flex-column gap-3 p-3 position-fixed" style="width: 260px; top: 1rem; left: 1rem; bottom: 1rem; background: linear-gradient(180deg, #1E1B4B 0%, #0F172A 100%); border-radius: 1.25rem;">
                 <div class="decore-skeleton w-75 mb-4" style="height: 32px; opacity: 0.12;"></div>
                 <div class="decore-skeleton w-100" style="height: 44px; opacity: 0.12; border-radius: 10px;"></div>
                 <div class="decore-skeleton w-100" style="height: 44px; opacity: 0.12; border-radius: 10px;"></div>
                 <div class="decore-skeleton w-100" style="height: 44px; opacity: 0.12; border-radius: 10px;"></div>
                 <div class="decore-skeleton w-100" style="height: 44px; opacity: 0.12; border-radius: 10px;"></div>
             </div>
-            <!-- Mock Content Skeleton Area -->
-            <div style="flex-grow: 1; margin-left: calc(260px + 1rem); padding: 1.5rem 1.5rem 1.5rem 0.5rem;" class="w-100">
+            <!-- Mock Content Skeleton Area (Desktop & Mobile) -->
+            <div style="flex-grow: 1; margin-left: calc(260px + 1rem); padding: 1.5rem 1.5rem 1.5rem 0.5rem;" class="mobile-skeleton-adjust w-100">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div class="decore-skeleton" style="width: 240px; height: 32px; opacity: 0.8;"></div>
                     <div class="decore-skeleton rounded-pill" style="width: 100px; height: 32px; opacity: 0.8;"></div>
@@ -75,9 +77,11 @@
                 <div class="decore-skeleton w-100" style="height: 300px; border-radius: var(--decore-radius); opacity: 0.8;"></div>
             </div>
         </div>
+    </div>
 
-        <!-- Mobile: Centered Logo Splash Loader -->
-        <div class="d-flex d-lg-none flex-column align-items-center justify-content-center w-100 h-100" style="background-color: var(--decore-bg-color, #f8fafc); z-index: 100000;">
+    <!-- Initial App-Opening Splash Loader Overlay (Mobile only / Startup only) -->
+    <div id="decoreInitialLoader" class="decore-loading-overlay active" style="z-index: 999999;">
+        <div class="d-flex flex-column align-items-center justify-content-center w-100 h-100" style="background-color: var(--decore-bg-color, #f8fafc);">
             <div class="text-center position-relative">
                 <!-- Glowing Outer Spinner Ring -->
                 <div class="spinner-border text-primary spinner-brand-ring position-absolute" role="status" style="width: 96px; height: 96px; top: -16px; left: -16px;"></div>

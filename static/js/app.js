@@ -191,6 +191,18 @@
     if (overlay) {
       overlay.classList.remove("active");
     }
+    var initial = document.getElementById("decoreInitialLoader");
+    if (initial) {
+      initial.classList.add("fade-out-loader");
+      setTimeout(function() {
+        initial.classList.remove("active");
+        initial.style.display = "none";
+      }, 350);
+    }
+    // Set the app loaded session state to prevent logo loader flash on navigations
+    try {
+      sessionStorage.setItem('decore-app-loaded', 'true');
+    } catch(e) {}
   }
 
   window.decoreShowLoading = function () {

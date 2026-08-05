@@ -1809,3 +1809,13 @@ body {
   opacity: 0.85;
 }
 
+.fade-out-loader {
+  opacity: 0 !important;
+  transition: opacity 0.3s ease-out !important;
+}
+
+/* Prevent loading logo flash on internal navigation */
+.app-already-loaded #decoreInitialLoader {
+  display: none !important;
+}
+
