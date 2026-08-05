@@ -102,8 +102,8 @@
                         </button>
                         {% else %}
                         <div class="dropdown">
-                            <button class="btn btn-sm btn-icon" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}'><i class="bi bi-three-dots-vertical"></i></button>
-                            <ul class="dropdown-menu dropdown-menu-end">
+                            <button class="btn btn-sm btn-icon" data-bs-toggle="dropdown" data-bs-auto-close="true" data-bs-popper-config='{"strategy":"fixed","modifiers":[{"name":"flip","enabled":true},{"name":"preventOverflow","options":{"boundary":"viewport","padding":8}}]}'><i class="bi bi-three-dots-vertical"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
                                 <li><a class="dropdown-item" href="{% url 'employees:detail' pk=emp.id %}"><i class="bi bi-eye me-2"></i>View Profile</a></li>
                                 <li><button type="button" class="dropdown-item" onclick="openEmployeeModal('edit', '{{ emp.id }}')"><i class="bi bi-pencil me-2"></i>Edit Employee</button></li>
                                 <li><hr class="dropdown-divider"></li>

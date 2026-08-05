@@ -976,11 +976,33 @@ a:hover {
   border-radius: 0.75rem;
   box-shadow: var(--decore-shadow-lg);
   padding: 0.4rem;
+  /* Prevent menu from overflowing the viewport */
+  max-width: calc(100vw - 1.5rem);
 }
 
 /* Bootstrap's default menu layer is too low when a page contains elevated UI. */
 .decore-navbar .dropdown-menu {
   z-index: 1050;
+}
+
+/* Action dropdowns in table/card rows — keep inside viewport on all screens */
+.dropdown-menu-end {
+  right: 0 !important;
+  left: auto !important;
+}
+
+@media (max-width: 576px) {
+  /* On small screens, shrink action dropdowns and pull them from the right edge */
+  td .dropdown-menu,
+  .decore-card .dropdown-menu {
+    min-width: 160px;
+    max-width: 200px;
+    font-size: 0.82rem;
+  }
+  td .dropdown-item,
+  .decore-card .dropdown-item {
+    padding: 0.5rem 0.75rem;
+  }
 }
 
 .dropdown-item {
@@ -1844,10 +1866,18 @@ body {
 }
 
 /* Scrollable Tab bar rules for mobile responsiveness */
-.worksite-tab-scroll-wrapper ul::-webkit-scrollbar {
+.worksite-tab-scroll-wrapper ul::-webkit-scrollbar,
+.worksite-tab-scroll-wrapper::-webkit-scrollbar,
+#worksiteTab::-webkit-scrollbar {
   display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  -webkit-appearance: none !important;
 }
-.worksite-tab-scroll-wrapper ul {
+.worksite-tab-scroll-wrapper ul,
+.worksite-tab-scroll-wrapper,
+#worksiteTab {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
 }
