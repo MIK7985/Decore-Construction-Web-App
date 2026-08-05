@@ -86,6 +86,7 @@ class WorksiteDetailView(LoginRequiredMixin, EngineerRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['assigned_employees'] = self.object.employees.all()
+        context['available_employees'] = Employee.objects.filter(is_archived=False).exclude(worksite=self.object).order_by('name')
         context['materials'] = []
         context['documents'] = self.object.documents.all()
         context['document_categories'] = DocumentCategory.choices
@@ -254,3 +255,34 @@ class DailySiteLogDeleteView(LoginRequiredMixin, EngineerRequiredMixin, View):
             log_item.photo.delete(save=False)
         log_item.delete()
         return JsonResponse({"success": True, "message": f'Daily log "{title}" deleted.'})
+
+
+class WorksiteAssignCrewView(LoginRequiredMixin, EngineerRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        site = get_object_or_404(Worksite, pk=pk)
+        employee_ids = request.POST.getlist("employee_ids")
+        if not employee_ids:
+            return JsonResponse({"success": False, "error": "No crew members selected."}, status=400)
+        
+        employees = Employee.objects.filter(id__in=employee_ids)
+        for emp in employees:
+            emp.worksite = site
+            emp.save()
+            
+        return JsonResponse({
+            "success": True,
+            "message": f"Successfully assigned {employees.count()} crew member(s) to {site.name}."
+        })
+
+
+class WorksiteUnassignCrewView(LoginRequiredMixin, EngineerRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        # Here pk is the employee ID
+        employee = get_object_or_404(Employee, pk=pk)
+        site_name = employee.worksite.name if employee.worksite else "worksite"
+        employee.worksite = None
+        employee.save()
+        return JsonResponse({
+            "success": True,
+            "message": f"Successfully unassigned {employee.name} from {site_name}."
+        })
