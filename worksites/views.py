@@ -152,7 +152,8 @@ class ClientPaymentCreateView(LoginRequiredMixin, EngineerRequiredMixin, View):
             return JsonResponse({"success": False, "error": "Milestone Stage is required."}, status=400)
 
         try:
-            amount = Decimal(amount_str)
+            clean_amt = str(amount_str).replace(',', '').replace('₹', '').strip()
+            amount = Decimal(clean_amt)
             if amount <= 0:
                 return JsonResponse({"success": False, "error": "Amount must be greater than 0."}, status=400)
         except Exception:
