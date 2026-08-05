@@ -1,7 +1,6 @@
-const CACHE_NAME = 'decore-cache-v3';
+const CACHE_NAME = 'decore-cache-v4';
 const ASSETS_TO_CACHE = [
   '/dashboard/',
-  '/static/css/style.css',
   '/static/images/logo.png',
   '/static/images/icon-192.png',
   '/static/images/icon-512.png'
