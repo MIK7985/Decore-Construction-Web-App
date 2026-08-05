@@ -272,7 +272,7 @@ class SubcontractPaymentCreateView(LoginRequiredMixin, EngineerRequiredMixin, Vi
                     f"• Total Paid to Date: ₹{subcontract.paid_amount:,.2f}\n"
                     f"• Remaining Balance: ₹{subcontract.balance_amount:,.2f}\n\n"
                     f"View Official Payment Receipt PDF:\n{receipt_pdf_url}\n\n"
-                    f"Thank you,\nDecore Construction Management"
+                    f"Thank you,\nDecore Builders"
                 )
                 wa_link = f"https://wa.me/{phone_clean}?text={urllib.parse.quote(msg_text)}"
 

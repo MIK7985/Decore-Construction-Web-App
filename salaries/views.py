@@ -309,7 +309,7 @@ class SalaryPayView(LoginRequiredMixin, EngineerRequiredMixin, View):
                 f"📥 *Download Official PDF Receipt Voucher:*\n"
                 f"{pdf_url}\n\n"
                 f"Thank you,\n"
-                f"*Decore Construction Management*"
+                f"*Decore Builders*"
             )
             
             encoded_text = urllib.parse.quote(whatsapp_msg)

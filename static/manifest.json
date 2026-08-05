@@ -1,6 +1,6 @@
 {
-  "name": "Decore Developers",
-  "short_name": "Decore",
+  "name": "Decore Builders",
+  "short_name": "Decore Builders",
   "description": "Premium construction project, attendance, payroll, and material management tool.",
   "start_url": "/dashboard/",
   "scope": "/",

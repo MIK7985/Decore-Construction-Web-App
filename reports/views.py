@@ -268,7 +268,7 @@ class SummaryReportExportView(LoginRequiredMixin, EngineerRequiredMixin, View):
         ]
         
         pdf = generate_pdf_report(
-            title="Decore Construction Operational Executive Summary",
+            title="Decore Builders Operational Executive Summary",
             subtitle="Comprehensive high-level operational overview across workforce, worksites, and aggregate ledger totals.",
             summary_cards=summary_cards,
             table_headers=table_headers,

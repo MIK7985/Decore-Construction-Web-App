@@ -76,7 +76,7 @@ class SettingsView(LoginRequiredMixin, EngineerRequiredMixin, TemplateView):
             # Compose WhatsApp credentials sharing message
             import urllib.parse
             text = (
-                f"Hello! Your Decore Operational Supervisor account has been registered successfully.\n\n"
+                f"Hello! Your Decore Builders Supervisor account has been registered successfully.\n\n"
                 f"Here are your login details:\n"
                 f"- Username: {username}\n"
                 f"- Password: {password}\n"

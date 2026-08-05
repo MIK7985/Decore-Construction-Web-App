@@ -161,7 +161,7 @@ def generate_pdf_report(title, subtitle, summary_cards, table_headers, table_dat
     
     # 5. Footer Signature
     story.append(Spacer(1, 14))
-    footer_text = f"<font size='7' color='#94a3b8'>Decore Construction Management Platform &bull; System Generated Operational PDF Document &bull; Confidential</font>"
+    footer_text = f"<font size='7' color='#94a3b8'>Decore Builders Construction Platform &bull; System Generated Operational PDF Document &bull; Confidential</font>"
     story.append(Paragraph(footer_text, ParagraphStyle('Footer', parent=styles['Normal'], alignment=1)))
 
     doc.build(story)
@@ -304,7 +304,7 @@ def generate_monthly_attendance_pdf(year, month, worksite_id=None):
     story.append(main_table)
 
     story.append(Spacer(1, 10))
-    footer_text = f"<font size='6.5' color='#94a3b8'>Decore Construction Platform &bull; P: Present &bull; L: Late (0.5 Day) &bull; A: Absent &bull; OT: Overtime (Daily wage + Extra hours * hourly rate) &bull; Confidential Official Roster</font>"
+    footer_text = f"<font size='6.5' color='#94a3b8'>Decore Builders Platform &bull; P: Present &bull; L: Late (0.5 Day) &bull; A: Absent &bull; OT: Overtime (Daily wage + Extra hours * hourly rate) &bull; Confidential Official Roster</font>"
     story.append(Paragraph(footer_text, ParagraphStyle('Footer', parent=styles['Normal'], alignment=1)))
 
     doc.build(story)
@@ -483,7 +483,7 @@ def generate_salary_receipt_pdf(data):
 
     # Signature Seal & Manager Sign Row
     sign_left = Paragraph("<b>EMPLOYEE ACKNOWLEDGEMENT</b><br/><br/><br/>_______________________<br/><font color='#64748b' size='7.5'>Worker Signature / Thumb Impression</font>", styles['Normal'])
-    sign_right = Paragraph("<b>AUTHORIZED ISSUER</b><br/><br/><br/>_______________________<br/><font color='#64748b' size='7.5'>Decore Construction Manager / Stamp</font>", ParagraphStyle('RSign', parent=styles['Normal'], alignment=2))
+    sign_right = Paragraph("<b>AUTHORIZED ISSUER</b><br/><br/><br/>_______________________<br/><font color='#64748b' size='7.5'>Decore Builders Manager / Stamp</font>", ParagraphStyle('RSign', parent=styles['Normal'], alignment=2))
 
     sign_table = Table([[sign_left, sign_right]], colWidths=[3.75*inch, 3.75*inch])
     sign_table.setStyle(TableStyle([
@@ -492,7 +492,7 @@ def generate_salary_receipt_pdf(data):
     story.append(sign_table)
 
     story.append(Spacer(1, 20))
-    footer_text = f"<font size='7' color='#94a3b8'>Decore Construction Platform &bull; Computer Generated Salary Voucher &bull; Official Record</font>"
+    footer_text = f"<font size='7' color='#94a3b8'>Decore Builders Platform &bull; Computer Generated Salary Voucher &bull; Official Record</font>"
     story.append(Paragraph(footer_text, ParagraphStyle('Footer', parent=styles['Normal'], alignment=1)))
 
     doc.build(story)
@@ -590,13 +590,13 @@ def generate_subcontract_receipt_pdf(data):
 
     # Signature Block
     sign_l = Paragraph("<b>SUBCONTRACTOR ACKNOWLEDGEMENT</b><br/><br/><br/>_______________________<br/><font color='#64748b' size='7.5'>Subcontractor Signature</font>", styles['Normal'])
-    sign_r = Paragraph("<b>AUTHORIZED ISSUER</b><br/><br/><br/>_______________________<br/><font color='#64748b' size='7.5'>Decore Site Manager / Engineer</font>", ParagraphStyle('R', parent=styles['Normal'], alignment=2))
+    sign_r = Paragraph("<b>AUTHORIZED ISSUER</b><br/><br/><br/>_______________________<br/><font color='#64748b' size='7.5'>Decore Builders Site Manager / Engineer</font>", ParagraphStyle('R', parent=styles['Normal'], alignment=2))
     sign_tbl = Table([[sign_l, sign_r]], colWidths=[3.75*inch, 3.75*inch])
     sign_tbl.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'BOTTOM')]))
     story.append(sign_tbl)
 
     story.append(Spacer(1, 20))
-    footer = "<font size='7' color='#94a3b8'>Decore Construction Platform &bull; Official Subcontractor Payment Receipt</font>"
+    footer = "<font size='7' color='#94a3b8'>Decore Builders Platform &bull; Official Subcontractor Payment Receipt</font>"
     story.append(Paragraph(footer, ParagraphStyle('F', parent=styles['Normal'], alignment=1)))
 
     doc.build(story)
